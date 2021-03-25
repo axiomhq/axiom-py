@@ -5,7 +5,7 @@ Axiom API Python bindings.
 ## Table of Contents
 
 1. [Introduction](#introduction)
-1. [Installation](#Installation)
+1. [Installation](#installation)
 1. [Authentication](#authentication)
 1. [Usage](#usage)
 1. [Documentation](#documentation)
@@ -21,12 +21,11 @@ Currently, **Axiom Py requires Python3 or greater.**
 
 ## Installation
 
-### Install  from source:
+### Install from source:
 
 ```
 git clone `https://github.com/axiomhq/axiom-py`
 cd axiom-py
-python3 client.py
 ```
 ## Authentication
 
@@ -34,7 +33,7 @@ The Client is initialized with the url of the deployment and an access token. Th
 
 **The personal access token grants access to all resources available to the user on his behalf.**
 
-> The ingest token just allows ingestion into the datasets the token is configured for.
+**The ingest token just allows ingestion into the datasets the token is configured for.**
 
 ## Usage
 
