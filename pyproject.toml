@@ -8,6 +8,10 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.9"
 requests = "^2.25.1"
+requests-toolbelt = "^0.9.1"
+ujson = "^4.0.2"
+dacite = "^1.6.0"
+pyhumps = "^1.6.1"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
