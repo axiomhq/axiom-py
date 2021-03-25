@@ -10,7 +10,7 @@ import axiom
 deployment_url = os.getenv("AXM_DEPLOYMENT_URL")
 access_token = os.getenv("AXM_ACCESS_TOKEN")
 
-client = axiom.Client(deployment_url, access_token))
+client = axiom.Client(deployment_url, access_token)
 
 # Ingest into a dataset
 print(client.datasets.ingest("foobar", [{"foo": "bar"}]))
