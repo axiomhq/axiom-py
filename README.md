@@ -19,7 +19,7 @@ Axiom Py is a Python client library for accessing the Axiom API.
 Currently, **Axiom Py requires Python3 or greater.**
 
 
-## Installation
+## Installation.
 
 ### Install from source:
 
