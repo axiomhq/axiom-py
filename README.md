@@ -1,4 +1,4 @@
-# axiom-py
+# axiom-py ![ci](https://github.com/axiomhq/axiom-py/workflows/ci/badge.svg)
 Axiom API Python bindings.
 
 ## Contributing
