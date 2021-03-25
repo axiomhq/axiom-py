@@ -2,6 +2,8 @@
 
 Axiom API Python bindings.
 
+### NOTE: This is a development in progress library. Querying is not supported yet. Only ingestion.
+
 ## Table of Contents
 
 1. [Introduction](#introduction)
