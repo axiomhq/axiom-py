@@ -7,16 +7,33 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Setup
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
-    - name: Install and run linters
-      run: | 
-        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
-        source $HOME/.poetry/env
-        poetry install
-        poetry run pylint -E axiom tests
-        poetry run black --check axiom tests
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+      - name: Install poetry
+        run: pip install poetry==1.1.7
+      - name: Install and run linters
+        run: |
+          poetry install
+          poetry run pylint -E axiom tests
+          poetry run black --check axiom tests
+  publish:
+    name: Publish on PyPi
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags')
+    needs:
+      - lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Setup
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+      - name: Install poetry
+        run: pip install poetry==1.1.7
+      - name: Build & publish
+        run: poetry --build -u __token__ -p "${{ secrets.PYPI_TOKEN }}"
