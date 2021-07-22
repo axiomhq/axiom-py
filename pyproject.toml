@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "axiom-py"
-version = "0.1.0"
+name = "axiom"
+version = "0.1.0-beta.1"
 description = "Axiom API Python bindings."
 authors = ["Axiom, Inc."]
 license = "MIT"
