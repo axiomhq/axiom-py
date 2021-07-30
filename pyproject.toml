@@ -9,7 +9,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 requests = "^2.25.1"
 requests-toolbelt = "^0.9.1"
 ujson = "^4.0.2"
