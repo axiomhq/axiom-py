@@ -1,6 +1,6 @@
 """This package provides dataset models and methods as well as a DatasetClient"""
 from typing import List
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from humps import decamelize
 from requests import Session
@@ -28,6 +28,25 @@ class IngestStatus:
     wal_length: int
 
 
+@dataclass
+class Dataset:
+    """Represents an Axiom dataset"""
+
+    id: str = field(init=False)
+    name: str
+    description: str
+    who: str
+    created: str
+
+
+@dataclass
+class DatasetCreateRequest:
+    """Request used to create a dataset"""
+
+    name: str
+    description: str
+
+
 class DatasetsClient:  # pylint: disable=R0903
     """DatasetsClient has methods to manipulate datasets."""
 
@@ -43,3 +62,9 @@ class DatasetsClient:  # pylint: disable=R0903
         res = self.session.post(path, data=ujson.dumps(events))
         status_snake = decamelize(res.json())
         return dacite.from_dict(data_class=IngestStatus, data=status_snake)
+
+    def create(self, req: DatasetCreateRequest) -> Dataset:
+        """Create a dataset with the given properties."""
+        path = "datasets"
+        res = self.session.post(path, data=ujson.dumps(asdict(req)))
+        return dacite.from_dict(data_class=Dataset, data=res.json())
