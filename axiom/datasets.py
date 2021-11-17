@@ -63,6 +63,13 @@ class DatasetsClient:  # pylint: disable=R0903
         status_snake = decamelize(res.json())
         return dacite.from_dict(data_class=IngestStatus, data=status_snake)
 
+    def get(self, id: str) -> Dataset:
+        """Get a dataset by id."""
+        path = "datasets/%s" % id
+        res = self.session.get(path)
+        decoded_response = res.json()
+        return dacite.from_dict(data_class=Dataset, data=decoded_response)
+
     def create(self, req: DatasetCreateRequest) -> Dataset:
         """Create a dataset with the given properties."""
         path = "datasets"
