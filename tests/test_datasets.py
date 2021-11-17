@@ -44,3 +44,12 @@ class TestDatasets(unittest.TestCase):
         print(dataset)
 
         assert dataset.name == self.dataset_name
+
+    def test_list(self):
+        """Tests list datasets endpoint"""
+        datasets = self.client.datasets.get_list()
+        print(
+            datasets
+        )
+
+        assert len(datasets) > 0

@@ -75,3 +75,15 @@ class DatasetsClient:  # pylint: disable=R0903
         path = "datasets"
         res = self.session.post(path, data=ujson.dumps(asdict(req)))
         return dacite.from_dict(data_class=Dataset, data=res.json())
+
+    def get_list(self) -> List[Dataset]:
+        """List all available datasets."""
+        path = "datasets"
+        res = self.session.get(path)
+        
+        datasets = []
+        for record in res.json():
+            ds = dacite.from_dict(data_class=Dataset, data=record)
+            datasets.append(ds)
+
+        return datasets
