@@ -40,8 +40,6 @@ class DatasetsClient:  # pylint: disable=R0903
         """Ingest the events into the named dataset and returns the status."""
         path = "datasets/%s/ingest" % dataset
         # FIXME: Use ndjson
-        res = self.session.post(
-            path, data=ujson.dumps(events), headers={"Content-Type": "application/json"}
-        )
+        res = self.session.post(path, data=ujson.dumps(events))
         status_snake = decamelize(res.json())
         return dacite.from_dict(data_class=IngestStatus, data=status_snake)
