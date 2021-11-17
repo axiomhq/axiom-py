@@ -10,8 +10,9 @@ class TestDatasets(unittest.TestCase):
 
     def test_ingest(self):
         """Tests the ingest endpoint"""
-        print(
-            self.client.datasets.ingest(
+        res = self.client.datasets.ingest(
                 os.getenv("AXIOM_DATASET"), [{"foo": "bar"}, {"bar": "baz"}]
             )
-        )
+        print(res)
+
+        assert res.ingested == 2, f'expected ingested count to equal 2, found {res.ingested}'
