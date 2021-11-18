@@ -47,6 +47,13 @@ class DatasetCreateRequest:
     description: str
 
 
+@dataclass
+class DatasetUpdateRequest:
+    """Request used to update a dataset"""
+
+    description: str
+
+
 class DatasetsClient:  # pylint: disable=R0903
     """DatasetsClient has methods to manipulate datasets."""
 
@@ -80,10 +87,16 @@ class DatasetsClient:  # pylint: disable=R0903
         """List all available datasets."""
         path = "datasets"
         res = self.session.get(path)
-        
+
         datasets = []
         for record in res.json():
             ds = dacite.from_dict(data_class=Dataset, data=record)
             datasets.append(ds)
 
         return datasets
+
+    def update(self, id: str, req: DatasetUpdateRequest) -> Dataset:
+        """Update a dataset with the given properties."""
+        path = "datasets/%s" % id
+        res = self.session.put(path, data=ujson.dumps(asdict(req)))
+        return dacite.from_dict(data_class=Dataset, data=res.json())

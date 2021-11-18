@@ -2,7 +2,7 @@
 import os
 import unittest
 from .helpers import get_random_name
-from axiom import Client, DatasetCreateRequest
+from axiom import Client, DatasetCreateRequest, DatasetUpdateRequest
 
 
 class TestDatasets(unittest.TestCase):
@@ -48,8 +48,13 @@ class TestDatasets(unittest.TestCase):
     def test_list(self):
         """Tests list datasets endpoint"""
         datasets = self.client.datasets.get_list()
-        print(
-            datasets
-        )
+        print(datasets)
 
         assert len(datasets) > 0
+
+    def test_update(self):
+        """Tests update dataset endpoint"""
+        updateReq = DatasetUpdateRequest("updated name through test")
+        ds = self.client.datasets.update(self.dataset_name, updateReq)
+
+        assert ds.description == updateReq.description
