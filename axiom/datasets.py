@@ -106,3 +106,8 @@ class DatasetsClient:  # pylint: disable=R0903
         ds = dacite.from_dict(data_class=Dataset, data=res.json())
         self.logger.info(f"updated dataset({ds.name}) with new desc: {ds.description}")
         return ds
+
+    def delete(self, id: str):
+        """Deletes a dataset with the given id."""
+        path = "datasets/%s" % id
+        res = self.session.delete(path)

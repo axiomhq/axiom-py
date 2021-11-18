@@ -63,3 +63,11 @@ class TestDatasets(unittest.TestCase):
         ds = self.client.datasets.update(self.dataset_name, updateReq)
 
         assert ds.description == updateReq.description
+
+    def test_step6_delete(self):
+        """Tests delete dataset endpoint"""
+        self.client.datasets.delete(self.dataset_name)
+
+        datasets = self.client.datasets.get_list()
+
+        self.assertEqual(len(datasets), 0, "expected test dataset to be deleted")
