@@ -1,12 +1,15 @@
 """Client provides an easy-to use client library to connect to your Axiom
 instance or Axiom Cloud."""
+from logging import getLogger
 from requests_toolbelt.sessions import BaseUrlSession
-
+from requests_toolbelt.utils.dump import dump_response
 from .datasets import DatasetsClient
 
 
 def raise_response_error(r):
-    print(r.json())
+    if r.status_code >= 400:
+        dump = dump_response(r)
+        print(dump.decode("utf-8"))
     r.raise_for_status()
 
 
@@ -20,6 +23,7 @@ class Client:  # pylint: disable=R0903
         # Append /api/v1 to the url_base
         url_base = url_base.rstrip("/") + "/api/v1/"
 
+        logger = getLogger()
         session = BaseUrlSession(url_base)
         # hook on responses, raise error when response is not successfull
         session.hooks = {"response": lambda r, *args, **kwargs: raise_response_error(r)}
@@ -32,4 +36,4 @@ class Client:  # pylint: disable=R0903
         if org_id:
             session.headers.update({"X-Axiom-Org-Id": org_id})
 
-        self.datasets = DatasetsClient(session)
+        self.datasets = DatasetsClient(session, logger)

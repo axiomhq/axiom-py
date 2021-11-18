@@ -4,6 +4,7 @@ from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from humps import decamelize
 from requests import Session
+from logging import Logger
 import ujson
 import dacite
 
@@ -59,8 +60,9 @@ class DatasetsClient:  # pylint: disable=R0903
 
     session: Session
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, logger: Logger):
         self.session = session
+        self.logger = logger
 
     def ingest(self, dataset: str, events: List[dict]) -> IngestStatus:
         """Ingest the events into the named dataset and returns the status."""
@@ -81,7 +83,9 @@ class DatasetsClient:  # pylint: disable=R0903
         """Create a dataset with the given properties."""
         path = "datasets"
         res = self.session.post(path, data=ujson.dumps(asdict(req)))
-        return dacite.from_dict(data_class=Dataset, data=res.json())
+        ds = dacite.from_dict(data_class=Dataset, data=res.json())
+        self.logger.info(f"created new dataset: {ds.name}")
+        return ds
 
     def get_list(self) -> List[Dataset]:
         """List all available datasets."""
@@ -99,4 +103,6 @@ class DatasetsClient:  # pylint: disable=R0903
         """Update a dataset with the given properties."""
         path = "datasets/%s" % id
         res = self.session.put(path, data=ujson.dumps(asdict(req)))
-        return dacite.from_dict(data_class=Dataset, data=res.json())
+        ds = dacite.from_dict(data_class=Dataset, data=res.json())
+        self.logger.info(f"updated dataset({ds.name}) with new desc: {ds.description}")
+        return ds

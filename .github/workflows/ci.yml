@@ -32,14 +32,14 @@ jobs:
           python-version: "3.9"
       - name: Install poetry
         run: pip install poetry==1.1.7
-      - name: Install and run linters
+      - name: Run tests
         env:
           AXIOM_DEPLOYMENT_URL: ${{ secrets.AXIOM_DEPLOYMENT_URL }}
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
           AXIOM_ORG_ID: ${{ secrets.AXIOM_ORG_ID }}
         run: |
           poetry install
-          poetry run python -m unittest
+          poetry run python -m pytest
   publish:
     name: Publish on PyPi
     runs-on: ubuntu-latest
