@@ -11,6 +11,7 @@ def raise_response_error(r):
         dump = dump_response(r)
         print(dump.decode("utf-8"))
     r.raise_for_status()
+    # TODO: Decode JSON https://github.com/axiomhq/axiom-go/blob/610cfbd235d3df17f96a4bb156c50385cfbd9edd/axiom/error.go#L35-L50
 
 
 class Client:  # pylint: disable=R0903
