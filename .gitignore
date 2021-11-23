@@ -130,3 +130,6 @@ dmypy.json
 
 # Poetry lockfiles
 poetry.lock
+
+# VSCode
+.vscode/
