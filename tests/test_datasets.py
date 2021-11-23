@@ -4,7 +4,7 @@ import unittest
 from logging import getLogger
 from .helpers import get_random_name
 from axiom import Client, DatasetCreateRequest, DatasetUpdateRequest
-
+from requests.exceptions import HTTPError
 
 class TestDatasets(unittest.TestCase):
 
@@ -66,8 +66,27 @@ class TestDatasets(unittest.TestCase):
 
     def test_step6_delete(self):
         """Tests delete dataset endpoint"""
-        self.client.datasets.delete(self.dataset_name)
 
-        datasets = self.client.datasets.get_list()
+        try:
+            self.client.datasets.delete(self.dataset_name)
+            datasets = self.client.datasets.get_list()
 
-        self.assertEqual(len(datasets), 0, "expected test dataset to be deleted")
+            self.assertEqual(len(datasets), 0, "expected test dataset to be deleted")
+        except HTTPError as err:
+            self.logger.error(err)
+            self.fail(f'dataset {self.dataset_name} not found')
+
+    @classmethod
+    def tearDownClass(cls):
+        """A teardown that checks if the dataset still exists and deletes it would be great,
+        otherwise we might run into zombie datasets on failures."""
+        cls.logger.info('cleaning up after TestDatasets...')
+        try:
+            ds = cls.client.datasets.get(cls.dataset_name)
+            if ds:
+                cls.client.datasets.delete(cls.dataset_name)
+                cls.logger.info('dataset (%s) was not deleted as part of the test, deleting it now.' % cls.dataset_name)
+        except HTTPError as err:
+            # nothing to do here, since the dataset doesn't exist
+            cls.logger.warning(err)
+        cls.logger.info('finish cleaning up after TestDatasets')
