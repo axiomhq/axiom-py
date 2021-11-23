@@ -37,7 +37,7 @@ jobs:
         run: pip install poetry==1.1.7
       - name: Run tests
         env:
-          AXIOM_DEPLOYMENT_URL: ${{ secrets.TESTING_AZURE_1_STAGING_DEPLOYMENT_URL }}
+          AXIOM_URL: ${{ secrets.TESTING_AZURE_1_STAGING_DEPLOYMENT_URL }}
           AXIOM_TOKEN: ${{ secrets.TESTING_AZURE_1_STAGING_ACCESS_TOKEN }}
           AXIOM_ORG_ID: ${{ secrets.AXIOM_ORG_ID }}
         run: |

@@ -6,6 +6,7 @@ from .helpers import get_random_name
 from axiom import Client, DatasetCreateRequest, DatasetUpdateRequest
 from requests.exceptions import HTTPError
 
+
 class TestDatasets(unittest.TestCase):
 
     dataset_name: str
@@ -15,7 +16,7 @@ class TestDatasets(unittest.TestCase):
     def setUpClass(cls):
         cls.dataset_name = get_random_name()
         cls.client = Client(
-            os.getenv("AXIOM_DEPLOYMENT_URL"),
+            os.getenv("AXIOM_URL"),
             os.getenv("AXIOM_TOKEN"),
             os.getenv("AXIOM_ORG_ID"),
         )
@@ -74,19 +75,22 @@ class TestDatasets(unittest.TestCase):
             self.assertEqual(len(datasets), 0, "expected test dataset to be deleted")
         except HTTPError as err:
             self.logger.error(err)
-            self.fail(f'dataset {self.dataset_name} not found')
+            self.fail(f"dataset {self.dataset_name} not found")
 
     @classmethod
     def tearDownClass(cls):
         """A teardown that checks if the dataset still exists and deletes it would be great,
         otherwise we might run into zombie datasets on failures."""
-        cls.logger.info('cleaning up after TestDatasets...')
+        cls.logger.info("cleaning up after TestDatasets...")
         try:
             ds = cls.client.datasets.get(cls.dataset_name)
             if ds:
                 cls.client.datasets.delete(cls.dataset_name)
-                cls.logger.info('dataset (%s) was not deleted as part of the test, deleting it now.' % cls.dataset_name)
+                cls.logger.info(
+                    "dataset (%s) was not deleted as part of the test, deleting it now."
+                    % cls.dataset_name
+                )
         except HTTPError as err:
             # nothing to do here, since the dataset doesn't exist
             cls.logger.warning(err)
-        cls.logger.info('finish cleaning up after TestDatasets')
+        cls.logger.info("finish cleaning up after TestDatasets")

@@ -11,7 +11,7 @@ class TestLogger(unittest.TestCase):
     def test_log(self):
         """Tests a simple log"""
         client = Client(
-            os.getenv("AXIOM_DEPLOYMENT_URL"),
+            os.getenv("AXIOM_URL"),
             os.getenv("AXIOM_TOKEN"),
             os.getenv("AXIOM_ORG_ID"),
         )
