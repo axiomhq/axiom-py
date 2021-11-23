@@ -29,6 +29,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    if: github.repository_owner == 'axiomhq'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -49,7 +50,7 @@ jobs:
   publish:
     name: Publish on PyPi
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags')
+    if: github.repository_owner == 'axiomhq' && startsWith(github.ref, 'refs/tags')
     needs:
       - lint
       - test
