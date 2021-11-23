@@ -29,7 +29,11 @@ class Client:  # pylint: disable=R0903
         # hook on responses, raise error when response is not successfull
         session.hooks = {"response": lambda r, *args, **kwargs: raise_response_error(r)}
         session.headers.update(
-            {"Authorization": "Bearer %s" % token, "Content-Type": "application/json"}
+            {
+                "Authorization": "Bearer %s" % token,
+                # set a default Content-Type header, can be overriden by requests.
+                "Content-Type": "application/json",
+            }
         )
 
         # if there is and organization id passed,

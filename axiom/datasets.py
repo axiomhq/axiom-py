@@ -1,12 +1,15 @@
 """This package provides dataset models and methods as well as a DatasetClient"""
 from typing import List
+from enum import Enum
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from humps import decamelize
 from requests import Session
 from logging import Logger
+import csv
 import ujson
 import dacite
+import ndjson
 
 
 @dataclass
@@ -55,6 +58,12 @@ class DatasetUpdateRequest:
     description: str
 
 
+class ContentType(Enum):
+    JSON = "application/json"
+    NDJSON = "application/x-ndjson"
+    CSV = "text/csv"
+
+
 class DatasetsClient:  # pylint: disable=R0903
     """DatasetsClient has methods to manipulate datasets."""
 
@@ -64,11 +73,24 @@ class DatasetsClient:  # pylint: disable=R0903
         self.session = session
         self.logger = logger
 
-    def ingest(self, dataset: str, events: List[dict]) -> IngestStatus:
+    def ingest(
+        self, dataset: str, events: List[dict], contentType: str = ContentType.NDJSON
+    ) -> IngestStatus:
         """Ingest the events into the named dataset and returns the status."""
         path = "datasets/%s/ingest" % dataset
-        # FIXME: Use ndjson
-        res = self.session.post(path, data=ujson.dumps(events))
+
+        # encode request payload based on the passed contentType
+        if contentType == ContentType.NDJSON:
+            events = ndjson.dumps(events)
+        elif contentType == ContentType.CSV:
+            events = csv.dumps(events)
+        else:
+            events = ujson.dumps(events)
+
+        # override the default header and set the value from the passed parameter
+        res = self.session.post(
+            path, data=events, headers={"Content-Type": contentType.value}
+        )
         status_snake = decamelize(res.json())
         return dacite.from_dict(data_class=IngestStatus, data=status_snake)
 
