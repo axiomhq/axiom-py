@@ -110,4 +110,4 @@ class DatasetsClient:  # pylint: disable=R0903
     def delete(self, id: str):
         """Deletes a dataset with the given id."""
         path = "datasets/%s" % id
-        res = self.session.delete(path)
+        self.session.delete(path)
