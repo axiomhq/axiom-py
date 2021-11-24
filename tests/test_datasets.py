@@ -1,9 +1,17 @@
 """This module contains the tests for the DatasetsClient."""
 import os
+import gzip
+import ujson
 import unittest
 from logging import getLogger
 from .helpers import get_random_name
-from axiom import Client, DatasetCreateRequest, DatasetUpdateRequest
+from axiom import (
+    Client,
+    DatasetCreateRequest,
+    DatasetUpdateRequest,
+    ContentEncoding,
+    ContentType,
+)
 from requests.exceptions import HTTPError
 
 
@@ -35,8 +43,14 @@ class TestDatasets(unittest.TestCase):
 
     def test_step2_ingest(self):
         """Tests the ingest endpoint"""
+        events = [{"foo": "bar"}, {"bar": "baz"}]
+        data: bytes = ujson.dumps(events).encode()
+        payload = gzip.compress(data)
         res = self.client.datasets.ingest(
-            self.dataset_name, [{"foo": "bar"}, {"bar": "baz"}]
+            self.dataset_name,
+            payload=payload,
+            contentType=ContentType.JSON,
+            enc=ContentEncoding.GZIP,
         )
         self.logger.debug(res)
 
@@ -44,28 +58,64 @@ class TestDatasets(unittest.TestCase):
             res.ingested == 2
         ), f"expected ingested count to equal 2, found {res.ingested}"
 
-    def test_step3_get(self):
+    def test_step3_ingest_events(self):
+        """Tests the ingest_events method"""
+        res = self.client.datasets.ingest_events(
+            dataset=self.dataset_name,
+            events=[{"foo": "bar"}, {"bar": "baz"}],
+        )
+        self.logger.debug(res)
+
+        assert (
+            res.ingested == 2
+        ), f"expected ingested count to equal 2, found {res.ingested}"
+
+    def test_step3_ingest_wrong_encoding(self):
+        try:
+            self.client.datasets.ingest("", "", ContentType.JSON, "")
+        except ValueError as err:
+            self.logger.debug(err)
+            self.logger.debug(
+                "Exceptioin was raised for wrong content-encoding, as expected."
+            )
+            return
+
+        self.fail("error should have been thrown for wrong content-encoding")
+
+    def test_step3_ingest_wrong_content_type(self):
+        try:
+            self.client.datasets.ingest("", "", "", ContentEncoding.GZIP)
+        except ValueError as err:
+            self.logger.debug(err)
+            self.logger.debug(
+                "Exceptioin was raised for wrong content-type, as expected."
+            )
+            return
+
+        self.fail("error should have been thrown for wrong content-type")
+
+    def test_step4_get(self):
         """Tests get dataset endpoint"""
         dataset = self.client.datasets.get(self.dataset_name)
         self.logger.debug(dataset)
 
         assert dataset.name == self.dataset_name
 
-    def test_step4_list(self):
+    def test_step5_list(self):
         """Tests list datasets endpoint"""
         datasets = self.client.datasets.get_list()
         self.logger.debug(datasets)
 
         assert len(datasets) > 0
 
-    def test_step5_update(self):
+    def test_step6_update(self):
         """Tests update dataset endpoint"""
         updateReq = DatasetUpdateRequest("updated name through test")
         ds = self.client.datasets.update(self.dataset_name, updateReq)
 
         assert ds.description == updateReq.description
 
-    def test_step6_delete(self):
+    def test_step7_delete(self):
         """Tests delete dataset endpoint"""
 
         try:

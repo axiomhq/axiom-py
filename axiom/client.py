@@ -1,17 +1,20 @@
 """Client provides an easy-to use client library to connect to your Axiom
 instance or Axiom Cloud."""
+import ndjson
 from logging import getLogger
 from requests_toolbelt.sessions import BaseUrlSession
-from requests_toolbelt.utils.dump import dump_response
-from .datasets import DatasetsClient
+from requests_toolbelt.utils.dump import dump_response, dump_all
+from .datasets import DatasetsClient, ContentType
 
 
 def raise_response_error(r):
     if r.status_code >= 400:
+        print("==== Response Debugging ====")
         dump = dump_response(r)
-        print(dump.decode("utf-8"))
-    r.raise_for_status()
-    # TODO: Decode JSON https://github.com/axiomhq/axiom-go/blob/610cfbd235d3df17f96a4bb156c50385cfbd9edd/axiom/error.go#L35-L50
+        print(dump)
+
+        r.raise_for_status()
+        # TODO: Decode JSON https://github.com/axiomhq/axiom-go/blob/610cfbd235d3df17f96a4bb156c50385cfbd9edd/axiom/error.go#L35-L50
 
 
 class Client:  # pylint: disable=R0903

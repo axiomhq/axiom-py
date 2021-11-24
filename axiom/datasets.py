@@ -8,6 +8,7 @@ from requests import Session
 from logging import Logger
 import csv
 import ujson
+import gzip
 import dacite
 import ndjson
 
@@ -30,6 +31,23 @@ class IngestStatus:
     processed_bytes: int
     blocks_created: int
     wal_length: int
+
+
+@dataclass
+class IngestOptions:
+    """IngestOptions specifies the optional parameters for the Ingest and
+    IngestEvents method of the Datasets service."""
+
+    # timestamp field defines a custom field to extract the ingestion timestamp
+    # from. Defaults to `_time`.
+    timestamp_field: str = field(init=False)
+    # timestamp format defines a custom format for the TimestampField.
+    # The reference time is `Mon Jan 2 15:04:05 -0700 MST 2006`, as specified
+    # in https://pkg.go.dev/time/?tab=doc#Parse.
+    timestamp_format: str = field(init=False)
+    # CSV delimiter is the delimiter that separates CSV fields. Only valid when
+    # the content to be ingested is CSV formatted.
+    CSV_delimiter: str = field(init=False)
 
 
 @dataclass
@@ -59,9 +77,18 @@ class DatasetUpdateRequest:
 
 
 class ContentType(Enum):
+    """ContentType describes the content type of the data to ingest."""
+
     JSON = "application/json"
     NDJSON = "application/x-ndjson"
     CSV = "text/csv"
+
+
+class ContentEncoding(Enum):
+    """ContentEncoding describes the content encoding of the data to ingest."""
+
+    IDENTITY = "1"
+    GZIP = "gzip"
 
 
 class DatasetsClient:  # pylint: disable=R0903
@@ -74,25 +101,44 @@ class DatasetsClient:  # pylint: disable=R0903
         self.logger = logger
 
     def ingest(
-        self, dataset: str, events: List[dict], contentType: str = ContentType.NDJSON
+        self,
+        dataset: str,
+        payload: bytes,
+        contentType: ContentType,
+        enc: ContentEncoding,
     ) -> IngestStatus:
         """Ingest the events into the named dataset and returns the status."""
         path = "datasets/%s/ingest" % dataset
 
-        # encode request payload based on the passed contentType
-        if contentType == ContentType.NDJSON:
-            events = ndjson.dumps(events)
-        elif contentType == ContentType.CSV:
-            events = csv.dumps(events)
-        else:
-            events = ujson.dumps(events)
+        # check if passed content type and encoding are correct
+        if not contentType:
+            raise ValueError("unknown content-type, choose one of json,x-ndjson or csv")
+
+        if not enc:
+            raise ValueError("unknown content-encoding")
+
+        # set headers
+        headers = {"Content-Type": contentType.value, "Content-Encoding": enc.value}
 
         # override the default header and set the value from the passed parameter
-        res = self.session.post(
-            path, data=events, headers={"Content-Type": contentType.value}
-        )
+        res = self.session.post(path, data=payload, headers=headers)
         status_snake = decamelize(res.json())
         return dacite.from_dict(data_class=IngestStatus, data=status_snake)
+
+    def ingest_events(
+        self,
+        dataset: str,
+        events: List[dict],
+        opts: IngestOptions = None,
+    ) -> IngestStatus:
+        """Ingest the events into the named dataset and returns the status."""
+        path = "datasets/%s/ingest" % dataset
+
+        # encode request payload to NDJSON
+        content = ndjson.dumps(events).encode("UTF-8")
+        gzipped = gzip.compress(content)
+
+        return self.ingest(dataset, gzipped, ContentType.NDJSON, ContentEncoding.GZIP)
 
     def get(self, id: str) -> Dataset:
         """Get a dataset by id."""
