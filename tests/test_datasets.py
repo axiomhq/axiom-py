@@ -11,6 +11,7 @@ from axiom import (
     DatasetUpdateRequest,
     ContentEncoding,
     ContentType,
+    IngestOptions,
 )
 from requests.exceptions import HTTPError
 
@@ -43,20 +44,49 @@ class TestDatasets(unittest.TestCase):
 
     def test_step2_ingest(self):
         """Tests the ingest endpoint"""
-        events = [{"foo": "bar"}, {"bar": "baz"}]
+        events = [
+            {
+                "time": "17/May/2015:08:05:32 +0000",
+                "remote_ip": "93.180.71.3",
+                "remote_user": "-",
+                "request": "GET /downloads/product_1 HTTP/1.1",
+                "response": 304,
+                "bytes": 0,
+                "referrer": "-",
+                "agent": "Debian APT-HTTP/1.3 (0.8.16~exp12ubuntu10.21)",
+            },
+            {
+                "time": "17/May/2015:08:05:32 +0000",
+                "remote_ip": "93.180.71.3",
+                "remote_user": "-",
+                "request": "GET /downloads/product_1 HTTP/1.1",
+                "response": 304,
+                "bytes": 0,
+                "referrer": "-",
+                "agent": "Debian APT-HTTP/1.3 (0.8.16~exp12ubuntu10.21)",
+            },
+        ]
         data: bytes = ujson.dumps(events).encode()
         payload = gzip.compress(data)
+        opts = IngestOptions(
+            "time",
+            "2/Jan/2006:15:04:05 +0000",
+            # CSV_delimiter obviously not valid for JSON, but perfectly fine to test for its presence in this test.
+            ";",
+        )
         res = self.client.datasets.ingest(
             self.dataset_name,
             payload=payload,
             contentType=ContentType.JSON,
             enc=ContentEncoding.GZIP,
+            opts=opts,
         )
         self.logger.debug(res)
 
         assert (
             res.ingested == 2
         ), f"expected ingested count to equal 2, found {res.ingested}"
+        self.logger.info("ingested 2 events successfully.")
 
     def test_step3_ingest_events(self):
         """Tests the ingest_events method"""

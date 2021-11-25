@@ -1,5 +1,5 @@
 """This package provides dataset models and methods as well as a DatasetClient"""
-from typing import List
+from typing import List, Dict
 from enum import Enum
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
@@ -40,14 +40,14 @@ class IngestOptions:
 
     # timestamp field defines a custom field to extract the ingestion timestamp
     # from. Defaults to `_time`.
-    timestamp_field: str = field(init=False)
+    timestamp_field: str = field(default="_time")
     # timestamp format defines a custom format for the TimestampField.
     # The reference time is `Mon Jan 2 15:04:05 -0700 MST 2006`, as specified
     # in https://pkg.go.dev/time/?tab=doc#Parse.
-    timestamp_format: str = field(init=False)
+    timestamp_format: str = field(default=None)
     # CSV delimiter is the delimiter that separates CSV fields. Only valid when
     # the content to be ingested is CSV formatted.
-    CSV_delimiter: str = field(init=False)
+    CSV_delimiter: str = field(default=None)
 
 
 @dataclass
@@ -106,6 +106,7 @@ class DatasetsClient:  # pylint: disable=R0903
         payload: bytes,
         contentType: ContentType,
         enc: ContentEncoding,
+        opts: IngestOptions = None,
     ) -> IngestStatus:
         """Ingest the events into the named dataset and returns the status."""
         path = "datasets/%s/ingest" % dataset
@@ -119,9 +120,12 @@ class DatasetsClient:  # pylint: disable=R0903
 
         # set headers
         headers = {"Content-Type": contentType.value, "Content-Encoding": enc.value}
+        # prepare query params
+        params = self._prepare_ingest_options(opts)
 
         # override the default header and set the value from the passed parameter
-        res = self.session.post(path, data=payload, headers=headers)
+        res = self.session.post(path, data=payload, headers=headers, params=params)
+        self.logger.debug("request url", res.request.url)
         status_snake = decamelize(res.json())
         return dacite.from_dict(data_class=IngestStatus, data=status_snake)
 
@@ -179,3 +183,21 @@ class DatasetsClient:  # pylint: disable=R0903
         """Deletes a dataset with the given id."""
         path = "datasets/%s" % id
         self.session.delete(path)
+
+    def _prepare_ingest_options(self, opts: IngestOptions) -> Dict[str, any]:
+        """the query params for ingest api are expected in a format
+        that couldn't be defined as a variable name because it has a dash.
+        As a work around, we create the params dict manually."""
+
+        if opts is None:
+            return {}
+
+        params = {}
+        if opts.timestamp_field:
+            params["timestamp-field"] = opts.timestamp_field
+        if opts.timestamp_format:
+            params["timestamp-format"] = opts.timestamp_format
+        if opts.CSV_delimiter:
+            params["csv-delimiter"] = opts.CSV_delimiter
+
+        return params
