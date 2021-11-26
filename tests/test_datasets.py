@@ -3,8 +3,9 @@ import os
 import gzip
 import ujson
 import unittest
+from typing import List
 from logging import getLogger
-from .helpers import get_random_name
+from .helpers import get_random_name, parse_time
 from axiom import (
     Client,
     DatasetCreateRequest,
@@ -13,7 +14,19 @@ from axiom import (
     ContentType,
     IngestOptions,
 )
+from axiom.query import (
+    Query,
+    QueryOptions,
+    QueryKind,
+    QueryResult,
+    QueryStatus,
+    Entry,
+    Timeseries,
+    Interval,
+    EntryGroup,
+)
 from requests.exceptions import HTTPError
+from datetime import datetime, timedelta
 
 
 class TestDatasets(unittest.TestCase):
@@ -44,9 +57,13 @@ class TestDatasets(unittest.TestCase):
 
     def test_step2_ingest(self):
         """Tests the ingest endpoint"""
+        time_format = "%d/%b/%Y:%H:%M:%S +0000"
+        time = datetime.now() - timedelta(minutes=1)
+        time_formatted = time.strftime(time_format)
+
         events = [
             {
-                "time": "17/May/2015:08:05:32 +0000",
+                "time": time_formatted,
                 "remote_ip": "93.180.71.3",
                 "remote_user": "-",
                 "request": "GET /downloads/product_1 HTTP/1.1",
@@ -56,7 +73,7 @@ class TestDatasets(unittest.TestCase):
                 "agent": "Debian APT-HTTP/1.3 (0.8.16~exp12ubuntu10.21)",
             },
             {
-                "time": "17/May/2015:08:05:32 +0000",
+                "time": time_formatted,
                 "remote_ip": "93.180.71.3",
                 "remote_user": "-",
                 "request": "GET /downloads/product_1 HTTP/1.1",
@@ -145,7 +162,27 @@ class TestDatasets(unittest.TestCase):
 
         assert ds.description == updateReq.description
 
-    def test_step7_delete(self):
+    def test_step7_query(self):
+        """Test querying a dataset"""
+        expec_result = self._build_expected_query_result()
+
+        startTime = datetime.now() - timedelta(minutes=1)
+        endTime = datetime.now()
+        q = Query(startTime=startTime, endTime=endTime)
+        opts = QueryOptions(
+            streamingDuration=timedelta(seconds=60),
+            nocache=True,
+            saveAsKind=QueryKind.ANALYTICS,
+        )
+        qr = self.client.datasets.query(self.dataset_name, q, opts)
+        self.assertIsNotNone(qr.savedQueryID)
+        self.assertEqual(len(qr.matches), len(expec_result.matches))
+        # self.assertTrue(isinstance(qr, QueryResult))
+        # self.assertEqual(qr.status.rowsMatched, expec_result.status.rowsMatched)
+        # self.assertEqual(qr.matches, expec_result.matches)
+        # self.assertEqual(qr.buckets, expec_result.buckets)
+
+    def test_step8_delete(self):
         """Tests delete dataset endpoint"""
 
         try:
@@ -174,3 +211,59 @@ class TestDatasets(unittest.TestCase):
             # nothing to do here, since the dataset doesn't exist
             cls.logger.warning(err)
         cls.logger.info("finish cleaning up after TestDatasets")
+
+    def _build_expected_query_result(self) -> QueryResult:
+        status = QueryStatus(
+            elapsedTime=542114,
+            blocksExamined=4,
+            rowsExamined=142655,
+            rowsMatched=142655,
+            numGroups=0,
+            isPartial=False,
+            minBlockTime=parse_time("2020-11-19T11:06:31.569475"),
+            maxBlockTime=parse_time("2020-11-27T12:06:38.966791"),
+        )
+
+        matches = [
+            Entry(
+                _time=datetime.now(),
+                _sysTime=datetime.now(),
+                _rowId="c776x1uafkpu-4918f6cb9000095-0",
+                data={
+                    "agent": "Debian APT-HTTP/1.3 (0.8.16~exp12ubuntu10.21)",
+                    "bytes": 0,
+                    "referrer": "-",
+                    "remote_ip": "93.180.71.3",
+                    "remote_user": "-",
+                    "request": "GET /downloads/product_1 HTTP/1.1",
+                    "response": 304,
+                    "time": "17/May/2015:08:05:32 +0000",
+                },
+            ),
+            Entry(
+                _time=datetime.now(),
+                _sysTime=datetime.now(),
+                _rowId="c776x1uafnvq-4918f6cb9000095-1",
+                data={
+                    "agent": "Debian APT-HTTP/1.3 (0.8.16~exp12ubuntu10.21)",
+                    "bytes": 0,
+                    "referrer": "-",
+                    "remote_ip": "93.180.71.3",
+                    "remote_user": "-",
+                    "request": "GET /downloads/product_1 HTTP/1.1",
+                    "response": 304,
+                    "time": "17/May/2015:08:05:32 +0000",
+                },
+            ),
+        ]
+
+        query_intervals: List[Interval] = []
+        totals: List[EntryGroup] = []
+        buckets = Timeseries(query_intervals, totals)
+        r = QueryResult(
+            status=status,
+            matches=matches,
+            buckets=buckets,
+        )
+
+        return r
