@@ -43,10 +43,12 @@ The Client is initialized with the url of the deployment and an access token. Th
 import os
 import axiom
 
-deployment_url = os.getenv("AXIOM_DEPLOYMENT_URL")
-access_token = os.getenv("AXIOM_ACCESS_TOKEN")
+deployment_url = os.getenv("AXIOM_URL")
+access_token = os.getenv("AXIOM_TOKEN")
+# needed only when using Axiom cloud, otherwise set to None
+org_id = os.getenv("AXIOM_ORG_ID")
 
-client = axiom.Client(deployment_url, access_token)
+client = axiom.Client(deployment_url, access_token, org_id)
 
 # Ingest into a dataset
 print(client.datasets.ingest("foobar", [{"foo": "bar"}]))
