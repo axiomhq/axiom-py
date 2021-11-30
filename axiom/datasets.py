@@ -2,7 +2,7 @@
 from typing import List, Dict
 from enum import Enum
 from dataclasses import dataclass, asdict, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from humps import decamelize
 from requests import Session
 from logging import Logger
@@ -11,6 +11,7 @@ import ujson
 import gzip
 import dacite
 import ndjson
+from .query import Query, QueryOptions, QueryResult, QueryKind
 
 
 @dataclass
@@ -125,7 +126,7 @@ class DatasetsClient:  # pylint: disable=R0903
 
         # override the default header and set the value from the passed parameter
         res = self.session.post(path, data=payload, headers=headers, params=params)
-        self.logger.debug("request url", res.request.url)
+        self.logger.debug(f"request url: ${res.request.url}")
         status_snake = decamelize(res.json())
         return dacite.from_dict(data_class=IngestStatus, data=status_snake)
 
@@ -184,6 +185,33 @@ class DatasetsClient:  # pylint: disable=R0903
         path = "datasets/%s" % id
         self.session.delete(path)
 
+    def query(self, id: str, query: Query, opts: QueryOptions) -> QueryResult:
+        """Executes the given query on the dataset identified by its id."""
+        if not opts.saveAsKind or opts.saveAsKind.value == QueryKind.APL.value:
+            raise BaseException(
+                "invalid query kind %s: must be %s or %s"
+                % (opts.saveAsKind, QueryKind.ANALYTICS.value, QueryKind.STREAM.value)
+            )
+
+        path = "datasets/%s/query" % id
+        payload = ujson.dumps(asdict(query), default=self._handle_json_serialization)
+        self.logger.debug("sending query %s" % payload)
+        params = self._prepare_query_options(opts)
+        res = self.session.post(path, data=payload, params=params)
+        result = dacite.from_dict(data_class=QueryResult, data=res.json())
+        self.logger.debug(f"query result: {result}")
+        query_id = res.headers.get("X-Axiom-History-Query-Id")
+        self.logger.info(f"received query result with query_id: {query_id}")
+        result.savedQueryID = query_id
+        return result
+
+    def _handle_json_serialization(self, obj):
+        if isinstance(obj, datetime):
+            d = obj.isoformat("T") + "Z"
+            return d
+        elif isinstance(obj, timedelta):
+            return str(obj.seconds)
+
     def _prepare_ingest_options(self, opts: IngestOptions) -> Dict[str, any]:
         """the query params for ingest api are expected in a format
         that couldn't be defined as a variable name because it has a dash.
@@ -199,5 +227,21 @@ class DatasetsClient:  # pylint: disable=R0903
             params["timestamp-format"] = opts.timestamp_format
         if opts.CSV_delimiter:
             params["csv-delimiter"] = opts.CSV_delimiter
+
+        return params
+
+    def _prepare_query_options(self, opts: QueryOptions) -> Dict[str, any]:
+        """returns the query options as a Dict, handles any renaming for key fields."""
+        if opts is None:
+            return {}
+        params = {}
+        if opts.streamingDuration:
+            params["streaming-duration"] = (
+                opts.streamingDuration.seconds.__str__() + "s"
+            )
+        if opts.saveAsKind:
+            params["saveAsKind"] = opts.saveAsKind.value
+
+        params["nocache"] = opts.nocache.__str__()
 
         return params

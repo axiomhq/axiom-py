@@ -1,5 +1,6 @@
 """This module contains helper functions for tests."""
 import random
+from datetime import datetime
 
 
 def get_random_name() -> str:
@@ -11,3 +12,7 @@ def get_random_name() -> str:
         random_string += chr(random_integer)
 
     return random_string
+
+
+def parse_time(txt: str) -> datetime:
+    return datetime.strptime(txt, "%Y-%m-%dT%H:%M:%S.%f")
