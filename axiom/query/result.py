@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import List, Dict
+from typing import List, Dict, Any
 from enum import Enum
 
 
@@ -75,14 +75,14 @@ class Entry:
 
     # the time the event occurred. Matches SysTime if not specified
     # during ingestion.
-    _time: datetime
+    _time: str
     # the time the event was recorded on the server.
-    _sysTime: datetime
+    _sysTime: str
     # the unique ID of the event row.
     _rowId: str
     # contains the raw data of the event (with filters and aggregations
     # applied).
-    data: Dict[str, any]
+    data: Dict[str, Any]
 
 
 @dataclass
