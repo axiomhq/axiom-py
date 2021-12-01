@@ -2,7 +2,6 @@ from enum import Enum
 from dataclasses import dataclass
 
 
-@dataclass
 class AggregationOperation(Enum):
     # Works with all types, field should be `*`.
     COUNT = "count"

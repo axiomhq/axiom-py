@@ -3,6 +3,7 @@ import os
 import gzip
 import ujson
 import unittest
+import rfc3339
 from typing import List, Dict, Any
 from logging import getLogger
 from .helpers import get_random_name, parse_time
@@ -13,17 +14,20 @@ from axiom import (
     ContentEncoding,
     ContentType,
     IngestOptions,
+    WrongQueryKindException,
 )
 from axiom.query import (
     Query,
     QueryOptions,
     QueryKind,
+)
+from axiom.query.result import (
     QueryResult,
     QueryStatus,
     Entry,
+    EntryGroup,
     Timeseries,
     Interval,
-    EntryGroup,
 )
 from requests.exceptions import HTTPError
 from datetime import datetime, timedelta
@@ -34,14 +38,20 @@ class TestDatasets(unittest.TestCase):
     dataset_name: str
     events: List[Dict[str, Any]]
     client: Client
+    events_time_format = "%d/%b/%Y:%H:%M:%S +0000"
 
     @classmethod
     def setUpClass(cls):
+        cls.logger = getLogger()
+
         cls.dataset_name = get_random_name()
+        cls.logger.info(f"generated random dataset name is: {cls.dataset_name}")
+
         # create events to ingest and query
-        time_format = "%d/%b/%Y:%H:%M:%S +0000"
-        time = datetime.now() - timedelta(minutes=1)
-        time_formatted = time.strftime(time_format)
+        # cls.events_time_format = "%d/%b/%Y:%H:%M:%S +0000"
+        time = datetime.utcnow() - timedelta(minutes=1)
+        time_formatted = time.strftime(cls.events_time_format)
+        cls.logger.info(f"time_formatted: {time_formatted}")
         cls.events = [
             {
                 "time": time_formatted,
@@ -69,10 +79,8 @@ class TestDatasets(unittest.TestCase):
             os.getenv("AXIOM_TOKEN"),
             os.getenv("AXIOM_ORG_ID"),
         )
-        cls.logger = getLogger()
-        cls.logger.info(f"generated random dataset name is: {cls.dataset_name}")
 
-    def test_step1_create(self):
+    def test_step001_create(self):
         """Tests create dataset endpoint"""
         req = DatasetCreateRequest(
             name=self.dataset_name,
@@ -82,7 +90,7 @@ class TestDatasets(unittest.TestCase):
         self.logger.debug(res)
         assert res.name == self.dataset_name
 
-    def test_step2_ingest(self):
+    def test_step002_ingest(self):
         """Tests the ingest endpoint"""
         data: bytes = ujson.dumps(self.events).encode()
         payload = gzip.compress(data)
@@ -106,11 +114,17 @@ class TestDatasets(unittest.TestCase):
         ), f"expected ingested count to equal 2, found {res.ingested}"
         self.logger.info("ingested 2 events successfully.")
 
-    def test_step3_ingest_events(self):
+    def test_step003_ingest_events(self):
         """Tests the ingest_events method"""
+        time = datetime.utcnow() - timedelta(hours=1)
+        time_formatted = rfc3339.format(time)
+
         res = self.client.datasets.ingest_events(
             dataset=self.dataset_name,
-            events=[{"foo": "bar"}, {"bar": "baz"}],
+            events=[
+                {"foo": "bar", "_time": time_formatted},
+                {"bar": "baz", "_time": time_formatted},
+            ],
         )
         self.logger.debug(res)
 
@@ -118,7 +132,7 @@ class TestDatasets(unittest.TestCase):
             res.ingested == 2
         ), f"expected ingested count to equal 2, found {res.ingested}"
 
-    def test_step3_ingest_wrong_encoding(self):
+    def test_step003_ingest_wrong_encoding(self):
         try:
             self.client.datasets.ingest("", "", ContentType.JSON, "")
         except ValueError as err:
@@ -130,7 +144,7 @@ class TestDatasets(unittest.TestCase):
 
         self.fail("error should have been thrown for wrong content-encoding")
 
-    def test_step3_ingest_wrong_content_type(self):
+    def test_step003_ingest_wrong_content_type(self):
         try:
             self.client.datasets.ingest("", "", "", ContentEncoding.GZIP)
         except ValueError as err:
@@ -142,32 +156,33 @@ class TestDatasets(unittest.TestCase):
 
         self.fail("error should have been thrown for wrong content-type")
 
-    def test_step4_get(self):
+    def test_step004_get(self):
         """Tests get dataset endpoint"""
         dataset = self.client.datasets.get(self.dataset_name)
         self.logger.debug(dataset)
 
         assert dataset.name == self.dataset_name
 
-    def test_step5_list(self):
+    def test_step005_list(self):
         """Tests list datasets endpoint"""
         datasets = self.client.datasets.get_list()
         self.logger.debug(datasets)
 
         assert len(datasets) > 0
 
-    def test_step6_update(self):
+    def test_step006_update(self):
         """Tests update dataset endpoint"""
         updateReq = DatasetUpdateRequest("updated name through test")
         ds = self.client.datasets.update(self.dataset_name, updateReq)
 
         assert ds.description == updateReq.description
 
-    def test_step7_query(self):
+    def test_step007_query(self):
         """Test querying a dataset"""
         # query the events we ingested in step2
-        startTime = datetime.now() - timedelta(minutes=2)
-        endTime = datetime.now()
+        startTime = datetime.utcnow() - timedelta(minutes=2)
+        endTime = datetime.utcnow()
+
         q = Query(startTime=startTime, endTime=endTime)
         opts = QueryOptions(
             streamingDuration=timedelta(seconds=60),
@@ -178,8 +193,51 @@ class TestDatasets(unittest.TestCase):
 
         self.assertIsNotNone(qr.savedQueryID)
         self.assertEqual(len(qr.matches), len(self.events))
+        # get history
+        history = self.client.datasets.history(qr.savedQueryID)
+        self.assertIsNotNone(history)
+        self.assertEqual(qr.savedQueryID, history.id)
+        self.assertEqual(opts.saveAsKind, history.kind)
+        # check that time parsing is correct
+        self.assertEqual(history.query.startTime.date(), q.startTime.date())
+        self.assertEqual(history.query.startTime.time(), q.startTime.time())
+        self.assertEqual(history.query.endTime.date(), q.endTime.date())
+        self.assertEqual(history.query.endTime.time(), q.endTime.time())
 
-    def test_step8_delete(self):
+    def test_step007_wrong_query_kind(self):
+        startTime = datetime.utcnow() - timedelta(minutes=2)
+        endTime = datetime.utcnow()
+        opts = QueryOptions(
+            streamingDuration=timedelta(seconds=60),
+            nocache=True,
+            saveAsKind=QueryKind.APL,
+        )
+        q = Query(startTime, endTime)
+
+        try:
+            self.client.datasets.query(self.dataset_name, q, opts)
+        except WrongQueryKindException as err:
+            self.logger.info("passing kind apl to query raised exception as expected")
+            return
+
+        self.fail("was excepting WrongQueryKindException")
+
+    def test_step008_info(self):
+        """Tests dataset info endpoint"""
+        info = self.client.datasets.info(self.dataset_name)
+        self.assertIsNotNone(info)
+        self.assertEqual(info.name, self.dataset_name)
+        # number of events ingested in step002 and step003
+        self.assertEqual(info.numEvents, 4)
+        self.assertTrue(len(info.fields) > 0)
+
+    def test_step009_trim(self):
+        """Tests dataset trim endpoint"""
+        res = self.client.datasets.trim(self.dataset_name, timedelta(seconds=1))
+        # HINT(lukasmalkmus): There are no blocks to trim in this test.
+        self.assertEqual(0, res.numDeleted)
+
+    def test_step999_delete(self):
         """Tests delete dataset endpoint"""
 
         try:

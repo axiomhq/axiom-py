@@ -3,7 +3,6 @@ from typing import List
 from dataclasses import dataclass
 
 
-@dataclass
 class FilterOperation(Enum):
     """A FilterOperatuib can be applied on queries to filter based on different conditions."""
 

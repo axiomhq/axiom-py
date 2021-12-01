@@ -1,17 +1,19 @@
 """This package provides dataset models and methods as well as a DatasetClient"""
-from typing import List, Dict
+import csv
+import gzip
+import ujson
+import ndjson
 from enum import Enum
-from dataclasses import dataclass, asdict, field
-from datetime import datetime, timedelta
+from logging import Logger
 from humps import decamelize
 from requests import Session
-from logging import Logger
-import csv
-import ujson
-import gzip
-import dacite
-import ndjson
-from .query import Query, QueryOptions, QueryResult, QueryKind
+from typing import List, Dict
+from dataclasses import dataclass, asdict, field
+from datetime import datetime, timedelta, timezone
+
+from .util import Util
+from .query import Query, QueryOptions, QueryKind
+from .query.result import QueryResult
 
 
 @dataclass
@@ -92,6 +94,67 @@ class ContentEncoding(Enum):
     GZIP = "gzip"
 
 
+@dataclass
+class TrimRequest:
+    """MaxDuration marks the oldest timestamp an event can have before getting deleted."""
+
+    maxDuration: str
+
+
+@dataclass
+class TrimResult:
+    """TrimResult is the result of a trim operation."""
+
+    # the amount of blocks deleted by the trim operation.
+    numDeleted: int
+
+
+@dataclass
+class Field:
+    """Represents a field of an Axiom dataset."""
+
+    name: str
+    description: str
+    type: str
+    unit: str
+    hidden: bool
+
+
+class WrongQueryKindException(Exception):
+    pass
+
+
+@dataclass
+class DatasetInfo:
+    """Represents the details of the information stored inside an Axiom dataset."""
+
+    name: str
+    numBlocks: int
+    numEvents: int
+    numFields: int
+    inputBytes: int
+    inputBytesHuman: str
+    compressedBytes: int
+    compressedBytesHuman: str
+    minTime: str
+    maxTime: str
+    fields: List[Field]
+    who: str
+    created: str
+
+
+@dataclass
+class History:
+    """represents a query stored inside the query history."""
+
+    id: str = field(init=False)
+    kind: QueryKind
+    dataset: str
+    who: str
+    query: Query
+    created: datetime
+
+
 class DatasetsClient:  # pylint: disable=R0903
     """DatasetsClient has methods to manipulate datasets."""
 
@@ -128,7 +191,7 @@ class DatasetsClient:  # pylint: disable=R0903
         res = self.session.post(path, data=payload, headers=headers, params=params)
         self.logger.debug(f"request url: ${res.request.url}")
         status_snake = decamelize(res.json())
-        return dacite.from_dict(data_class=IngestStatus, data=status_snake)
+        return Util.from_dict(IngestStatus, status_snake)
 
     def ingest_events(
         self,
@@ -150,13 +213,13 @@ class DatasetsClient:  # pylint: disable=R0903
         path = "datasets/%s" % id
         res = self.session.get(path)
         decoded_response = res.json()
-        return dacite.from_dict(data_class=Dataset, data=decoded_response)
+        return Util.from_dict(Dataset, decoded_response)
 
     def create(self, req: DatasetCreateRequest) -> Dataset:
         """Create a dataset with the given properties."""
         path = "datasets"
         res = self.session.post(path, data=ujson.dumps(asdict(req)))
-        ds = dacite.from_dict(data_class=Dataset, data=res.json())
+        ds = Util.from_dict(Dataset, res.json())
         self.logger.info(f"created new dataset: {ds.name}")
         return ds
 
@@ -167,7 +230,7 @@ class DatasetsClient:  # pylint: disable=R0903
 
         datasets = []
         for record in res.json():
-            ds = dacite.from_dict(data_class=Dataset, data=record)
+            ds = Util.from_dict(Dataset, record)
             datasets.append(ds)
 
         return datasets
@@ -176,7 +239,7 @@ class DatasetsClient:  # pylint: disable=R0903
         """Update a dataset with the given properties."""
         path = "datasets/%s" % id
         res = self.session.put(path, data=ujson.dumps(asdict(req)))
-        ds = dacite.from_dict(data_class=Dataset, data=res.json())
+        ds = Util.from_dict(Dataset, res.json())
         self.logger.info(f"updated dataset({ds.name}) with new desc: {ds.description}")
         return ds
 
@@ -187,30 +250,58 @@ class DatasetsClient:  # pylint: disable=R0903
 
     def query(self, id: str, query: Query, opts: QueryOptions) -> QueryResult:
         """Executes the given query on the dataset identified by its id."""
-        if not opts.saveAsKind or opts.saveAsKind.value == QueryKind.APL.value:
-            raise BaseException(
+        if not opts.saveAsKind or (opts.saveAsKind == QueryKind.APL):
+            raise WrongQueryKindException(
                 "invalid query kind %s: must be %s or %s"
-                % (opts.saveAsKind, QueryKind.ANALYTICS.value, QueryKind.STREAM.value)
+                % (opts.saveAsKind, QueryKind.ANALYTICS, QueryKind.STREAM)
             )
 
         path = "datasets/%s/query" % id
-        payload = ujson.dumps(asdict(query), default=self._handle_json_serialization)
+        payload = ujson.dumps(asdict(query), default=Util.handle_json_serialization)
         self.logger.debug("sending query %s" % payload)
         params = self._prepare_query_options(opts)
         res = self.session.post(path, data=payload, params=params)
-        result = dacite.from_dict(data_class=QueryResult, data=res.json())
+        result = Util.from_dict(QueryResult, res.json())
         self.logger.debug(f"query result: {result}")
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         self.logger.info(f"received query result with query_id: {query_id}")
         result.savedQueryID = query_id
         return result
 
-    def _handle_json_serialization(self, obj):
-        if isinstance(obj, datetime):
-            d = obj.isoformat("T") + "Z"
-            return d
-        elif isinstance(obj, timedelta):
-            return str(obj.seconds)
+    def info(self, id: str) -> DatasetInfo:
+        """Retrieves the information of the dataset identified by its id."""
+        path = "datasets/%s/info" % id
+        res = self.session.get(path)
+        decoded_response = res.json()
+
+        return Util.from_dict(DatasetInfo, decoded_response)
+
+    def trim(self, id: str, maxDuration: timedelta) -> TrimResult:
+        """
+        Trim the dataset identified by its id to a given length. The max duration
+        given will mark the oldest timestamp an event can have. Older ones will be
+        deleted from the dataset.
+        """
+        path = "datasets/%s/trim" % id
+        # prepare request payload and format masDuration to append time unit at the end, e.g `1s`
+        req = TrimRequest(f"{maxDuration.seconds}s")
+        res = self.session.post(path, data=ujson.dumps(asdict(req)))
+        decoded_response = res.json()
+
+        return Util.from_dict(TrimResult, decoded_response)
+
+    def history(self, id: str) -> History:
+        """
+        History retrieves the query stored inside the query history dataset
+        identified by its id.
+        """
+        path = "datasets/_history/%s" % id
+        res = self.session.get(path)
+        decoded_response = res.json()
+
+        # return history
+        history = Util.from_dict(History, decoded_response)
+        return history
 
     def _prepare_ingest_options(self, opts: IngestOptions) -> Dict[str, any]:
         """the query params for ingest api are expected in a format

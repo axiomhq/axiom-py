@@ -1,5 +1,5 @@
 from datetime import timedelta
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from .query import QueryKind
 
 
