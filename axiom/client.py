@@ -21,11 +21,18 @@ def raise_response_error(r):
     if r.status_code >= 400:
         print("==== Response Debugging ====")
         print("##Request Headers", r.request.headers)
-        dump = dump_response(r)
-        print("##Response:", dump.decode("UTF-8"))
 
-        err = dacite.from_dict(data_class=Error, data=r.json())
-        print(err)
+        # extract content type
+        ct = r.headers["content-type"].split(";")[0]
+        if ct == ContentType.JSON.value:
+            dump = dump_response(r)
+            print(dump)
+            print("##Response:", dump.decode("UTF-8"))
+            err = dacite.from_dict(data_class=Error, data=r.json())
+            print(err)
+        elif ct == ContentType.NDJSON.value:
+            decoded = ndjson.loads(r.text)
+            print("##Response:", decoded)
 
         r.raise_for_status()
         # TODO: Decode JSON https://github.com/axiomhq/axiom-go/blob/610cfbd235d3df17f96a4bb156c50385cfbd9edd/axiom/error.go#L35-L50

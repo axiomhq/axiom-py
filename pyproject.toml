@@ -16,6 +16,8 @@ ujson = "^4.0.2"
 dacite = "^1.6.0"
 pyhumps = "^1.6.1"
 ndjson = "^0.3.1"
+rfc3339 = "^6.2"
+iso8601 = "^1.0.2"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
