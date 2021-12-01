@@ -6,7 +6,6 @@ from .aggregation import Aggregation
 from .filter import Filter
 
 
-@dataclass
 class QueryKind(Enum):
     """represents kind of query"""
 

@@ -14,6 +14,7 @@ from axiom import (
     ContentEncoding,
     ContentType,
     IngestOptions,
+    WrongQueryKindException,
 )
 from axiom.query import (
     Query,
@@ -202,6 +203,24 @@ class TestDatasets(unittest.TestCase):
         self.assertEqual(history.query.startTime.time(), q.startTime.time())
         self.assertEqual(history.query.endTime.date(), q.endTime.date())
         self.assertEqual(history.query.endTime.time(), q.endTime.time())
+
+    def test_step007_wrong_query_kind(self):
+        startTime = datetime.utcnow() - timedelta(minutes=2)
+        endTime = datetime.utcnow()
+        opts = QueryOptions(
+            streamingDuration=timedelta(seconds=60),
+            nocache=True,
+            saveAsKind=QueryKind.APL,
+        )
+        q = Query(startTime, endTime)
+
+        try:
+            self.client.datasets.query(self.dataset_name, q, opts)
+        except WrongQueryKindException as err:
+            self.logger.info("passing kind apl to query raised exception as expected")
+            return
+
+        self.fail("was excepting WrongQueryKindException")
 
     def test_step008_info(self):
         """Tests dataset info endpoint"""

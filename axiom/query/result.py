@@ -14,7 +14,6 @@ class MessageCode(Enum):
     DEFAULT_LIMIT_WARNING = "default_limit_warning"
 
 
-@dataclass
 class MessagePriority(Enum):
     """Message priorities represents the priority of a message associated with a query."""
 

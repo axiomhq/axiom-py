@@ -120,6 +120,10 @@ class Field:
     hidden: bool
 
 
+class WrongQueryKindException(Exception):
+    pass
+
+
 @dataclass
 class DatasetInfo:
     """Represents the details of the information stored inside an Axiom dataset."""
@@ -246,10 +250,10 @@ class DatasetsClient:  # pylint: disable=R0903
 
     def query(self, id: str, query: Query, opts: QueryOptions) -> QueryResult:
         """Executes the given query on the dataset identified by its id."""
-        if not opts.saveAsKind or opts.saveAsKind.value == QueryKind.APL.value:
-            raise BaseException(
+        if not opts.saveAsKind or (opts.saveAsKind == QueryKind.APL):
+            raise WrongQueryKindException(
                 "invalid query kind %s: must be %s or %s"
-                % (opts.saveAsKind, QueryKind.ANALYTICS.value, QueryKind.STREAM.value)
+                % (opts.saveAsKind, QueryKind.ANALYTICS, QueryKind.STREAM)
             )
 
         path = "datasets/%s/query" % id
