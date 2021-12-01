@@ -16,4 +16,4 @@ class AxiomHandler(Handler):
 
     def emit(self, record):
         # FIXME: Don't do an ingest call for every event
-        self.client.datasets.ingest(self.dataset, [record.__dict__])
+        self.client.datasets.ingest_events(self.dataset, [record.__dict__])
