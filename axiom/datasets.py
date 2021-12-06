@@ -189,7 +189,6 @@ class DatasetsClient:  # pylint: disable=R0903
 
         # override the default header and set the value from the passed parameter
         res = self.session.post(path, data=payload, headers=headers, params=params)
-        self.logger.debug(f"request url: ${res.request.url}")
         status_snake = decamelize(res.json())
         return Util.from_dict(IngestStatus, status_snake)
 
