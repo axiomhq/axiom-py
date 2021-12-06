@@ -240,14 +240,18 @@ class TestDatasets(unittest.TestCase):
     def test_step999_delete(self):
         """Tests delete dataset endpoint"""
 
+        self.client.datasets.delete(self.dataset_name)
         try:
-            self.client.datasets.delete(self.dataset_name)
-            datasets = self.client.datasets.get_list()
+            dataset = self.client.datasets.get(self.dataset_name)
 
-            self.assertEqual(len(datasets), 0, "expected test dataset to be deleted")
+            self.assertIsNone(
+                dataset, f"expected test dataset (%{self.dataset_name}) to be deleted"
+            )
         except HTTPError as err:
-            self.logger.error(err)
-            self.fail(f"dataset {self.dataset_name} not found")
+            # the get method returns 404 error if dataset doesn't exist, so that means
+            # that our tests passed, otherwise, it should fail.
+            if err.response.status_code != 404:
+                self.fail(err)
 
     @classmethod
     def tearDownClass(cls):

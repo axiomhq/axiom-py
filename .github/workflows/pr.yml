@@ -44,4 +44,4 @@ jobs:
           AXIOM_TOKEN: ${{ steps.axiom.outputs.token }}
         run: |
           poetry install
-          poetry run python -m pytest
+          poetry run pytest --log-cli-level info
