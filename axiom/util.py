@@ -1,5 +1,6 @@
 import dacite
 import iso8601
+from enum import Enum
 from typing import Type, TypeVar
 from datetime import datetime, timedelta
 
@@ -69,3 +70,5 @@ class Util:
             return d
         elif isinstance(obj, timedelta):
             return str(obj.seconds) + "s"
+        elif isinstance(obj, Enum):
+            return obj.value

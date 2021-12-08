@@ -90,9 +90,9 @@ class EntryGroupAgg:
 
     # alias is the aggregations alias. If it wasn't specified at query time, it
     # is the uppercased string representation of the aggregation operation.
-    op: str
+    value: Any
+    op: str = field(default="")
     # value is the result value of the aggregation.
-    value: any
 
 
 @dataclass
@@ -102,7 +102,7 @@ class EntryGroup:
     # the unique id of the group.
     id: int
     # group maps the fieldnames to the unique values for the entry.
-    group: Dict[str, any]
+    group: Dict[str, Any]
     # aggregations of the group.
     aggregations: List[EntryGroupAgg]
 
