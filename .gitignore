@@ -133,3 +133,7 @@ poetry.lock
 
 # VSCode
 .vscode/
+
+# Direnv
+/.envrc
+/.direnv
