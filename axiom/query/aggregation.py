@@ -1,5 +1,5 @@
 from enum import Enum
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field as dataclass_field
 
 
 class AggregationOperation(Enum):
@@ -24,6 +24,6 @@ class Aggregation:
     """Aggregation performed as part of a query."""
 
     op: AggregationOperation
-    field: str
-    alias: str = field(default="")
-    argument: any = field(default="")
+    field: str = dataclass_field(default="")
+    alias: str = dataclass_field(default="")
+    argument: any = dataclass_field(default="")
