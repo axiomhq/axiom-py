@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
 
 jobs:
   lint:
@@ -23,9 +25,32 @@ jobs:
           poetry install
           poetry run pylint -E axiom tests
           poetry run black --check axiom tests
-  test:
-    name: Test
+  test-local:
+    name: Test (Local)
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup axiom
+        uses: axiomhq/setup-axiom@v1
+        id: axiom
+      - name: Setup
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+      - name: Install poetry
+        run: pip install poetry==1.1.7
+      - name: Run tests
+        env:
+          AXIOM_URL: ${{ steps.axiom.outputs.url }}
+          AXIOM_TOKEN: ${{ steps.axiom.outputs.token }}
+        run: |
+          poetry install
+          poetry run pytest --log-cli-level info
+  test-staging:
+    name: Test (Staging)
+    runs-on: ubuntu-latest
+    if: github.repository == 'axiomhq/axiom-py'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -46,10 +71,11 @@ jobs:
   publish:
     name: Publish on PyPi
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags')
+    if: github.repository == 'axiomhq/axiom-py' && startsWith(github.ref, 'refs/tags')
     needs:
       - lint
-      - test
+      - test-local
+      - test-staging
     steps:
       - name: Checkout
         uses: actions/checkout@v1
