@@ -4,6 +4,7 @@ import gzip
 import ujson
 import unittest
 import rfc3339
+import time
 from typing import List, Dict, Any
 from logging import getLogger
 from .helpers import get_random_name, parse_time
@@ -200,6 +201,10 @@ class TestDatasets(unittest.TestCase):
 
         self.assertIsNotNone(qr.savedQueryID)
         self.assertEqual(len(qr.matches), len(self.events))
+
+        # Queries are saved async
+        time.sleep(1)
+
         # get history
         history = self.client.datasets.history(qr.savedQueryID)
         self.assertIsNotNone(history)
