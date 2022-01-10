@@ -2,7 +2,7 @@
 
 Axiom API Python bindings.
 
-### NOTE: This is a development in progress library. Querying is not supported yet. Only ingestion.
+⚠️ This library is still a work-in-progress.
 
 ## Table of Contents
 
@@ -20,7 +20,6 @@ Axiom Py is a Python client library for accessing the Axiom API.
 
 Currently, **Axiom Py requires Python3 or greater.**
 
-
 ## Installation
 
 ### Install from source:
@@ -29,6 +28,7 @@ Currently, **Axiom Py requires Python3 or greater.**
 git clone `https://github.com/axiomhq/axiom-py`
 cd axiom-py
 ```
+
 ## Authentication
 
 The Client is initialized with the url of the deployment and an access token. The access token can be a personal token retreived from the users profile page or an ingest token retrieved from the settings of the Axiom deployment.
@@ -54,7 +54,7 @@ client = axiom.Client(deployment_url, access_token, org_id)
 print(client.datasets.ingest("foobar", [{"foo": "bar"}]))
 ```
 
-## Documentation 
+## Documentation
 
 You can find the Axiom and Axiom Py documentation on the [docs website.](https://docs.axiom.co/)
 
