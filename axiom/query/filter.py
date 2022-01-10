@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import List
-from dataclasses import dataclass
+from dataclasses import dataclass, field as dataclass_field
 
 
 class FilterOperation(Enum):
@@ -41,9 +41,9 @@ class BaseFilter:
     op: FilterOperation
     field: str
     value: any
-    caseSensitive: bool
+    caseSensitive: bool = dataclass_field(default=False)
 
 
 @dataclass
 class Filter(BaseFilter):
-    children: List[BaseFilter]
+    children: List[BaseFilter] = dataclass_field(default=lambda: [])

@@ -67,7 +67,7 @@ class Query:
     # when at least one aggregation is specified.
     groupBy: List[str] = field(default_factory=lambda: [])
     # Filter applied on the queried results.
-    # filters: Filter = field(init=False)
+    filter: Filter = field(default=None)
     # Order is a list of order rules that specify the order of the query
     # result.
     order: List[Order] = field(default_factory=lambda: [])

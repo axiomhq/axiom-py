@@ -20,6 +20,11 @@ from axiom.query import (
     Query,
     QueryOptions,
     QueryKind,
+    Filter,
+    Order,
+    VirtualField,
+    Projection,
+    FilterOperation,
 )
 from axiom.query.result import (
     QueryResult,
@@ -29,6 +34,8 @@ from axiom.query.result import (
     Timeseries,
     Interval,
 )
+from axiom.query.aggregation import Aggregation, AggregationOperation
+
 from requests.exceptions import HTTPError
 from datetime import datetime, timedelta
 
@@ -221,6 +228,31 @@ class TestDatasets(unittest.TestCase):
             return
 
         self.fail("was excepting WrongQueryKindException")
+
+    def test_step007_complex_query(self):
+        startTime = datetime.utcnow() - timedelta(minutes=2)
+        endTime = datetime.utcnow()
+        aggregations = [
+            Aggregation(alias="event_count", op=AggregationOperation.COUNT, field="*")
+        ]
+        q = Query(startTime, endTime, aggregations=aggregations)
+        q.groupBy = ["success", "remote_ip"]
+        q.filter = Filter(FilterOperation.EQUAL, "response", 304)
+        q.order = [
+            Order("success", True),
+            Order("remote_ip", False),
+        ]
+        q.virtualFields = [VirtualField("success", "response < 400")]
+        q.project = [Projection("remote_ip", "ip")]
+
+        res = self.client.datasets.query(self.dataset_name, q, QueryOptions())
+
+        self.assertEqual(len(self.events) * 2, res.status.rowsExamined)
+        self.assertEqual(len(self.events), res.status.rowsMatched)
+
+        if len(res.buckets.totals):
+            agg = res.buckets.totals[0].aggregations[0]
+            self.assertEqual("event_count", agg.op)
 
     def test_step008_info(self):
         """Tests dataset info endpoint"""
