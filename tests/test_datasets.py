@@ -247,7 +247,7 @@ class TestDatasets(unittest.TestCase):
 
         res = self.client.datasets.query(self.dataset_name, q, QueryOptions())
 
-        self.assertEqual(len(self.events), res.status.rowsExamined)
+        self.assertEqual(len(self.events) * 2, res.status.rowsExamined)
         self.assertEqual(len(self.events), res.status.rowsMatched)
 
         if len(res.buckets.totals):
