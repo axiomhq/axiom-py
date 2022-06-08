@@ -1,4 +1,6 @@
-# axiom-py [![CI](https://github.com/axiomhq/axiom-py/actions/workflows/ci.yml/badge.svg)](https://github.com/axiomhq/axiom-py/actions/workflows/ci.yml)
+# axiom-py
+
+[![CI](https://github.com/axiomhq/axiom-py/actions/workflows/ci.yml/badge.svg)](https://github.com/axiomhq/axiom-py/actions/workflows/ci.yml) [![PyPI version](https://img.shields.io/pypi/v/axiom-py.svg)](https://pypi.org/project/axiom-py/) [![Python version](https://img.shields.io/pypi/pyversions/axiom-py.svg)](https://pypi.org/project/axiom-py/) 
 
 Axiom API Python bindings.
 
@@ -6,23 +8,42 @@ Axiom API Python bindings.
 
 ## Table of Contents
 
-1. [Introduction](#introduction)
-1. [Installation](#installation)
-1. [Authentication](#authentication)
-1. [Usage](#usage)
-1. [Documentation](#documentation)
-1. [Contributing](#contributing)
-1. [License](#license)
+- [axiom-py](#axiom-py)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Standard Installation](#standard-installation)
+  - [Install from Source](#install-from-source)
+  - [Authentication](#authentication)
+  - [Usage](#usage)
+  - [Documentation](#documentation)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ## Introduction
 
-Axiom Py is a Python client library for accessing the Axiom API.
+`axiom-py` is a Python library that handles client connections and wraps API functions for interacting with the Axiom API.
 
-Currently, **Axiom Py requires Python3 or greater.**
+## Standard Installation
 
-## Installation
+The library can be found in the [Python Package Index (PyPI)](https://pypi.org/) as `axiom-py`, located [here](https://pypi.org/project/axiom-py/).
 
-### Install from source:
+You can install `axiom-py` with the following command:
+
+```bash
+# Linux / MacOS
+python3 -m pip install axiom-py
+
+# Windows
+py -m pip install axiom-py
+```
+
+Alternatively, if you have the [`pip`](https://pip.pypa.io/) package installed, you can install `axiom-py` with the following command:
+
+```bash
+pip3 install axiom-py
+```
+
+## Install from Source
 
 ```
 git clone `https://github.com/axiomhq/axiom-py`
