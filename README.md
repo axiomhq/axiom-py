@@ -12,7 +12,7 @@ Axiom API Python bindings.
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
   - [Standard Installation](#standard-installation)
-  - [Install from source:](#install-from-source)
+  - [Install from Source](#install-from-source)
   - [Authentication](#authentication)
   - [Usage](#usage)
   - [Documentation](#documentation)
@@ -43,7 +43,7 @@ Alternatively, if you have the [`pip`](https://pip.pypa.io/) package installed, 
 pip3 install axiom-py
 ```
 
-## Install from source:
+## Install from Source
 
 ```
 git clone `https://github.com/axiomhq/axiom-py`
