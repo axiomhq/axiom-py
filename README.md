@@ -78,12 +78,12 @@ client = axiom.Client(access_token, org_id)
 print(client.datasets.ingest("foobar", [{"foo": "bar"}]))
 ```
 
-### Non Cloud Example
+### Self-Host Example
 ```py
 import os
 import axiom
 
-# needed only for non cloud deployments, otherwise the url is automatically set
+# needed only for self-host deployments, otherwise the url is automatically set
 deployment_url = os.getenv("AXIOM_URL")
 
 access_token = os.getenv("AXIOM_TOKEN")
