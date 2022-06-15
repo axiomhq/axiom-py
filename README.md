@@ -15,6 +15,8 @@ Axiom API Python bindings.
   - [Install from Source](#install-from-source)
   - [Authentication](#authentication)
   - [Usage](#usage)
+    - [Cloud Example](#cloud-example)
+    - [Non Cloud Example](#non-cloud-example)
   - [Documentation](#documentation)
   - [Contributing](#contributing)
   - [License](#license)
@@ -60,16 +62,33 @@ The Client is initialized with the url of the deployment and an access token. Th
 
 ## Usage
 
+### Cloud Example
 ```py
 import os
 import axiom
 
-deployment_url = os.getenv("AXIOM_URL")
 access_token = os.getenv("AXIOM_TOKEN")
+
 # needed only when using Axiom cloud, otherwise set to None
 org_id = os.getenv("AXIOM_ORG_ID")
 
-client = axiom.Client(deployment_url, access_token, org_id)
+client = axiom.Client(access_token, org_id)
+
+# Ingest into a dataset
+print(client.datasets.ingest("foobar", [{"foo": "bar"}]))
+```
+
+### Self-Host Example
+```py
+import os
+import axiom
+
+# needed only for self-host deployments, otherwise the url is automatically set
+deployment_url = os.getenv("AXIOM_URL")
+
+access_token = os.getenv("AXIOM_TOKEN")
+
+client = axiom.Client(access_token, None, deployment_url)
 
 # Ingest into a dataset
 print(client.datasets.ingest("foobar", [{"foo": "bar"}]))

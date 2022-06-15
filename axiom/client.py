@@ -9,6 +9,8 @@ from requests_toolbelt.sessions import BaseUrlSession
 from requests_toolbelt.utils.dump import dump_response, dump_all
 from .datasets import DatasetsClient, ContentType
 
+CLOUD_URL = "https://cloud.axiom.co"
+
 
 @dataclass
 class Error:
@@ -44,7 +46,7 @@ class Client:  # pylint: disable=R0903
 
     datasets: DatasetsClient
 
-    def __init__(self, url_base: str, token: str, org_id: str = None):
+    def __init__(self, token: str, org_id: str = None, url_base: str = CLOUD_URL):
         # Append /api/v1 to the url_base
         url_base = url_base.rstrip("/") + "/api/v1/"
 
