@@ -103,7 +103,7 @@ class TestDatasets(unittest.TestCase):
         data: bytes = ujson.dumps(self.events).encode()
         payload = gzip.compress(data)
         opts = IngestOptions(
-            "time",
+            "_time",
             "2/Jan/2006:15:04:05 +0000",
             # CSV_delimiter obviously not valid for JSON, but perfectly fine to test for its presence in this test.
             ";",
@@ -146,7 +146,7 @@ class TestDatasets(unittest.TestCase):
         except ValueError as err:
             self.logger.debug(err)
             self.logger.debug(
-                "Exceptioin was raised for wrong content-encoding, as expected."
+                "Exception was raised for wrong content-encoding, as expected."
             )
             return
 
@@ -158,7 +158,7 @@ class TestDatasets(unittest.TestCase):
         except ValueError as err:
             self.logger.debug(err)
             self.logger.debug(
-                "Exceptioin was raised for wrong content-type, as expected."
+                "Exception was raised for wrong content-type, as expected."
             )
             return
 
