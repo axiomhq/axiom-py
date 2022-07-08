@@ -11,9 +11,9 @@ class TestLogger(unittest.TestCase):
     def test_log(self):
         """Tests a simple log"""
         client = Client(
-            os.getenv("AXIOM_URL"),
             os.getenv("AXIOM_TOKEN"),
             os.getenv("AXIOM_ORG_ID"),
+            os.getenv("AXIOM_URL"),
         )
         # create a dataset for that purpose
         dataset_name = get_random_name()
