@@ -83,9 +83,9 @@ class TestDatasets(unittest.TestCase):
             },
         ]
         cls.client = Client(
-            os.getenv("AXIOM_URL"),
             os.getenv("AXIOM_TOKEN"),
             os.getenv("AXIOM_ORG_ID"),
+            os.getenv("AXIOM_URL"),
         )
 
     def test_step001_create(self):

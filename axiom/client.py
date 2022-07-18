@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from requests_toolbelt.sessions import BaseUrlSession
 from requests_toolbelt.utils.dump import dump_response, dump_all
 from .datasets import DatasetsClient, ContentType
+from .__init__ import __version__
 
 CLOUD_URL = "https://cloud.axiom.co"
 
@@ -59,6 +60,7 @@ class Client:  # pylint: disable=R0903
                 "Authorization": "Bearer %s" % token,
                 # set a default Content-Type header, can be overriden by requests.
                 "Content-Type": "application/json",
+                "User-Agent": f"axiom-py/{__version__}",
             }
         )
 
