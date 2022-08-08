@@ -109,38 +109,8 @@ class TrimResult:
     numDeleted: int
 
 
-@dataclass
-class Field:
-    """Represents a field of an Axiom dataset."""
-
-    name: str
-    description: str
-    type: str
-    unit: str
-    hidden: bool
-
-
 class WrongQueryKindException(Exception):
     pass
-
-
-@dataclass
-class DatasetInfo:
-    """Represents the details of the information stored inside an Axiom dataset."""
-
-    name: str
-    numBlocks: int
-    numEvents: int
-    numFields: int
-    inputBytes: int
-    inputBytesHuman: str
-    compressedBytes: int
-    compressedBytesHuman: str
-    minTime: str
-    maxTime: str
-    fields: List[Field]
-    who: str
-    created: str
 
 
 class DatasetsClient:  # pylint: disable=R0903
