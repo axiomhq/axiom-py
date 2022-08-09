@@ -109,50 +109,8 @@ class TrimResult:
     numDeleted: int
 
 
-@dataclass
-class Field:
-    """Represents a field of an Axiom dataset."""
-
-    name: str
-    description: str
-    type: str
-    unit: str
-    hidden: bool
-
-
 class WrongQueryKindException(Exception):
     pass
-
-
-@dataclass
-class DatasetInfo:
-    """Represents the details of the information stored inside an Axiom dataset."""
-
-    name: str
-    numBlocks: int
-    numEvents: int
-    numFields: int
-    inputBytes: int
-    inputBytesHuman: str
-    compressedBytes: int
-    compressedBytesHuman: str
-    minTime: str
-    maxTime: str
-    fields: List[Field]
-    who: str
-    created: str
-
-
-@dataclass
-class History:
-    """represents a query stored inside the query history."""
-
-    id: str = field(init=False)
-    kind: QueryKind
-    dataset: str
-    who: str
-    query: Query
-    created: datetime
 
 
 class DatasetsClient:  # pylint: disable=R0903
@@ -267,14 +225,6 @@ class DatasetsClient:  # pylint: disable=R0903
         result.savedQueryID = query_id
         return result
 
-    def info(self, id: str) -> DatasetInfo:
-        """Retrieves the information of the dataset identified by its id."""
-        path = "datasets/%s/info" % id
-        res = self.session.get(path)
-        decoded_response = res.json()
-
-        return Util.from_dict(DatasetInfo, decoded_response)
-
     def trim(self, id: str, maxDuration: timedelta) -> TrimResult:
         """
         Trim the dataset identified by its id to a given length. The max duration
@@ -288,19 +238,6 @@ class DatasetsClient:  # pylint: disable=R0903
         decoded_response = res.json()
 
         return Util.from_dict(TrimResult, decoded_response)
-
-    def history(self, id: str) -> History:
-        """
-        History retrieves the query stored inside the query history dataset
-        identified by its id.
-        """
-        path = "datasets/_history/%s" % id
-        res = self.session.get(path)
-        decoded_response = res.json()
-
-        # return history
-        history = Util.from_dict(History, decoded_response)
-        return history
 
     def _prepare_ingest_options(self, opts: IngestOptions) -> Dict[str, any]:
         """the query params for ingest api are expected in a format

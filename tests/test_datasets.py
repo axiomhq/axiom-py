@@ -202,20 +202,6 @@ class TestDatasets(unittest.TestCase):
         self.assertIsNotNone(qr.savedQueryID)
         self.assertEqual(len(qr.matches), len(self.events))
 
-        # Queries are saved async
-        time.sleep(1)
-
-        # get history
-        history = self.client.datasets.history(qr.savedQueryID)
-        self.assertIsNotNone(history)
-        self.assertEqual(qr.savedQueryID, history.id)
-        self.assertEqual(opts.saveAsKind, history.kind)
-        # check that time parsing is correct
-        self.assertEqual(history.query.startTime.date(), q.startTime.date())
-        self.assertEqual(history.query.startTime.time(), q.startTime.time())
-        self.assertEqual(history.query.endTime.date(), q.endTime.date())
-        self.assertEqual(history.query.endTime.time(), q.endTime.time())
-
     def test_step007_wrong_query_kind(self):
         startTime = datetime.utcnow() - timedelta(minutes=2)
         endTime = datetime.utcnow()
@@ -258,15 +244,6 @@ class TestDatasets(unittest.TestCase):
         if len(res.buckets.totals):
             agg = res.buckets.totals[0].aggregations[0]
             self.assertEqual("event_count", agg.op)
-
-    def test_step008_info(self):
-        """Tests dataset info endpoint"""
-        info = self.client.datasets.info(self.dataset_name)
-        self.assertIsNotNone(info)
-        self.assertEqual(info.name, self.dataset_name)
-        # number of events ingested in step002 and step003
-        self.assertEqual(info.numEvents, 4)
-        self.assertTrue(len(info.fields) > 0)
 
     def test_step009_trim(self):
         """Tests dataset trim endpoint"""
