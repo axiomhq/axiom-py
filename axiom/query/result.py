@@ -66,6 +66,10 @@ class QueryStatus:
     maxBlockTime: str = field(default=None)
     # messages associated with the query.
     messages: List[Message] = field(default_factory=lambda: [])
+    # row id of the newest row, as seen server side.
+    maxCursor: str = field(default=None)
+    # row id of the oldest row, as seen server side.
+    minCursor: str = field(default=None)
 
 
 @dataclass
