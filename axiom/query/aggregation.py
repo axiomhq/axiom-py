@@ -17,6 +17,9 @@ class AggregationOperation(Enum):
     HISTOGRAM = "histogram"
     VARIANCE = "variance"
     STDEV = "stdev"
+    ARGMIN = "argmin"
+    ARGMAX = "argmax"
+    SET = "set"
 
 
 @dataclass
