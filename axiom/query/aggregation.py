@@ -20,6 +20,8 @@ class AggregationOperation(Enum):
     ARGMIN = "argmin"
     ARGMAX = "argmax"
     SET = "set"
+    COUNTIF = "countif"
+    COUNTDISTINCTIF = "distinctif"
 
 
 @dataclass
