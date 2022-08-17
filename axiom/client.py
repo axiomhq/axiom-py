@@ -58,6 +58,7 @@ class Client:  # pylint: disable=R0903
         retries = Retry(
             total=3, backoff_factor=0.1, status_forcelist=[61, 53, 500, 502, 503, 504]
         )
+        session.mount("http://", HTTPAdapter(max_retries=retries))
         session.mount("https://", HTTPAdapter(max_retries=retries))
         # hook on responses, raise error when response is not successfull
         session.hooks = {"response": lambda r, *args, **kwargs: raise_response_error(r)}
