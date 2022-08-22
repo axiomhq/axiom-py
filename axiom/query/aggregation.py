@@ -17,6 +17,11 @@ class AggregationOperation(Enum):
     HISTOGRAM = "histogram"
     VARIANCE = "variance"
     STDEV = "stdev"
+    ARGMIN = "argmin"
+    ARGMAX = "argmax"
+    MAKESET = "makeset"
+    COUNTIF = "countif"
+    COUNTDISTINCTIF = "distinctif"
 
 
 @dataclass
