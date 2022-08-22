@@ -19,7 +19,7 @@ class AggregationOperation(Enum):
     STDEV = "stdev"
     ARGMIN = "argmin"
     ARGMAX = "argmax"
-    SET = "set"
+    MAKESET = "makeset"
     COUNTIF = "countif"
     COUNTDISTINCTIF = "distinctif"
 
