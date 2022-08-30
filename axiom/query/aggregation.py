@@ -5,7 +5,11 @@ from dataclasses import dataclass, field as dataclass_field
 class AggregationOperation(Enum):
     # Works with all types, field should be `*`.
     COUNT = "count"
+    COUNTIF = "countif"
     COUNT_DISTINCT = "distinct"
+    COUNTDISTINCTIF = "distinctif"
+    MAKE_SET = "makeset"
+    MAKE_SET_IF = "makesetif"
 
     # Only works for numbers.
     SUM = "sum"
@@ -15,13 +19,10 @@ class AggregationOperation(Enum):
     TOPK = "topk"
     PERCENTILES = "percentiles"
     HISTOGRAM = "histogram"
-    VARIANCE = "variance"
     STDEV = "stdev"
+    VARIANCE = "variance"
     ARGMIN = "argmin"
     ARGMAX = "argmax"
-    MAKESET = "makeset"
-    COUNTIF = "countif"
-    COUNTDISTINCTIF = "distinctif"
 
 
 @dataclass
