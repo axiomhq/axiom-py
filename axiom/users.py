@@ -3,6 +3,7 @@ from .util import Util
 from dataclasses import dataclass
 from requests import Session
 
+
 @dataclass
 class User:
     """An authenticated axiom user."""
@@ -10,6 +11,7 @@ class User:
     id: str
     name: str
     emails: List[str]
+
 
 class UsersClient:
     """The UsersClient is a client for the Axiom Users service."""
