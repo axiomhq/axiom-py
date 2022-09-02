@@ -9,6 +9,7 @@ from requests_toolbelt.sessions import BaseUrlSession
 from requests_toolbelt.utils.dump import dump_response, dump_all
 from requests.adapters import HTTPAdapter, Retry
 from .datasets import DatasetsClient, ContentType
+from .users import UsersClient
 from .__init__ import __version__
 
 CLOUD_URL = "https://cloud.axiom.co"
@@ -47,6 +48,7 @@ class Client:  # pylint: disable=R0903
     instance or Axiom Cloud."""
 
     datasets: DatasetsClient
+    users: UsersClient
 
     def __init__(self, token: str, org_id: str = None, url_base: str = CLOUD_URL):
         # Append /api/v1 to the url_base
@@ -78,3 +80,4 @@ class Client:  # pylint: disable=R0903
             session.headers.update({"X-Axiom-Org-Id": org_id})
 
         self.datasets = DatasetsClient(session, logger)
+        self.users = UsersClient(session)
