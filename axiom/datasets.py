@@ -113,6 +113,36 @@ class WrongQueryKindException(Exception):
     pass
 
 
+@dataclass
+class Field:
+    """A field of a dataset"""
+
+    name: str
+    description: str
+    type: str
+    unit: str
+    hidden: bool
+
+
+@dataclass
+class DatasetInfo:
+    """Information and statistics stored inside a dataset"""
+
+    name: str
+    numBlocks: int
+    numEvents: int
+    numFields: int
+    inputBytes: int
+    inputBytesHuman: str
+    compressedBytes: int
+    compressedBytesHuman: str
+    minTime: datetime
+    maxTime: datetime
+    fields: List[Field]
+    who: str
+    created: datetime
+
+
 class DatasetsClient:  # pylint: disable=R0903
     """DatasetsClient has methods to manipulate datasets."""
 
@@ -272,3 +302,10 @@ class DatasetsClient:  # pylint: disable=R0903
         params["nocache"] = opts.nocache.__str__()
 
         return params
+
+    def info(self, id: str) -> DatasetInfo:
+        """Returns the info about a dataset."""
+        path = "datasets/%s/info" % id
+        res = self.session.get(path)
+        decoded_response = res.json()
+        return Util.from_dict(DatasetInfo, decoded_response)
