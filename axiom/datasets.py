@@ -7,7 +7,7 @@ from enum import Enum
 from logging import Logger
 from humps import decamelize
 from requests import Session
-from typing import List, Dict
+from typing import List, Dict, Optional
 from dataclasses import dataclass, asdict, field
 from datetime import datetime, timedelta, timezone
 
@@ -51,6 +51,23 @@ class IngestOptions:
     # CSV delimiter is the delimiter that separates CSV fields. Only valid when
     # the content to be ingested is CSV formatted.
     CSV_delimiter: str = field(default=None)
+
+
+class AplResultFormat(Enum):
+    """The result format of an APL query."""
+
+    Legacy = "legacy"
+
+
+@dataclass
+class AplOptions:
+    """AplOptions specifies the optional parameters for the apl query method."""
+
+    start_time: Optional[datetime] = field(default=None)
+    end_time: Optional[datetime] = field(default=None)
+    no_cache: bool = field(default=False)
+    save: bool = field(default=False)
+    format: AplResultFormat = field(default=AplResultFormat.Legacy)
 
 
 @dataclass
