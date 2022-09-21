@@ -316,7 +316,7 @@ class DatasetsClient:  # pylint: disable=R0903
         if opts.save:
             params["save"] = opts.save
         if opts.format:
-            params["format"] = opts.format
+            params["format"] = opts.format.value
 
         return params
 
