@@ -277,7 +277,7 @@ class DatasetsClient:  # pylint: disable=R0903
 
         path = "datasets/_apl"
         payload = ujson.dumps(
-            asdict(self._prepare_apl_payload(apl, opts)),
+            self._prepare_apl_payload(apl, opts),
             default=Util.handle_json_serialization,
         )
         self.logger.debug("sending query %s" % payload)
