@@ -12,7 +12,7 @@ from dataclasses import dataclass, asdict, field
 from datetime import datetime, timedelta, timezone
 
 from .util import Util
-from .query import Query, QueryOptions, QueryKind
+from .query import Query, QueryOptions, QueryKind, AplQueryResult
 from .query.result import QueryResult
 
 
@@ -272,6 +272,29 @@ class DatasetsClient:  # pylint: disable=R0903
         result.savedQueryID = query_id
         return result
 
+    def apl_query(self, apl: str, opts: AplOptions) -> AplQueryResult:
+        """Executes the given apl query on the dataset identified by its id."""
+        if not opts.saveAsKind == QueryKind.APL:
+            raise WrongQueryKindException(
+                "invalid query kind %s: must be %s or %s"
+                % (opts.saveAsKind, QueryKind.APL)
+            )
+
+        path = "datasets/_apl"
+        payload = ujson.dumps(
+            asdict(self._prepare_apl_payload(apl, opts)),
+            default=Util.handle_json_serialization,
+        )
+        self.logger.debug("sending query %s" % payload)
+        params = self._prepare_apl_options(opts)
+        res = self.session.post(path, data=payload, params=params)
+        result = Util.from_dict(AplQueryResult, res.json())
+        self.logger.debug(f"apl query result: {result}")
+        query_id = res.headers.get("X-Axiom-History-Query-Id")
+        self.logger.info(f"received query result with query_id: {query_id}")
+        result.savedQueryID = query_id
+        return result
+
     def trim(self, id: str, maxDuration: timedelta) -> TrimResult:
         """
         Trim the dataset identified by its id to a given length. The max duration
@@ -285,6 +308,33 @@ class DatasetsClient:  # pylint: disable=R0903
         decoded_response = res.json()
 
         return Util.from_dict(TrimResult, decoded_response)
+
+    def _prepare_apl_options(self, opts: AplOptions) -> Dict[str, any]:
+        """Prepare the apl query options for the request."""
+
+        if opts is None:
+            return {}
+
+        params = {}
+        if opts.no_cache:
+            params["nocache"] = opts.nocache.__str__()
+        if opts.save:
+            params["save"] = opts.save
+        if opts.format:
+            params["format"] = opts.format
+
+        return params
+
+    def _prepare_apl_payload(self, apl: str, opts: AplOptions) -> Dict[str, any]:
+        """Prepare the apl query options for the request."""
+
+        params = {apl}
+        if opts.start_time:
+            params["startTime"] = opts.start_time
+        if opts.end_time:
+            params["endTime:"] = opts.end_time
+
+        return params
 
     def _prepare_ingest_options(self, opts: IngestOptions) -> Dict[str, any]:
         """the query params for ingest api are expected in a format
