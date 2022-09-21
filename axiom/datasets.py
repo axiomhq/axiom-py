@@ -323,12 +323,13 @@ class DatasetsClient:  # pylint: disable=R0903
     def _prepare_apl_payload(self, apl: str, opts: AplOptions) -> Dict[str, any]:
         """Prepare the apl query options for the request."""
 
-        params = {apl: apl}
+        params = {}
+        params["apl"] = apl
 
         if opts.start_time:
             params["startTime"] = opts.start_time
         if opts.end_time:
-            params["endTime:"] = opts.end_time
+            params["endTime"] = opts.end_time
 
         return params
 
