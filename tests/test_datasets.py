@@ -18,8 +18,6 @@ from axiom import (
     WrongQueryKindException,
 )
 from axiom.query import (
-    AplOptions,
-    AplQueryFormat,
     AplQueryResult,
     Query,
     QueryOptions,
@@ -37,6 +35,10 @@ from axiom.query.result import (
     EntryGroup,
     Timeseries,
     Interval,
+)
+from axiom.datasets import (
+    AplOptions,
+    AplResultFormat,
 )
 from axiom.query.aggregation import Aggregation, AggregationOperation
 
@@ -217,7 +219,7 @@ class TestDatasets(unittest.TestCase):
             end_time=endTime,
             no_cache=True,
             save=False,
-            format=AplQueryFormat.Legacy,
+            format=AplResultFormat.Legacy,
         )
         qr = self.client.datasets.apl_query(apl, opts)
 
