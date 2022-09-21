@@ -312,7 +312,7 @@ class DatasetsClient:  # pylint: disable=R0903
 
         params = {}
         if opts.no_cache:
-            params["nocache"] = opts.nocache.__str__()
+            params["nocache"] = opts.no_cache.__str__()
         if opts.save:
             params["save"] = opts.save
         if opts.format:
