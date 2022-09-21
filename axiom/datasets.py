@@ -274,11 +274,6 @@ class DatasetsClient:  # pylint: disable=R0903
 
     def apl_query(self, apl: str, opts: AplOptions) -> AplQueryResult:
         """Executes the given apl query on the dataset identified by its id."""
-        if not opts.saveAsKind == QueryKind.APL:
-            raise WrongQueryKindException(
-                "invalid query kind %s: must be %s or %s"
-                % (opts.saveAsKind, QueryKind.APL)
-            )
 
         path = "datasets/_apl"
         payload = ujson.dumps(

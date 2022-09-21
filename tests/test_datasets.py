@@ -18,6 +18,9 @@ from axiom import (
     WrongQueryKindException,
 )
 from axiom.query import (
+    AplOptions,
+    AplQueryFormat,
+    AplQueryResult,
     Query,
     QueryOptions,
     QueryKind,
@@ -202,7 +205,27 @@ class TestDatasets(unittest.TestCase):
         self.assertIsNotNone(qr.savedQueryID)
         self.assertEqual(len(qr.matches), len(self.events))
 
+    def test_step007_apl_query(self):
+        """Test apl query"""
+        # query the events we ingested in step2
+        startTime = datetime.utcnow() - timedelta(minutes=2)
+        endTime = datetime.utcnow()
+
+        apl = "['%s']" % self.dataset_name
+        opts = AplOptions(
+            start_time=startTime,
+            end_time=endTime,
+            no_cache=True,
+            save=False,
+            format=AplQueryFormat.Legacy,
+        )
+        qr = self.client.datasets.apl_query(apl, opts)
+
+        self.assertIsNotNone(qr.savedQueryID)
+        self.assertEqual(len(qr.matches), len(self.events))
+
     def test_step007_wrong_query_kind(self):
+        """Test wrong query kind"""
         startTime = datetime.utcnow() - timedelta(minutes=2)
         endTime = datetime.utcnow()
         opts = QueryOptions(
@@ -221,6 +244,7 @@ class TestDatasets(unittest.TestCase):
         self.fail("was excepting WrongQueryKindException")
 
     def test_step007_complex_query(self):
+        """Test complex query"""
         startTime = datetime.utcnow() - timedelta(minutes=2)
         endTime = datetime.utcnow()
         aggregations = [
