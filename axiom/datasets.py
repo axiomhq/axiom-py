@@ -101,14 +101,6 @@ class TrimRequest:
     maxDuration: str
 
 
-@dataclass
-class TrimResult:
-    """TrimResult is the result of a trim operation."""
-
-    # the amount of blocks deleted by the trim operation.
-    numDeleted: int
-
-
 class WrongQueryKindException(Exception):
     pass
 
@@ -255,7 +247,7 @@ class DatasetsClient:  # pylint: disable=R0903
         result.savedQueryID = query_id
         return result
 
-    def trim(self, id: str, maxDuration: timedelta) -> TrimResult:
+    def trim(self, id: str, maxDuration: timedelta):
         """
         Trim the dataset identified by its id to a given length. The max duration
         given will mark the oldest timestamp an event can have. Older ones will be
@@ -264,10 +256,7 @@ class DatasetsClient:  # pylint: disable=R0903
         path = "datasets/%s/trim" % id
         # prepare request payload and format masDuration to append time unit at the end, e.g `1s`
         req = TrimRequest(f"{maxDuration.seconds}s")
-        res = self.session.post(path, data=ujson.dumps(asdict(req)))
-        decoded_response = res.json()
-
-        return Util.from_dict(TrimResult, decoded_response)
+        self.session.post(path, data=ujson.dumps(asdict(req)))
 
     def _prepare_ingest_options(self, opts: IngestOptions) -> Dict[str, any]:
         """the query params for ingest api are expected in a format

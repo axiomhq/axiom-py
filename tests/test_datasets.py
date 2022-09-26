@@ -247,9 +247,7 @@ class TestDatasets(unittest.TestCase):
 
     def test_step009_trim(self):
         """Tests dataset trim endpoint"""
-        res = self.client.datasets.trim(self.dataset_name, timedelta(seconds=1))
-        # HINT(lukasmalkmus): There are no blocks to trim in this test.
-        self.assertEqual(0, res.numDeleted)
+        self.client.datasets.trim(self.dataset_name, timedelta(seconds=1))
 
     def test_step999_delete(self):
         """Tests delete dataset endpoint"""
