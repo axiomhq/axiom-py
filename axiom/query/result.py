@@ -122,7 +122,7 @@ class Interval:
     # endTime of the interval.
     endTime: datetime
     # groups of the interval.
-    groups: List[EntryGroup]
+    groups: Optional[List[EntryGroup]]
 
 
 @dataclass
