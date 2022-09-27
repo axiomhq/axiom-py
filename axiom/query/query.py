@@ -60,7 +60,7 @@ class Query:
     # resolution of the queries graph. Valid values are the queries time
     # range / 100 at maximum and / 1000 at minimum. Use zero value for
     # serve-side auto-detection.
-    resolution: timedelta = field(default=timedelta(seconds=0))
+    resolution: str = field(default="auto")
     # Aggregations performed as part of the query.
     aggregations: List[Aggregation] = field(default_factory=lambda: [])
     # GroupBy is a list of field names to group the query result by. Only valid
