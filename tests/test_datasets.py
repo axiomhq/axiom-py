@@ -210,7 +210,7 @@ class TestDatasets(unittest.TestCase):
     def test_step007_apl_query(self):
         """Test apl query"""
         # query the events we ingested in step2
-        startTime = datetime.utcnow() - timedelta(hours=2)
+        startTime = datetime.utcnow() - timedelta(minutes=2)
         endTime = datetime.utcnow()
 
         apl = "['%s']" % self.dataset_name
