@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from enum import Enum
 
 from .query import Query
@@ -132,7 +132,7 @@ class Timeseries:
     # the intervals that build a time series.
     series: List[Interval]
     # totals of the time series.
-    totals: List[EntryGroup]
+    totals: Optional[List[EntryGroup]]
 
 
 @dataclass
@@ -158,12 +158,12 @@ class AplQueryResult:
     request: Query
     # Status of the apl query result.
     status: QueryStatus
-    # Dataset names are the datasets that were used in the apl query.
-    dataset_names: List[str]
     # Matches are the events that matched the apl query.
     matches: List[Entry]
     # Buckets are the time series buckets.
     buckets: Timeseries
+    # Dataset names are the datasets that were used in the apl query.
+    dataset_names: List[str] = field(default=[])
     # savedQueryID is the ID of the apl query that generated this result when it
     # was saved on the server. This is only set when the apl query was send with
     # the `saveAsKind` option specified.
