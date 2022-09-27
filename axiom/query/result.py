@@ -163,7 +163,7 @@ class AplQueryResult:
     # Buckets are the time series buckets.
     buckets: Timeseries
     # Dataset names are the datasets that were used in the apl query.
-    dataset_names: List[str] = field(default=[])
+    dataset_names: List[str] = field(default_factory=lambda: [])
     # savedQueryID is the ID of the apl query that generated this result when it
     # was saved on the server. This is only set when the apl query was send with
     # the `saveAsKind` option specified.
