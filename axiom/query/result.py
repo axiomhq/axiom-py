@@ -167,4 +167,4 @@ class AplQueryResult:
     # savedQueryID is the ID of the apl query that generated this result when it
     # was saved on the server. This is only set when the apl query was send with
     # the `saveAsKind` option specified.
-    savedQueryID: str = field(default=None)
+    savedQueryID: Optional[str] = field(default=None)

@@ -223,7 +223,6 @@ class TestDatasets(unittest.TestCase):
         )
         qr = self.client.datasets.apl_query(apl, opts)
 
-        self.assertIsNotNone(qr.savedQueryID)
         self.assertEqual(len(qr.matches), len(self.events))
 
     def test_step007_wrong_query_kind(self):
