@@ -7,12 +7,12 @@ from enum import Enum
 from logging import Logger
 from humps import decamelize
 from requests import Session
-from typing import List, Dict
+from typing import List, Dict, Optional
 from dataclasses import dataclass, asdict, field
 from datetime import datetime, timedelta, timezone
 
 from .util import Util
-from .query import Query, QueryOptions, QueryKind
+from .query import Query, QueryOptions, QueryKind, AplQueryResult
 from .query.result import QueryResult
 
 
@@ -51,6 +51,23 @@ class IngestOptions:
     # CSV delimiter is the delimiter that separates CSV fields. Only valid when
     # the content to be ingested is CSV formatted.
     CSV_delimiter: str = field(default=None)
+
+
+class AplResultFormat(Enum):
+    """The result format of an APL query."""
+
+    Legacy = "legacy"
+
+
+@dataclass
+class AplOptions:
+    """AplOptions specifies the optional parameters for the apl query method."""
+
+    start_time: Optional[datetime] = field(default=None)
+    end_time: Optional[datetime] = field(default=None)
+    no_cache: bool = field(default=False)
+    save: bool = field(default=False)
+    format: AplResultFormat = field(default=AplResultFormat.Legacy)
 
 
 @dataclass
@@ -247,6 +264,24 @@ class DatasetsClient:  # pylint: disable=R0903
         result.savedQueryID = query_id
         return result
 
+    def apl_query(self, apl: str, opts: AplOptions) -> AplQueryResult:
+        """Executes the given apl query on the dataset identified by its id."""
+
+        path = "datasets/_apl"
+        payload = ujson.dumps(
+            self._prepare_apl_payload(apl, opts),
+            default=Util.handle_json_serialization,
+        )
+        self.logger.debug("sending query %s" % payload)
+        params = self._prepare_apl_options(opts)
+        res = self.session.post(path, data=payload, params=params)
+        result = Util.from_dict(AplQueryResult, res.json())
+        self.logger.debug(f"apl query result: {result}")
+        query_id = res.headers.get("X-Axiom-History-Query-Id")
+        self.logger.info(f"received query result with query_id: {query_id}")
+        result.savedQueryID = query_id
+        return result
+
     def trim(self, id: str, maxDuration: timedelta):
         """
         Trim the dataset identified by its id to a given length. The max duration
@@ -257,6 +292,35 @@ class DatasetsClient:  # pylint: disable=R0903
         # prepare request payload and format masDuration to append time unit at the end, e.g `1s`
         req = TrimRequest(f"{maxDuration.seconds}s")
         self.session.post(path, data=ujson.dumps(asdict(req)))
+
+    def _prepare_apl_options(self, opts: AplOptions) -> Dict[str, any]:
+        """Prepare the apl query options for the request."""
+
+        if opts is None:
+            return {}
+
+        params = {}
+        if opts.no_cache:
+            params["nocache"] = opts.no_cache.__str__()
+        if opts.save:
+            params["save"] = opts.save
+        if opts.format:
+            params["format"] = opts.format.value
+
+        return params
+
+    def _prepare_apl_payload(self, apl: str, opts: AplOptions) -> Dict[str, any]:
+        """Prepare the apl query options for the request."""
+
+        params = {}
+        params["apl"] = apl
+
+        if opts.start_time:
+            params["startTime"] = opts.start_time
+        if opts.end_time:
+            params["endTime"] = opts.end_time
+
+        return params
 
     def _prepare_ingest_options(self, opts: IngestOptions) -> Dict[str, any]:
         """the query params for ingest api are expected in a format

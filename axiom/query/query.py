@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List
+from typing import List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from .aggregation import Aggregation
@@ -60,26 +60,26 @@ class Query:
     # resolution of the queries graph. Valid values are the queries time
     # range / 100 at maximum and / 1000 at minimum. Use zero value for
     # serve-side auto-detection.
-    resolution: timedelta = field(default=timedelta(seconds=0))
+    resolution: str = field(default="auto")
     # Aggregations performed as part of the query.
-    aggregations: List[Aggregation] = field(default_factory=lambda: [])
+    aggregations: Optional[List[Aggregation]] = field(default_factory=lambda: [])
     # GroupBy is a list of field names to group the query result by. Only valid
     # when at least one aggregation is specified.
-    groupBy: List[str] = field(default_factory=lambda: [])
+    groupBy: Optional[List[str]] = field(default_factory=lambda: [])
     # Filter applied on the queried results.
-    filter: Filter = field(default=None)
+    filter: Optional[Filter] = field(default=None)
     # Order is a list of order rules that specify the order of the query
     # result.
-    order: List[Order] = field(default_factory=lambda: [])
+    order: Optional[List[Order]] = field(default_factory=lambda: [])
     # Limit the amount of results returned from the query.
     limit: int = field(default=10)
     # VirtualFields is a list of virtual fields that can be referenced by
     # aggregations, filters and orders.
-    virtualFields: List[VirtualField] = field(default_factory=lambda: [])
+    virtualFields: Optional[List[VirtualField]] = field(default_factory=lambda: [])
     # Projections is a list of projections that can be referenced by
     # aggregations, filters and orders. Leaving it empty projects all available
     # fields to the query result.
-    project: List[Projection] = field(default_factory=lambda: [])
+    project: Optional[List[Projection]] = field(default_factory=lambda: [])
     # Cursor is the query cursor. It should be set to the Cursor returned with
     # a previous query result if it was partial.
     cursor: str = field(default=None)
