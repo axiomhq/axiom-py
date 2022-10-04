@@ -1,5 +1,4 @@
-"""Client provides an easy-to use client library to connect to your Axiom
-instance or Axiom Cloud."""
+"""Client provides an easy-to use client library to connect to Axiom."""
 import ndjson
 import dacite
 import ujson
@@ -12,7 +11,7 @@ from .datasets import DatasetsClient, ContentType
 from .users import UsersClient
 from .__init__ import __version__
 
-CLOUD_URL = "https://cloud.axiom.co"
+AXIOM_URL = "https://cloud.axiom.co"
 
 
 @dataclass
@@ -44,13 +43,12 @@ def raise_response_error(r):
 
 
 class Client:  # pylint: disable=R0903
-    """The client class allows you to connect to your self-hosted Axiom
-    instance or Axiom Cloud."""
+    """The client class allows you to connect to Axiom."""
 
     datasets: DatasetsClient
     users: UsersClient
 
-    def __init__(self, token: str, org_id: str = None, url_base: str = CLOUD_URL):
+    def __init__(self, token: str, org_id: str = None, url_base: str = AXIOM_URL):
         # Append /api/v1 to the url_base
         url_base = url_base.rstrip("/") + "/api/v1/"
 
