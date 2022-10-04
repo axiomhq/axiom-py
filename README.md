@@ -41,7 +41,6 @@ Otherwise create a personal token in [the Axiom settings](https://cloud.axiom.co
 
 Create and use a client like this:
 
-### Cloud Example
 ```py
 import os
 import axiom
