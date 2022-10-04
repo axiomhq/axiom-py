@@ -66,11 +66,9 @@ virtual environment.
 
 ## License
 
-&copy; Axiom, Inc., 2021
-
 Distributed under MIT License (`The MIT License`).
 
-See [LICENSE](LICENSE) for more information.
+<!-- Badges -->
 
 [ci]: https://github.com/axiomhq/axiom-py/actions/workflows/ci.yml
 [ci_badge]: https://github.com/axiomhq/axiom-py/actions/workflows/ci.yml/badge.svg
