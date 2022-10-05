@@ -1,34 +1,25 @@
-# axiom-py
+![axiom-py: The official Python bindings for the Axiom API](.github/images/banner-dark.svg#gh-dark-mode-only)
+![axiom-py: The official Python bindings for the Axiom API](.github/images/banner-light.svg#gh-light-mode-only)
 
-[![CI](https://github.com/axiomhq/axiom-py/actions/workflows/ci.yml/badge.svg)](https://github.com/axiomhq/axiom-py/actions/workflows/ci.yml) [![PyPI version](https://img.shields.io/pypi/v/axiom-py.svg)](https://pypi.org/project/axiom-py/) [![Python version](https://img.shields.io/pypi/pyversions/axiom-py.svg)](https://pypi.org/project/axiom-py/) 
+<div align="center">
 
-Axiom API Python bindings.
+[![CI][ci_badge]][ci]
+[![PyPI version][pypi_badge]][pypi]
+[![Python version][version_badge]][pypi]
 
-⚠️ This library is still a work-in-progress.
+</div>
 
-## Table of Contents
+[Axiom](https://axiom.co) unlocks observability at any scale.
 
-- [axiom-py](#axiom-py)
-  - [Table of Contents](#table-of-contents)
-  - [Introduction](#introduction)
-  - [Standard Installation](#standard-installation)
-  - [Install from Source](#install-from-source)
-  - [Authentication](#authentication)
-  - [Usage](#usage)
-    - [Example](#example)
-  - [Documentation](#documentation)
-  - [Contributing](#contributing)
-  - [License](#license)
+- **Ingest with ease, store without limits:** Axiom’s next-generation datastore enables ingesting petabytes of data with ultimate efficiency. Ship logs from Kubernetes, AWS, Azure, Google Cloud, DigitalOcean, Nomad, and others.
+- **Query everything, all the time:** Whether DevOps, SecOps, or EverythingOps, query all your data no matter its age. No provisioning, no moving data from cold/archive to “hot”, and no worrying about slow queries. All your data, all. the. time.
+- **Powerful dashboards, for continuous observability:** Build dashboards to collect related queries and present information that’s quick and easy to digest for you and your team. Dashboards can be kept private or shared with others, and are the perfect way to bring together data from different sources
 
-## Introduction
+For more information check out the [official documentation](https://axiom.co/docs).
 
-`axiom-py` is a Python library that handles client connections and wraps API functions for interacting with the Axiom API.
+## Usage
 
-## Standard Installation
-
-The library can be found in the [Python Package Index (PyPI)](https://pypi.org/) as `axiom-py`, located [here](https://pypi.org/project/axiom-py/).
-
-You can install `axiom-py` with the following command:
+Install using `pip`:
 
 ```bash
 # Linux / MacOS
@@ -44,27 +35,12 @@ Alternatively, if you have the [`pip`](https://pip.pypa.io/) package installed, 
 pip3 install axiom-py
 ```
 
-## Install from Source
+If you use the [Axiom CLI](https://github.com/axiomhq/cli), run `eval $(axiom config export -f)` to configure your environment variables.
 
-```
-git clone `https://github.com/axiomhq/axiom-py`
-cd axiom-py
-```
+Otherwise create a personal token in [the Axiom settings](https://cloud.axiom.co/settings/profile) and export it as `AXIOM_TOKEN`. Set `AXIOM_ORG_ID` to the organization ID from the settings page of the organization you want to access.
 
-## Authentication
+Create and use a client like this:
 
-The Client is initialized with the url of the deployment and an access token. The access token can be a personal token retreived from the users profile page or an ingest token retrieved from the settings of the Axiom deployment.
-
-**The personal access token grants access to all resources available to the user on his behalf.**
-
-**The ingest token just allows ingestion into the datasets the token is configured for.**
-
-## Usage
-
-1. import axiom
-2. set axiom token, organization id and create the client
-
-### Example
 ```py
 import os
 import axiom
@@ -72,15 +48,9 @@ import axiom
 access_token = os.getenv("AXIOM_TOKEN")
 org_id = os.getenv("AXIOM_ORG_ID")
 
-client = axiom.Client(access_token, org_id)
 
-# Ingest into a dataset
-print(client.datasets.ingest("foobar", [{"foo": "bar"}]))
+client.datasets.apl_query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
-
-## Documentation
-
-You can find the Axiom and Axiom Py documentation on the [docs website.](https://docs.axiom.co/)
 
 ## Contributing
 
@@ -92,8 +62,12 @@ virtual environment.
 
 ## License
 
-&copy; Axiom, Inc., 2021
-
 Distributed under MIT License (`The MIT License`).
 
-See [LICENSE](LICENSE) for more information.
+<!-- Badges -->
+
+[ci]: https://github.com/axiomhq/axiom-py/actions/workflows/ci.yml
+[ci_badge]: https://github.com/axiomhq/axiom-py/actions/workflows/ci.yml/badge.svg
+[pypi]: https://pypi.org/project/axiom-py/
+[pypi_badge]: https://img.shields.io/pypi/v/axiom-py.svg
+[version_badge]: https://img.shields.io/pypi/pyversions/axiom-py.svg
