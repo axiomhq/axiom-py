@@ -4,7 +4,7 @@ from .client import Client
 
 
 class AxiomHandler(Handler):
-    """A logging handler that sends logs to an Axiom instance."""
+    """A logging handler that sends logs to Axiom."""
 
     client: Client
     dataset: str
