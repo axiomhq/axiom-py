@@ -48,11 +48,6 @@ import axiom
 access_token = os.getenv("AXIOM_TOKEN")
 org_id = os.getenv("AXIOM_ORG_ID")
 
- Commits 8
- Checks 3
- Files changed 4
-Conversation
-
 
 client.datasets.apl_query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
