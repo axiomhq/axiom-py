@@ -58,9 +58,9 @@ jobs:
       - run: poetry install
       - run: poetry run python -m pytest
         env:
-          AXIOM_URL: ${{ secrets.TESTING_AZURE_1_STAGING_DEPLOYMENT_URL }}
-          AXIOM_TOKEN: ${{ secrets.TESTING_AZURE_1_STAGING_ACCESS_TOKEN }}
-          AXIOM_ORG_ID: ${{ secrets.AXIOM_ORG_ID }}
+          AXIOM_URL: ${{ secrets.TESTING_CLOUD_DEV_DEPLOYMENT_URL }}
+          AXIOM_TOKEN: ${{ secrets.TESTING_CLOUD_DEV_ACCESS_TOKEN }}
+          AXIOM_ORG_ID: ${{ secrets.TESTING_CLOUD_DEV_ORG_ID }}
   publish:
     name: Publish on PyPi
     runs-on: ubuntu-latest
