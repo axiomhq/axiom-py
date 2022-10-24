@@ -1,15 +1,19 @@
 """Logging contains the AxiomHandler and related methods to do with logging."""
+import time
+
 from logging import Handler, NOTSET, getLogger, WARNING
 from .client import Client
-
 
 class AxiomHandler(Handler):
     """A logging handler that sends logs to Axiom."""
 
     client: Client
     dataset: str
+    logcache: list
+    interval: int
+    last_run: float
 
-    def __init__(self, client: Client, dataset: str, level=NOTSET):
+    def __init__(self, client: Client, dataset: str, level=NOTSET, interval=3):
         Handler.__init__(self, level)
         # set urllib3 logging level to warning, check:
         # https://github.com/axiomhq/axiom-py/issues/23
@@ -18,7 +22,16 @@ class AxiomHandler(Handler):
         getLogger("urllib3").setLevel(WARNING)
         self.client = client
         self.dataset = dataset
+        self.logcache = []
+        self.last_run = time.now()
+        self.interval = interval
 
     def emit(self, record):
-        # FIXME: Don't do an ingest call for every event
-        self.client.ingest_events(self.dataset, [record.__dict__])
+        """emit sends a log to Axiom."""
+        self.logcache.append(record)
+        if time.now() - self.last_run > self.interval:
+            self.client.ingest_events(self.dataset, self.logcache)
+            self.last_run = time.now()
+            self.logcache = []
+        else:
+            return
