@@ -1,8 +1,10 @@
 """Logging contains the AxiomHandler and related methods to do with logging."""
 import time
+import atexit
 
 from logging import Handler, NOTSET, getLogger, WARNING
 from .client import Client
+
 
 class AxiomHandler(Handler):
     """A logging handler that sends logs to Axiom."""
@@ -26,6 +28,9 @@ class AxiomHandler(Handler):
         self.last_run = time.now()
         self.interval = interval
 
+        # register flush on exit,
+        atexit.register(self.flush)
+
     def emit(self, record):
         """emit sends a log to Axiom."""
         self.logcache.append(record)
@@ -35,3 +40,8 @@ class AxiomHandler(Handler):
             self.logcache = []
         else:
             return
+
+    def flush(self):
+        """flush sends all logs in the logcache to Axiom."""
+        self.client.datasets.ingest_events(self.dataset, self.logcache)
+        self.logcache = []
