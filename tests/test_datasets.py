@@ -18,8 +18,8 @@ from axiom import (
     WrongQueryKindException,
 )
 from axiom.query import (
-    AplQueryResult,
-    Query,
+    QueryResult,
+    QueryLegacy,
     QueryOptions,
     QueryKind,
     Filter,
@@ -29,7 +29,7 @@ from axiom.query import (
     FilterOperation,
 )
 from axiom.query.result import (
-    QueryResult,
+    QueryLegacyResult,
     QueryStatus,
     Entry,
     EntryGroup,
@@ -196,13 +196,13 @@ class TestDatasets(unittest.TestCase):
         startTime = datetime.utcnow() - timedelta(minutes=2)
         endTime = datetime.utcnow()
 
-        q = Query(startTime=startTime, endTime=endTime)
+        q = QueryLegacy(startTime=startTime, endTime=endTime)
         opts = QueryOptions(
             streamingDuration=timedelta(seconds=60),
             nocache=True,
             saveAsKind=QueryKind.ANALYTICS,
         )
-        qr = self.client.datasets.query(self.dataset_name, q, opts)
+        qr = self.client.datasets.query_legacy(self.dataset_name, q, opts)
 
         self.assertIsNotNone(qr.savedQueryID)
         self.assertEqual(len(qr.matches), len(self.events))
@@ -221,7 +221,7 @@ class TestDatasets(unittest.TestCase):
             save=False,
             format=AplResultFormat.Legacy,
         )
-        qr = self.client.datasets.apl_query(apl, opts)
+        qr = self.client.datasets.query(apl, opts)
 
         self.assertEqual(len(qr.matches), len(self.events))
 
@@ -234,10 +234,10 @@ class TestDatasets(unittest.TestCase):
             nocache=True,
             saveAsKind=QueryKind.APL,
         )
-        q = Query(startTime, endTime)
+        q = QueryLegacy(startTime, endTime)
 
         try:
-            self.client.datasets.query(self.dataset_name, q, opts)
+            self.client.datasets.query_legacy(self.dataset_name, q, opts)
         except WrongQueryKindException as err:
             self.logger.info("passing kind apl to query raised exception as expected")
             return
@@ -251,7 +251,7 @@ class TestDatasets(unittest.TestCase):
         aggregations = [
             Aggregation(alias="event_count", op=AggregationOperation.COUNT, field="*")
         ]
-        q = Query(startTime, endTime, aggregations=aggregations)
+        q = QueryLegacy(startTime, endTime, aggregations=aggregations)
         q.groupBy = ["success", "remote_ip"]
         q.filter = Filter(FilterOperation.EQUAL, "response", 304)
         q.order = [
@@ -261,7 +261,7 @@ class TestDatasets(unittest.TestCase):
         q.virtualFields = [VirtualField("success", "response < 400")]
         q.project = [Projection("remote_ip", "ip")]
 
-        res = self.client.datasets.query(self.dataset_name, q, QueryOptions())
+        res = self.client.datasets.query_legacy(self.dataset_name, q, QueryOptions())
 
         # self.assertEqual(len(self.events), res.status.rowsExamined)
         self.assertEqual(len(self.events), res.status.rowsMatched)

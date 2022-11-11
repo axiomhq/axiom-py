@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from enum import Enum
 
-from .query import Query
+from .query import QueryLegacy
 
 
 class MessageCode(Enum):
@@ -136,7 +136,7 @@ class Timeseries:
 
 
 @dataclass
-class QueryResult:
+class QueryLegacyResult:
     """Result is the result of a query."""
 
     # Status of the query result.
@@ -152,10 +152,10 @@ class QueryResult:
 
 
 @dataclass
-class AplQueryResult:
+class QueryResult:
     """Result is the result of apl query."""
 
-    request: Query
+    request: QueryLegacy
     # Status of the apl query result.
     status: QueryStatus
     # Matches are the events that matched the apl query.
