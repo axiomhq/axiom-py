@@ -49,7 +49,7 @@ access_token = os.getenv("AXIOM_TOKEN")
 org_id = os.getenv("AXIOM_ORG_ID")
 
 
-client.datasets.apl_query(r"['my-dataset'] | where foo == 'bar' | limit 100")
+client.datasets.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
 
 ## Contributing

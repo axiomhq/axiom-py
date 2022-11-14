@@ -12,8 +12,8 @@ from dataclasses import dataclass, asdict, field
 from datetime import datetime, timedelta, timezone
 
 from .util import Util
-from .query import Query, QueryOptions, QueryKind, AplQueryResult
-from .query.result import QueryResult
+from .query import QueryLegacy, QueryOptions, QueryKind, QueryResult
+from .query.result import QueryLegacyResult
 
 
 @dataclass
@@ -244,7 +244,9 @@ class DatasetsClient:  # pylint: disable=R0903
         path = "datasets/%s" % id
         self.session.delete(path)
 
-    def query(self, id: str, query: Query, opts: QueryOptions) -> QueryResult:
+    def query_legacy(
+        self, id: str, query: QueryLegacy, opts: QueryOptions
+    ) -> QueryLegacyResult:
         """Executes the given query on the dataset identified by its id."""
         if not opts.saveAsKind or (opts.saveAsKind == QueryKind.APL):
             raise WrongQueryKindException(
@@ -257,14 +259,18 @@ class DatasetsClient:  # pylint: disable=R0903
         self.logger.debug("sending query %s" % payload)
         params = self._prepare_query_options(opts)
         res = self.session.post(path, data=payload, params=params)
-        result = Util.from_dict(QueryResult, res.json())
+        result = Util.from_dict(QueryLegacyResult, res.json())
         self.logger.debug(f"query result: {result}")
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         self.logger.info(f"received query result with query_id: {query_id}")
         result.savedQueryID = query_id
         return result
 
-    def apl_query(self, apl: str, opts: AplOptions) -> AplQueryResult:
+    def apl_query(self, apl: str, opts: AplOptions) -> QueryResult:
+        """Executes the given apl query on the dataset identified by its id."""
+        return self.query(apl, opts)
+
+    def query(self, apl: str, opts: AplOptions) -> QueryResult:
         """Executes the given apl query on the dataset identified by its id."""
 
         path = "datasets/_apl"
@@ -275,7 +281,7 @@ class DatasetsClient:  # pylint: disable=R0903
         self.logger.debug("sending query %s" % payload)
         params = self._prepare_apl_options(opts)
         res = self.session.post(path, data=payload, params=params)
-        result = Util.from_dict(AplQueryResult, res.json())
+        result = Util.from_dict(QueryResult, res.json())
         self.logger.debug(f"apl query result: {result}")
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         self.logger.info(f"received query result with query_id: {query_id}")

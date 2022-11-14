@@ -50,7 +50,7 @@ class Projection:
 
 
 @dataclass
-class Query:
+class QueryLegacy:
     """represents a query that gets executed on a dataset."""
 
     # start time of the query. Required.
