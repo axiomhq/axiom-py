@@ -266,6 +266,10 @@ class DatasetsClient:  # pylint: disable=R0903
         result.savedQueryID = query_id
         return result
 
+    def apl_query(self, apl: str, opts: AplOptions) -> QueryResult:
+        """Executes the given apl query on the dataset identified by its id."""
+        return self.query(apl, opts)
+
     def query(self, apl: str, opts: AplOptions) -> QueryResult:
         """Executes the given apl query on the dataset identified by its id."""
 
