@@ -31,14 +31,14 @@ class TestLogger(unittest.TestCase):
         logger.warning("foo")
 
         # this log shouldn't be ingested yet
-        res = client.datasets.apl_query(dataset_name)
+        res = client.datasets.apl_query(dataset_name, {})
         self.assertEqual(0, res.status.rowsExamined)
 
         # flush events
         axiom_handler.flush()
 
         # this log shouldn't be ingested yet
-        res = client.datasets.apl_query(dataset_name)
+        res = client.datasets.apl_query(dataset_name, {})
         self.assertEqual(1, res.status.rowsExamined)
 
         # cleanup created dataset
