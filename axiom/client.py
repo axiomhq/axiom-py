@@ -25,9 +25,9 @@ AXIOM_URL = "https://cloud.axiom.co"
 
 @dataclass
 class Error:
-    status: int = field(default=None)
-    message: str = field(default=None)
-    error: str = field(default=None)
+    status: Optional[int] = field(default=None)
+    message: Optional[str] = field(default=None)
+    error: Optional[str] = field(default=None)
 
 
 @dataclass
@@ -61,10 +61,10 @@ class IngestOptions:
     # timestamp format defines a custom format for the TimestampField.
     # The reference time is `Mon Jan 2 15:04:05 -0700 MST 2006`, as specified
     # in https://pkg.go.dev/time/?tab=doc#Parse.
-    timestamp_format: str = field(default=None)
+    timestamp_format: Optional[str] = field(default=None)
     # CSV delimiter is the delimiter that separates CSV fields. Only valid when
     # the content to be ingested is CSV formatted.
-    CSV_delimiter: str = field(default=None)
+    CSV_delimiter: Optional[str] = field(default=None)
 
 
 class AplResultFormat(Enum):
@@ -220,7 +220,7 @@ class Client:  # pylint: disable=R0903
         )
 
     def query_legacy(
-        self, id: str, query: QueryLegacy, opts: QueryOptions = {}
+        self, id: str, query: QueryLegacy, opts: QueryOptions
     ) -> QueryLegacyResult:
         """Executes the given query on the dataset identified by its id."""
         if not opts.saveAsKind or (opts.saveAsKind == QueryKind.APL):
@@ -241,11 +241,11 @@ class Client:  # pylint: disable=R0903
         result.savedQueryID = query_id
         return result
 
-    def apl_query(self, apl: str, opts: AplOptions) -> QueryResult:
+    def apl_query(self, apl: str, opts: Optional[AplOptions]) -> QueryResult:
         """Executes the given apl query on the dataset identified by its id."""
         return self.query(apl, opts)
 
-    def query(self, apl: str, opts: AplOptions) -> QueryResult:
+    def query(self, apl: str, opts: Optional[AplOptions]) -> QueryResult:
         """Executes the given apl query on the dataset identified by its id."""
         path = "datasets/_apl"
         payload = ujson.dumps(
@@ -278,9 +278,7 @@ class Client:  # pylint: disable=R0903
 
         return params
 
-    def _prepare_ingest_options(
-        self, opts: Optional[IngestOptions] = None
-    ) -> Dict[str, Any]:
+    def _prepare_ingest_options(self, opts: Optional[IngestOptions]) -> Dict[str, Any]:
         """the query params for ingest api are expected in a format
         that couldn't be defined as a variable name because it has a dash.
         As a work around, we create the params dict manually."""
@@ -298,7 +296,7 @@ class Client:  # pylint: disable=R0903
 
         return params
 
-    def _prepare_apl_options(self, opts: AplOptions) -> Dict[str, Any]:
+    def _prepare_apl_options(self, opts: Optional[AplOptions]) -> Dict[str, Any]:
         """Prepare the apl query options for the request."""
 
         if opts is None:
@@ -314,8 +312,12 @@ class Client:  # pylint: disable=R0903
 
         return params
 
-    def _prepare_apl_payload(self, apl: str, opts: AplOptions) -> Dict[str, Any]:
+    def _prepare_apl_payload(
+        self, apl: str, opts: Optional[AplOptions]
+    ) -> Dict[str, Any]:
         """Prepare the apl query options for the request."""
+        if opts is None:
+            return {}
 
         params = {}
         params["apl"] = apl
