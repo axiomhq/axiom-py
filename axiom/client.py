@@ -2,6 +2,8 @@
 import ndjson
 import dacite
 import ujson
+import os
+from typing import Optional
 from logging import getLogger
 from dataclasses import dataclass, field
 from requests_toolbelt.sessions import BaseUrlSession
@@ -10,6 +12,7 @@ from requests.adapters import HTTPAdapter, Retry
 from .datasets import DatasetsClient, ContentType
 from .users import UsersClient
 from .__init__ import __version__
+
 
 AXIOM_URL = "https://cloud.axiom.co"
 
@@ -48,7 +51,14 @@ class Client:  # pylint: disable=R0903
     datasets: DatasetsClient
     users: UsersClient
 
-    def __init__(self, token: str, org_id: str = None, url_base: str = AXIOM_URL):
+    def __init__(self, token: Optional[str], org_id: Optional[str] = None, url_base: Optional[str] = None):
+        # fallback to env variables if token, org_id or url are not provided
+        if token is None:
+            token = os.getenv("AXIOM_TOKEN")
+        if org_id is None:
+            org_id = os.getenv("AXIOM_ORG_ID")
+        if url_base is None:
+            url_base = AXIOM_URL
         # Append /api/v1 to the url_base
         url_base = url_base.rstrip("/") + "/api/v1/"
 
@@ -71,7 +81,7 @@ class Client:  # pylint: disable=R0903
             }
         )
 
-        # if there is and organization id passed,
+        # if there is an organization id passed,
         # set it in the header
         if org_id:
             logger.info("found organization id: %s" % org_id)

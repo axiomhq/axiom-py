@@ -45,10 +45,7 @@ Create and use a client like this:
 import os
 import axiom
 
-access_token = os.getenv("AXIOM_TOKEN")
-org_id = os.getenv("AXIOM_ORG_ID")
-
-client = axiom.Client(access_token, org_id)
+client = axiom.Client()
 
 time = datetime.utcnow() - timedelta(hours=1)
 time_formatted = rfc3339.format(time)
@@ -60,6 +57,18 @@ client.datasets.ingest_events(
         {"bar": "baz", "_time": time_formatted},
     ])
 client.datasets.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
+```
+
+You can also configure the client using options passed to the client constructor:
+
+```py
+import os
+import axiom
+
+access_token = os.getenv("AXIOM_TOKEN")
+org_id = os.getenv("AXIOM_ORG_ID")
+
+client = axiom.Client(access_token, org_id)
 ```
 
 ## Contributing
