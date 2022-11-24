@@ -17,7 +17,7 @@
 
 For more information check out the [official documentation](https://axiom.co/docs).
 
-## Usage
+## Quickstart
 
 Install using `pip`:
 
@@ -48,7 +48,7 @@ import axiom
 access_token = os.getenv("AXIOM_TOKEN")
 org_id = os.getenv("AXIOM_ORG_ID")
 
-
+client = axiom.Client(access_token, org_id)
 client.datasets.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
 
