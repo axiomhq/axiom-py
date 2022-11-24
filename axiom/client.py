@@ -220,7 +220,7 @@ class Client:  # pylint: disable=R0903
         )
 
     def query_legacy(
-        self, id: str, query: QueryLegacy, opts: QueryOptions
+        self, id: str, query: QueryLegacy, opts: QueryOptions = {}
     ) -> QueryLegacyResult:
         """Executes the given query on the dataset identified by its id."""
         if not opts.saveAsKind or (opts.saveAsKind == QueryKind.APL):
