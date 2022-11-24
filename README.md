@@ -62,13 +62,9 @@ client.datasets.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 You can also configure the client using options passed to the client constructor:
 
 ```py
-import os
 import axiom
 
-access_token = os.getenv("AXIOM_TOKEN")
-org_id = os.getenv("AXIOM_ORG_ID")
-
-client = axiom.Client(access_token, org_id)
+client = axiom.Client("<api token>", "<org id>")
 ```
 
 ## Contributing
