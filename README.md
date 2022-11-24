@@ -49,6 +49,16 @@ access_token = os.getenv("AXIOM_TOKEN")
 org_id = os.getenv("AXIOM_ORG_ID")
 
 client = axiom.Client(access_token, org_id)
+
+time = datetime.utcnow() - timedelta(hours=1)
+time_formatted = rfc3339.format(time)
+
+client.datasets.ingest_events(
+    dataset="my-dataset",
+    events=[
+        {"foo": "bar", "_time": time_formatted},
+        {"bar": "baz", "_time": time_formatted},
+    ])
 client.datasets.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
 
