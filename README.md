@@ -17,7 +17,7 @@
 
 For more information check out the [official documentation](https://axiom.co/docs).
 
-## Usage
+## Quickstart
 
 Install using `pip`:
 
@@ -39,16 +39,31 @@ If you use the [Axiom CLI](https://github.com/axiomhq/cli), run `eval $(axiom co
 
 Otherwise create a personal token in [the Axiom settings](https://cloud.axiom.co/settings/profile) and export it as `AXIOM_TOKEN`. Set `AXIOM_ORG_ID` to the organization ID from the settings page of the organization you want to access.
 
+You can also configure the client using options passed to the client constructor:
+
+```py
+import axiom
+
+client = axiom.Client("<api token>", "<org id>")
+```
+
 Create and use a client like this:
 
 ```py
 import os
 import axiom
 
-access_token = os.getenv("AXIOM_TOKEN")
-org_id = os.getenv("AXIOM_ORG_ID")
+client = axiom.Client()
 
+time = datetime.utcnow() - timedelta(hours=1)
+time_formatted = rfc3339.format(time)
 
+client.datasets.ingest_events(
+    dataset="my-dataset",
+    events=[
+        {"foo": "bar", "_time": time_formatted},
+        {"bar": "baz", "_time": time_formatted},
+    ])
 client.datasets.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
 
