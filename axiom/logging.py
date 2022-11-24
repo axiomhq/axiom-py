@@ -15,7 +15,7 @@ class AxiomHandler(Handler):
     interval: int
     last_run: float
 
-    def __init__(self, client: Client, dataset: str, level=NOTSET, interval=3):
+    def __init__(self, client: Client, dataset: str, level=NOTSET, interval=1):
         Handler.__init__(self, level)
         # set urllib3 logging level to warning, check:
         # https://github.com/axiomhq/axiom-py/issues/23
@@ -24,7 +24,7 @@ class AxiomHandler(Handler):
         getLogger("urllib3").setLevel(WARNING)
         self.client = client
         self.dataset = dataset
-        self.logcache = []
+        self.buffer = []
         self.last_run = time.time()
         self.interval = interval
 
@@ -33,15 +33,12 @@ class AxiomHandler(Handler):
 
     def emit(self, record):
         """emit sends a log to Axiom."""
-        self.logcache.append(record)
-        if time.time() - self.last_run > self.interval:
-            self.client.ingest_events(self.dataset, self.logcache)
-            self.last_run = time.time()
-            self.logcache = []
-        else:
-            return
+        self.buffer.append(record)
+        if len(self.buffer) >= 1000 or time.time() - self.last_run > self.interval:
+            self.flush()
 
     def flush(self):
         """flush sends all logs in the logcache to Axiom."""
-        self.client.ingest_events(self.dataset, self.logcache)
-        self.logcache = []
+        self.client.ingest_events(self.dataset, self.buffer)
+        self.buffer = []
+        self.last_run = time.time()

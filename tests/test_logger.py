@@ -25,9 +25,21 @@ class TestLogger(unittest.TestCase):
 
         axiom_handler = AxiomHandler(client, dataset_name)
 
-        root = logging.getLogger()
-        root.addHandler(axiom_handler)
+        logger = logging.getLogger()
+        logger.addHandler(axiom_handler)
 
-        root.warning("foo")
+        logger.warning("foo")
+
+        # this log shouldn't be ingested yet
+        res = client.datasets.apl_query(dataset_name)
+        self.assertEqual(0, res.status.rowsExamined)
+
+        # flush events
+        axiom_handler.flush()
+
+        # this log shouldn't be ingested yet
+        res = client.datasets.apl_query(dataset_name)
+        self.assertEqual(1, res.status.rowsExamined)
+
         # cleanup created dataset
         client.datasets.delete(dataset_name)
