@@ -4,17 +4,14 @@ import os
 import unittest
 from typing import List, Dict, Any
 from logging import getLogger
+from requests.exceptions import HTTPError
+from datetime import timedelta
 from .helpers import get_random_name
 from axiom import (
     Client,
     DatasetCreateRequest,
     DatasetUpdateRequest,
 )
-
-from axiom.query.aggregation import Aggregation, AggregationOperation
-
-from requests.exceptions import HTTPError
-from datetime import timedelta
 
 
 class TestDatasets(unittest.TestCase):
@@ -90,7 +87,7 @@ class TestDatasets(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """A teardown that checks if the dataset still exists and deletes it would be great,
+        """A teardown that checks if the dataset still exists and deletes it,
         otherwise we might run into zombie datasets on failures."""
         cls.logger.info("cleaning up after TestDatasets...")
         try:

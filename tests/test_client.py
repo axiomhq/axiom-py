@@ -8,6 +8,7 @@ import responses
 from logging import getLogger
 from datetime import datetime, timedelta
 from .helpers import get_random_name
+from requests.exceptions import HTTPError
 from axiom import (
     Client,
     AplOptions,
@@ -16,6 +17,7 @@ from axiom import (
     ContentType,
     IngestOptions,
     WrongQueryKindException,
+    DatasetCreateRequest,
 )
 from axiom.query import (
     QueryLegacy,
@@ -72,6 +74,12 @@ class TestClient(unittest.TestCase):
                 "agent": "Debian APT-HTTP/1.3 (0.8.16~exp12ubuntu10.21)",
             },
         ]
+        # create dataset to test the client
+        req = DatasetCreateRequest(
+            name=cls.dataset_name,
+            description="create a dataset to test the python client",
+        )
+        cls.client.datasets.create(req)
 
     @responses.activate
     def test_retries(self):
@@ -88,7 +96,7 @@ class TestClient(unittest.TestCase):
         resp = self.client.datasets.get("test")
         assert len(responses.calls) == 3
 
-    def test_step002_ingest(self):
+    def test_step001_ingest(self):
         """Tests the ingest endpoint"""
         data: bytes = ujson.dumps(self.events).encode()
         payload = gzip.compress(data)
@@ -112,7 +120,7 @@ class TestClient(unittest.TestCase):
         ), f"expected ingested count to equal 2, found {res.ingested}"
         self.logger.info("ingested 2 events successfully.")
 
-    def test_step003_ingest_events(self):
+    def test_step002_ingest_events(self):
         """Tests the ingest_events method"""
         time = datetime.utcnow() - timedelta(hours=1)
         time_formatted = rfc3339.format(time)
@@ -154,7 +162,7 @@ class TestClient(unittest.TestCase):
 
         self.fail("error should have been thrown for wrong content-type")
 
-    def test_step007_query(self):
+    def test_step004_query(self):
         """Test querying a dataset"""
         # query the events we ingested in step2
         startTime = datetime.utcnow() - timedelta(minutes=2)
@@ -171,7 +179,7 @@ class TestClient(unittest.TestCase):
         self.assertIsNotNone(qr.savedQueryID)
         self.assertEqual(len(qr.matches), len(self.events))
 
-    def test_step007_apl_query(self):
+    def test_step005_apl_query(self):
         """Test apl query"""
         # query the events we ingested in step2
         startTime = datetime.utcnow() - timedelta(minutes=2)
@@ -189,7 +197,7 @@ class TestClient(unittest.TestCase):
 
         self.assertEqual(len(qr.matches), len(self.events))
 
-    def test_step007_wrong_query_kind(self):
+    def test_step005_wrong_query_kind(self):
         """Test wrong query kind"""
         startTime = datetime.utcnow() - timedelta(minutes=2)
         endTime = datetime.utcnow()
@@ -208,7 +216,7 @@ class TestClient(unittest.TestCase):
 
         self.fail("was excepting WrongQueryKindException")
 
-    def test_step007_complex_query(self):
+    def test_step005_complex_query(self):
         """Test complex query"""
         startTime = datetime.utcnow() - timedelta(minutes=2)
         endTime = datetime.utcnow()
@@ -233,3 +241,21 @@ class TestClient(unittest.TestCase):
         if len(res.buckets.totals):
             agg = res.buckets.totals[0].aggregations[0]
             self.assertEqual("event_count", agg.op)
+
+    @classmethod
+    def tearDownClass(cls):
+        """A teardown that checks if the dataset still exists and deletes it,
+        otherwise we might run into zombie datasets on failures."""
+        cls.logger.info("cleaning up after TestClient...")
+        try:
+            ds = cls.client.datasets.get(cls.dataset_name)
+            if ds:
+                cls.client.datasets.delete(cls.dataset_name)
+                cls.logger.info(
+                    "dataset (%s) was not deleted as part of the test, deleting it now."
+                    % cls.dataset_name
+                )
+        except HTTPError as err:
+            # nothing to do here, since the dataset doesn't exist
+            cls.logger.warning(err)
+        cls.logger.info("finish cleaning up after TestClient")
