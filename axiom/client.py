@@ -298,11 +298,12 @@ class Client:  # pylint: disable=R0903
 
     def _prepare_apl_options(self, opts: Optional[AplOptions]) -> Dict[str, Any]:
         """Prepare the apl query options for the request."""
+        params = {}
 
         if opts is None:
-            return {}
+            params["format"] = AplResultFormat.Legacy
+            return params
 
-        params = {}
         if opts.no_cache:
             params["nocache"] = opts.no_cache.__str__()
         if opts.save:
