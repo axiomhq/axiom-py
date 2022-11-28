@@ -241,11 +241,11 @@ class Client:  # pylint: disable=R0903
         result.savedQueryID = query_id
         return result
 
-    def apl_query(self, apl: str, opts: Optional[AplOptions]) -> QueryResult:
+    def apl_query(self, apl: str, opts: Optional[AplOptions] = None) -> QueryResult:
         """Executes the given apl query on the dataset identified by its id."""
         return self.query(apl, opts)
 
-    def query(self, apl: str, opts: Optional[AplOptions]) -> QueryResult:
+    def query(self, apl: str, opts: Optional[AplOptions] = None) -> QueryResult:
         """Executes the given apl query on the dataset identified by its id."""
         path = "datasets/_apl"
         payload = ujson.dumps(
