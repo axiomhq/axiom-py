@@ -301,7 +301,7 @@ class Client:  # pylint: disable=R0903
         params = {}
 
         if opts is None:
-            params["format"] = AplResultFormat.Legacy
+            params["format"] = AplResultFormat.Legacy.value
             return params
 
         if opts.no_cache:
