@@ -316,15 +316,13 @@ class Client:  # pylint: disable=R0903
         self, apl: str, opts: Optional[AplOptions]
     ) -> Dict[str, Any]:
         """Prepare the apl query options for the request."""
-        if opts is None:
-            return {}
-
         params = {}
         params["apl"] = apl
 
-        if opts.start_time:
-            params["startTime"] = opts.start_time
-        if opts.end_time:
-            params["endTime"] = opts.end_time
+        if opts is not None:
+            if opts.start_time:
+                params["startTime"] = opts.start_time
+            if opts.end_time:
+                params["endTime"] = opts.end_time
 
         return params
