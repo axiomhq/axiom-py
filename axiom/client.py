@@ -241,11 +241,11 @@ class Client:  # pylint: disable=R0903
         result.savedQueryID = query_id
         return result
 
-    def apl_query(self, apl: str, opts: Optional[AplOptions]) -> QueryResult:
+    def apl_query(self, apl: str, opts: Optional[AplOptions] = None) -> QueryResult:
         """Executes the given apl query on the dataset identified by its id."""
         return self.query(apl, opts)
 
-    def query(self, apl: str, opts: Optional[AplOptions]) -> QueryResult:
+    def query(self, apl: str, opts: Optional[AplOptions] = None) -> QueryResult:
         """Executes the given apl query on the dataset identified by its id."""
         path = "datasets/_apl"
         payload = ujson.dumps(
@@ -298,11 +298,12 @@ class Client:  # pylint: disable=R0903
 
     def _prepare_apl_options(self, opts: Optional[AplOptions]) -> Dict[str, Any]:
         """Prepare the apl query options for the request."""
+        params = {}
 
         if opts is None:
-            return {}
+            params["format"] = AplResultFormat.Legacy.value
+            return params
 
-        params = {}
         if opts.no_cache:
             params["nocache"] = opts.no_cache.__str__()
         if opts.save:
@@ -316,15 +317,13 @@ class Client:  # pylint: disable=R0903
         self, apl: str, opts: Optional[AplOptions]
     ) -> Dict[str, Any]:
         """Prepare the apl query options for the request."""
-        if opts is None:
-            return {}
-
         params = {}
         params["apl"] = apl
 
-        if opts.start_time:
-            params["startTime"] = opts.start_time
-        if opts.end_time:
-            params["endTime"] = opts.end_time
+        if opts is not None:
+            if opts.start_time:
+                params["startTime"] = opts.start_time
+            if opts.end_time:
+                params["endTime"] = opts.end_time
 
         return params
