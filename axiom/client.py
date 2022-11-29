@@ -132,7 +132,7 @@ class Client:  # pylint: disable=R0903
 
     def __init__(
         self,
-        token: Optional[str],
+        token: Optional[str] = None,
         org_id: Optional[str] = None,
         url_base: Optional[str] = None,
     ):
@@ -245,7 +245,7 @@ class Client:  # pylint: disable=R0903
         """Executes the given apl query on the dataset identified by its id."""
         return self.query(apl, opts)
 
-    def query(self, apl: str, opts: Optional[AplOptions]) -> QueryResult:
+    def query(self, apl: str, opts: Optional[AplOptions] = None) -> QueryResult:
         """Executes the given apl query on the dataset identified by its id."""
         path = "datasets/_apl"
         payload = ujson.dumps(
