@@ -6,6 +6,3 @@ def list_datasets():
     res = client.datasets.get_list()
     for dataset in res:
         print(f"found dataset: {dataset.name}")
-
-
-list_datasets()
