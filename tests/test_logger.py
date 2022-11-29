@@ -37,7 +37,7 @@ class TestLogger(unittest.TestCase):
         # flush events
         axiom_handler.flush()
 
-        # this log shouldn't be ingested yet
+        # now we should have a log
         res = client.apl_query(dataset_name)
         self.assertEqual(1, res.status.rowsExamined)
 
