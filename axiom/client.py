@@ -132,7 +132,7 @@ class Client:  # pylint: disable=R0903
 
     def __init__(
         self,
-        token: Optional[str],
+        token: Optional[str] = None,
         org_id: Optional[str] = None,
         url_base: Optional[str] = None,
     ):
