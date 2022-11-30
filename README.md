@@ -67,6 +67,8 @@ client.datasets.ingest_events(
 client.datasets.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
 
+for more examples, check out the [examples](examples) directory.
+
 ## Contributing
 
 This project uses [Poetry](https://python-poetry.org) for dependecy management
