@@ -27,20 +27,6 @@ jobs:
       - run: poetry install
       - run: poetry run black --check axiom tests examples
       - run: poetry run pylint -E axiom tests examples
-  examples:
-    name: Run Examples
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - run: pip install poetry==${{ env.POETRY_VERSION }}
-        working-directory: ./examples
-      - run: poetry install
-        working-directory: ./examples
-      - run: poetry run python ./main.py
-        working-directory: ./examples
   test-dev:
     name: Test (Cloud Dev)
     runs-on: ubuntu-latest
