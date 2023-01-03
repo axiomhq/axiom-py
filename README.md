@@ -86,7 +86,7 @@ Distributed under MIT License (`The MIT License`).
 <!-- Badges -->
 
 [ci]: https://github.com/axiomhq/axiom-py/actions/workflows/ci.yml
-[ci_badge]: https://github.com/axiomhq/axiom-py/actions/workflows/ci.yml/badge.svg
+[ci_badge]: https://img.shields.io/github/actions/workflow/status/axiomhq/axiom-py/ci.yml?branch=main&ghcache=unused
 [pypi]: https://pypi.org/project/axiom-py/
 [pypi_badge]: https://img.shields.io/pypi/v/axiom-py.svg
 [version_badge]: https://img.shields.io/pypi/pyversions/axiom-py.svg
