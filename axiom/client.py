@@ -20,7 +20,7 @@ from .users import UsersClient
 from .__init__ import __version__
 
 
-AXIOM_URL = "https://cloud.axiom.co"
+AXIOM_URL = "https://api.axiom.co"
 
 
 @dataclass
@@ -143,8 +143,8 @@ class Client:  # pylint: disable=R0903
             org_id = os.getenv("AXIOM_ORG_ID")
         if url_base is None:
             url_base = AXIOM_URL
-        # Append /api/v1 to the url_base
-        url_base = url_base.rstrip("/") + "/api/v1/"
+        # Append /v1 to the url_base
+        url_base = url_base.rstrip("/") + "/v1/"
 
         self.logger = getLogger()
         self.session = BaseUrlSession(url_base)

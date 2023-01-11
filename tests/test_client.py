@@ -83,7 +83,7 @@ class TestClient(unittest.TestCase):
 
     @responses.activate
     def test_retries(self):
-        url = os.getenv("AXIOM_URL") + "/api/v1/datasets/test"
+        url = os.getenv("AXIOM_URL") + "/v1/datasets/test"
         responses.add(responses.GET, url, status=500)
         responses.add(responses.GET, url, status=502)
         responses.add(
