@@ -60,13 +60,13 @@ client = axiom.Client()
 time = datetime.utcnow() - timedelta(hours=1)
 time_formatted = rfc3339.format(time)
 
-client.datasets.ingest_events(
+client.ingest_events(
     dataset="my-dataset",
     events=[
         {"foo": "bar", "_time": time_formatted},
         {"bar": "baz", "_time": time_formatted},
     ])
-client.datasets.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
+client.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
 
 for more examples, check out the [examples](examples) directory.
