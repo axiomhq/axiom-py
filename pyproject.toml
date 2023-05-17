@@ -11,7 +11,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.8"
 requests = "^2.25.1"
-requests-toolbelt = "^0.9.1"
+requests-toolbelt = ">= 0.9.1, <1.1.0"
 ujson = "^5.2.0"
 dacite = "^1.6.0"
 pyhumps = "^1.6.1"
