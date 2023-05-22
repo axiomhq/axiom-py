@@ -41,9 +41,9 @@ jobs:
       - run: poetry install
       - run: poetry run python -m pytest
         env:
-          AXIOM_URL: ${{ secrets.TESTING_DEV_API_URL }}
-          AXIOM_TOKEN: ${{ secrets.TESTING_DEV_TOKEN }}
-          AXIOM_ORG_ID: ${{ secrets.TESTING_DEV_ORG_ID }}
+          AXIOM_URL: ${{ secrets.TESTING_STAGING_API_URL }}
+          AXIOM_TOKEN: ${{ secrets.TESTING_STAGING_TOKEN }}
+          AXIOM_ORG_ID: ${{ secrets.TESTING_STAGING_ORG_ID }}
   publish:
     name: Publish on PyPi
     runs-on: ubuntu-latest
