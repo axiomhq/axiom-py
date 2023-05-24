@@ -10,9 +10,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-# urllib3 2.0 and higher contains a breaking change, we
-# we prevent its use by using a version of requests that uses urllib3 < 2.0.
-requests = "2.30.0"
+requests = "^2.25.1"
 requests-toolbelt = "^0.9.1"
 ujson = "^5.2.0"
 dacite = "^1.6.0"
