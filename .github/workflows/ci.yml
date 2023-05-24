@@ -28,7 +28,7 @@ jobs:
       - run: poetry run black --check axiom tests examples
       - run: poetry run pylint -E axiom tests examples
   test-integration:
-    name: Test (Cloud Dev)
+    name: Test Integration
     runs-on: ubuntu-latest
     if: github.repository == 'axiomhq/axiom-py'
     needs: lint
@@ -36,11 +36,7 @@ jobs:
       fail-fast: true
       max-parallel: 1
       matrix:
-        python:
-          - 3.8
-          - 3.9
-          - 3.10
-          - 3.11
+        python: ["3.8", "3.9", "3.10", "3.11"]
         environment:
           - development
           - staging
