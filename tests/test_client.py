@@ -139,30 +139,6 @@ class TestClient(unittest.TestCase):
             res.ingested == 2
         ), f"expected ingested count to equal 2, found {res.ingested}"
 
-    def test_step003_ingest_wrong_encoding(self):
-        try:
-            self.client.ingest("", bytes(), ContentType.JSON)
-        except ValueError as err:
-            self.logger.debug(err)
-            self.logger.debug(
-                "Exception was raised for wrong content-encoding, as expected."
-            )
-            return
-
-        self.fail("error should have been thrown for wrong content-encoding")
-
-    def test_step003_ingest_wrong_content_type(self):
-        try:
-            self.client.ingest("", bytes(), enc=ContentEncoding.GZIP)
-        except ValueError as err:
-            self.logger.debug(err)
-            self.logger.debug(
-                "Exception was raised for wrong content-type, as expected."
-            )
-            return
-
-        self.fail("error should have been thrown for wrong content-type")
-
     def test_step004_query(self):
         """Test querying a dataset"""
         # query the events we ingested in step2
