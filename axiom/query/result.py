@@ -59,19 +59,19 @@ class QueryStatus:
     isPartial: bool
     # ContinuationToken is populated when isPartial is true and must be passed
     # to the next query request to retrieve the next result set.
-    continuationToken: str = field(default=False)
+    continuationToken: str | None = field(default=None)
     # describes if the query result is estimated.
-    isEstimate: bool = field(default=None)
+    isEstimate: bool | None = field(default=None)
     # the timestamp of the oldest block examined.
-    minBlockTime: str = field(default=None)
+    minBlockTime: str | None = field(default=None)
     # the timestamp of the newest block examined.
-    maxBlockTime: str = field(default=None)
+    maxBlockTime: str | None = field(default=None)
     # messages associated with the query.
     messages: List[Message] = field(default_factory=lambda: [])
     # row id of the newest row, as seen server side.
-    maxCursor: str = field(default=None)
+    maxCursor: str | None = field(default=None)
     # row id of the oldest row, as seen server side.
-    minCursor: str = field(default=None)
+    minCursor: str | None = field(default=None)
 
 
 @dataclass
@@ -148,7 +148,7 @@ class QueryLegacyResult:
     # savedQueryID is the ID of the query that generated this result when it
     # was saved on the server. This is only set when the query was send with
     # the `saveAsKind` option specified.
-    savedQueryID: str = field(default=None)
+    savedQueryID: str | None = field(default=None)
 
 
 @dataclass

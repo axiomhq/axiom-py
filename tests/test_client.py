@@ -83,7 +83,8 @@ class TestClient(unittest.TestCase):
 
     @responses.activate
     def test_retries(self):
-        url = os.getenv("AXIOM_URL") + "/v1/datasets/test"
+        axiomUrl = os.getenv("AXIOM_URL") or ""
+        url = axiomUrl + "/v1/datasets/test"
         responses.add(responses.GET, url, status=500)
         responses.add(responses.GET, url, status=502)
         responses.add(
@@ -93,7 +94,7 @@ class TestClient(unittest.TestCase):
             json={"name": "test", "description": "", "who": "", "created": ""},
         )
 
-        resp = self.client.datasets.get("test")
+        self.client.datasets.get("test")
         assert len(responses.calls) == 3
 
     def test_step001_ingest(self):
@@ -140,7 +141,7 @@ class TestClient(unittest.TestCase):
 
     def test_step003_ingest_wrong_encoding(self):
         try:
-            self.client.ingest("", "", ContentType.JSON, "")
+            self.client.ingest("", bytes(), ContentType.JSON)
         except ValueError as err:
             self.logger.debug(err)
             self.logger.debug(
@@ -152,7 +153,7 @@ class TestClient(unittest.TestCase):
 
     def test_step003_ingest_wrong_content_type(self):
         try:
-            self.client.ingest("", "", "", ContentEncoding.GZIP)
+            self.client.ingest("", bytes(), enc=ContentEncoding.GZIP)
         except ValueError as err:
             self.logger.debug(err)
             self.logger.debug(
@@ -238,7 +239,7 @@ class TestClient(unittest.TestCase):
         # self.assertEqual(len(self.events), res.status.rowsExamined)
         self.assertEqual(len(self.events), res.status.rowsMatched)
 
-        if len(res.buckets.totals):
+        if res.buckets.totals and len(res.buckets.totals):
             agg = res.buckets.totals[0].aggregations[0]
             self.assertEqual("event_count", agg.op)
 

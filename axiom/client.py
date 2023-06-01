@@ -180,8 +180,8 @@ class Client:  # pylint: disable=R0903
         self,
         dataset: str,
         payload: bytes,
-        contentType: ContentType,
-        enc: ContentEncoding,
+        contentType: ContentType | None = None,
+        enc: ContentEncoding | None = None,
         opts: Optional[IngestOptions] = None,
     ) -> IngestStatus:
         """Ingest the events into the named dataset and returns the status."""
