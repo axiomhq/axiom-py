@@ -12,48 +12,65 @@ on:
 
 env:
   PYTHON_VERSION: "3.8"
-  POETRY_VERSION: "1.1.12"
+  POETRY_VERSION: "1.5"
 
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - run: pip install poetry==${{ env.POETRY_VERSION }}
       - run: poetry install
       - run: poetry run black --check axiom tests examples
       - run: poetry run pylint -E axiom tests examples
-  test-dev:
-    name: Test (Cloud Dev)
+  test-integration:
+    name: Test Integration
     runs-on: ubuntu-latest
     if: github.repository == 'axiomhq/axiom-py'
     needs: lint
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix:
+        python: ["3.8", "3.9", "3.10", "3.11"]
+        environment:
+          - development
+          - staging
+        include:
+          - environment: development
+            url: TESTING_DEV_API_URL
+            token: TESTING_DEV_TOKEN
+            org_id: TESTING_DEV_ORG_ID
+          - environment: staging
+            url: TESTING_STAGING_API_URL
+            token: TESTING_STAGING_TOKEN
+            org_id: TESTING_STAGING_ORG_ID
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ matrix.python }}
       - run: pip install poetry==${{ env.POETRY_VERSION }}
       - run: poetry install
       - run: poetry run python -m pytest
         env:
-          AXIOM_URL: ${{ secrets.TESTING_DEV_API_URL }}
-          AXIOM_TOKEN: ${{ secrets.TESTING_DEV_TOKEN }}
-          AXIOM_ORG_ID: ${{ secrets.TESTING_DEV_ORG_ID }}
+          AXIOM_URL: ${{ secrets[matrix.url] }}
+          AXIOM_TOKEN: ${{ secrets[matrix.token] }}
+          AXIOM_ORG_ID: ${{ secrets[matrix.org_id] }}
   publish:
     name: Publish on PyPi
     runs-on: ubuntu-latest
     if: github.repository == 'axiomhq/axiom-py' && startsWith(github.ref, 'refs/tags')
     needs:
-      - test-dev
+      - test-integration
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - run: pip install poetry==1.1.7
+      - run: pip install poetry==${{ env.POETRY_VERSION }}
       - run: poetry publish --build -u __token__ -p "${{ secrets.PYPI_TOKEN }}"
