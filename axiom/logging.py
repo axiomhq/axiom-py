@@ -39,6 +39,8 @@ class AxiomHandler(Handler):
 
     def flush(self):
         """flush sends all logs in the logcache to Axiom."""
+        self.last_run = time.time()
+        if len(self.buffer) == 0:
+            return
         self.client.ingest_events(self.dataset, self.buffer)
         self.buffer = []
-        self.last_run = time.time()
