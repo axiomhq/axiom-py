@@ -30,7 +30,8 @@ jobs:
   test-integration:
     name: Test Integration
     runs-on: ubuntu-latest
-    if: github.repository == 'axiomhq/axiom-py'
+    # run integration tests on PRs originating in the upstream repo (non-forks only)
+    if: github.event.pull_request.head.repo.full_name == github.repository
     needs: lint
     strategy:
       fail-fast: true
