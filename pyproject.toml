@@ -19,7 +19,7 @@ dacite = "^1.6.0"
 pyhumps = "^1.6.1"
 ndjson = "^0.3.1"
 rfc3339 = "^6.2"
-iso8601 = "^1.0.2"
+iso8601 = ">=1.0.2,<3.0.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
