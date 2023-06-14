@@ -13,19 +13,19 @@ packages = [
 urllib3 = "<3.0.0"
 python = "^3.8"
 requests = "^2.30.0"
-requests-toolbelt = "^0.9.1"
+requests-toolbelt = ">= 0.9.1, <1.1.0"
 ujson = "^5.2.0"
 dacite = "^1.6.0"
-pyhumps = "^1.6.1"
+pyhumps = ">=1.6.1,<4.0.0"
 ndjson = "^0.3.1"
 rfc3339 = "^6.2"
-iso8601 = "^1.0.2"
+iso8601 = ">=1.0.2,<3.0.0"
 
 [tool.poetry.dev-dependencies]
-black = "^22.3.0"
+black = "^23.3.0"
 pytest = "^7.3.2"
 pylint = "^2.7.2"
-responses = "^0.21.0"
+responses = "^0.23.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
