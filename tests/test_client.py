@@ -34,7 +34,6 @@ from axiom.query import (
 
 
 class TestClient(unittest.TestCase):
-
     client: Client
 
     @classmethod

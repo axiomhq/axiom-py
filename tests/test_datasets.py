@@ -15,7 +15,6 @@ from axiom import (
 
 
 class TestDatasets(unittest.TestCase):
-
     dataset_name: str
     events: List[Dict[str, Any]]
     client: Client
