@@ -52,8 +52,9 @@ client = axiom.Client("<api token>", "<org id>")
 Create and use a client like this:
 
 ```py
-import os
 import axiom
+import rfc3339
+from datetime import datetime,timedelta
 
 client = axiom.Client()
 
