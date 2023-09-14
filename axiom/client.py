@@ -212,7 +212,9 @@ class Client:  # pylint: disable=R0903
     ) -> IngestStatus:
         """Ingest the events into the named dataset and returns the status."""
         # encode request payload to NDJSON
-        content = ndjson.dumps(events, default=Util.handle_json_serialization).encode("UTF-8")
+        content = ndjson.dumps(events, default=Util.handle_json_serialization).encode(
+            "UTF-8"
+        )
         gzipped = gzip.compress(content)
 
         return self.ingest(
