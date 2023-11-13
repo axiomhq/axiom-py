@@ -25,7 +25,7 @@ class AxiomHandler(Handler):
         self.client = client
         self.dataset = dataset
         self.buffer = []
-        self.last_run = time.time()
+        self.last_run = time.monotonic()
         self.interval = interval
 
         # register flush on exit,
@@ -34,12 +34,12 @@ class AxiomHandler(Handler):
     def emit(self, record):
         """emit sends a log to Axiom."""
         self.buffer.append(record.__dict__)
-        if len(self.buffer) >= 1000 or time.time() - self.last_run > self.interval:
+        if len(self.buffer) >= 1000 or time.monotonic() - self.last_run > self.interval:
             self.flush()
 
     def flush(self):
         """flush sends all logs in the logcache to Axiom."""
-        self.last_run = time.time()
+        self.last_run = time.monotonic()
         if len(self.buffer) == 0:
             return
         self.client.ingest_events(self.dataset, self.buffer)

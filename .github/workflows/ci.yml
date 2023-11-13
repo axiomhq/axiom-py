@@ -27,11 +27,12 @@ jobs:
       - run: poetry install
       - run: poetry run black --check axiom tests examples
       - run: poetry run pylint -E axiom tests examples
+
   test-integration:
     name: Test Integration
     runs-on: ubuntu-latest
     # run integration tests on PRs originating in the upstream repo (non-forks only)
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.repository == 'axiomhq/axiom-py' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     needs: lint
     strategy:
       fail-fast: true
@@ -62,6 +63,7 @@ jobs:
           AXIOM_URL: ${{ secrets[matrix.url] }}
           AXIOM_TOKEN: ${{ secrets[matrix.token] }}
           AXIOM_ORG_ID: ${{ secrets[matrix.org_id] }}
+
   publish:
     name: Publish on PyPi
     runs-on: ubuntu-latest
