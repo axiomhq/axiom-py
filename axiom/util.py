@@ -1,6 +1,7 @@
 import dacite
 import iso8601
 from enum import Enum
+from uuid import UUID
 from typing import Type, TypeVar
 from datetime import datetime, timedelta
 
@@ -66,9 +67,10 @@ class Util:
     @classmethod
     def handle_json_serialization(cls, obj):
         if isinstance(obj, datetime):
-            d = obj.isoformat("T") + "Z"
-            return d
+            return obj.isoformat("T") + "Z"
         elif isinstance(obj, timedelta):
             return str(obj.seconds) + "s"
         elif isinstance(obj, Enum):
             return obj.value
+        elif isinstance(obj, UUID):
+            return str(obj)
