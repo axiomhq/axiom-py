@@ -134,6 +134,9 @@ poetry.lock
 # VSCode
 .vscode/
 
+# JetBrains
+.idea/
+
 # Direnv
 /.envrc
 /.direnv
