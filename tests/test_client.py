@@ -1,4 +1,5 @@
 """This module contains the tests for the axiom client."""
+
 import os
 import unittest
 import gzip
@@ -6,7 +7,7 @@ import ujson
 import rfc3339
 import responses
 from logging import getLogger
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from .helpers import get_random_name
 from requests.exceptions import HTTPError
 from axiom import (
@@ -61,6 +62,7 @@ class TestClient(unittest.TestCase):
                 "bytes": 0,
                 "referrer": "-",
                 "agent": "Debian APT-HTTP/1.3 (0.8.16~exp12ubuntu10.21)",
+                "some": {"nested": "value"},
             },
             {
                 "_time": time_formatted,
@@ -71,6 +73,7 @@ class TestClient(unittest.TestCase):
                 "bytes": 0,
                 "referrer": "-",
                 "agent": "Debian APT-HTTP/1.3 (0.8.16~exp12ubuntu10.21)",
+                "some": {"nested": {"some": ["array"]}},
             },
         ]
         # create dataset to test the client
@@ -109,7 +112,7 @@ class TestClient(unittest.TestCase):
         res = self.client.ingest(
             self.dataset_name,
             payload=payload,
-            contentType=ContentType.JSON,
+            content_type=ContentType.JSON,
             enc=ContentEncoding.GZIP,
             opts=opts,
         )
@@ -141,48 +144,47 @@ class TestClient(unittest.TestCase):
     def test_step004_query(self):
         """Test querying a dataset"""
         # query the events we ingested in step2
-        startTime = datetime.utcnow() - timedelta(minutes=2)
-        endTime = datetime.utcnow()
+        start_time = datetime.utcnow() - timedelta(minutes=2)
+        end_time = datetime.utcnow()
 
-        q = QueryLegacy(startTime=startTime, endTime=endTime)
+        q = QueryLegacy(start_time, end_time)
         opts = QueryOptions(
-            streamingDuration=timedelta(seconds=60),
+            streaming_duration=timedelta(seconds=60),
             nocache=True,
-            saveAsKind=QueryKind.ANALYTICS,
+            save_as_kind=QueryKind.ANALYTICS,
         )
         qr = self.client.query_legacy(self.dataset_name, q, opts)
 
-        self.assertIsNotNone(qr.savedQueryID)
+        self.assertIsNotNone(qr.save_query_id)
         self.assertEqual(len(qr.matches), len(self.events))
 
     def test_step005_apl_query(self):
         """Test apl query"""
         # query the events we ingested in step2
-        startTime = datetime.utcnow() - timedelta(minutes=2)
-        endTime = datetime.utcnow()
+        start_time = datetime.utcnow() - timedelta(minutes=2)
+        end_time = datetime.utcnow()
 
-        apl = "['%s']" % self.dataset_name
         opts = AplOptions(
-            start_time=startTime,
-            end_time=endTime,
+            start_time=start_time,
+            end_time=end_time,
             no_cache=True,
             save=False,
             format=AplResultFormat.Legacy,
+            include_cursor=True,
         )
-        qr = self.client.query(apl, opts)
-
+        qr = self.client.query(f"['{self.dataset_name}']", opts)
         self.assertEqual(len(qr.matches), len(self.events))
 
     def test_step005_wrong_query_kind(self):
         """Test wrong query kind"""
-        startTime = datetime.utcnow() - timedelta(minutes=2)
-        endTime = datetime.utcnow()
+        start_time = datetime.utcnow() - timedelta(minutes=2)
+        end_time = datetime.utcnow()
         opts = QueryOptions(
-            streamingDuration=timedelta(seconds=60),
+            streaming_duration=timedelta(seconds=60),
             nocache=True,
-            saveAsKind=QueryKind.APL,
+            save_as_kind=QueryKind.APL,
         )
-        q = QueryLegacy(startTime, endTime)
+        q = QueryLegacy(start_time, end_time)
 
         try:
             self.client.query_legacy(self.dataset_name, q, opts)
@@ -194,12 +196,12 @@ class TestClient(unittest.TestCase):
 
     def test_step005_complex_query(self):
         """Test complex query"""
-        startTime = datetime.utcnow() - timedelta(minutes=2)
-        endTime = datetime.utcnow()
+        start_time = datetime.utcnow() - timedelta(minutes=2)
+        end_time = datetime.utcnow()
         aggregations = [
             Aggregation(alias="event_count", op=AggregationOperation.COUNT, field="*")
         ]
-        q = QueryLegacy(startTime, endTime, aggregations=aggregations)
+        q = QueryLegacy(start_time, end_time, aggregations=aggregations)
         q.groupBy = ["success", "remote_ip"]
         q.filter = Filter(FilterOperation.EQUAL, "response", 304)
         q.order = [
@@ -211,12 +213,21 @@ class TestClient(unittest.TestCase):
 
         res = self.client.query_legacy(self.dataset_name, q, QueryOptions())
 
-        # self.assertEqual(len(self.events), res.status.rowsExamined)
-        self.assertEqual(len(self.events), res.status.rowsMatched)
+        self.assertEqual(len(self.events), res.status.rows_matched)
 
         if res.buckets.totals and len(res.buckets.totals):
             agg = res.buckets.totals[0].aggregations[0]
             self.assertEqual("event_count", agg.op)
+
+    def test_step006_to_pandas(self):
+        """Test converting getting dataframe from dataset"""
+        df = self.client.df(
+            self.dataset_name,
+            datetime.now(timezone.utc) - timedelta(minutes=5),
+            datetime.now(timezone.utc),
+        )
+        self.assertEqual(df.shape[0], len(self.events))
+        self.assertEqual(df["some.nested.some"].values[1], ["array"])
 
     @classmethod
     def tearDownClass(cls):

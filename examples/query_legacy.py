@@ -9,7 +9,7 @@ def queryLegacy(dataset_name):
 
     client = Client()
     res = client.query_legacy(
-        dataset_name, query, QueryOptions(saveAsKind=QueryKind.ANALYTICS)
+        dataset_name, query, QueryOptions(save_as_kind=QueryKind.ANALYTICS)
     )
     if res.matches is None or len(res.matches) == 0:
         print("No matches found")

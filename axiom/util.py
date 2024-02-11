@@ -1,11 +1,19 @@
 import dacite
-import iso8601
 from enum import Enum
 from uuid import UUID
 from typing import Type, TypeVar
 from datetime import datetime, timedelta
+import inflection
+import iso8601
 
-from .query import QueryKind
+from .query import (
+    QueryKind,
+    QueryStatus,
+    Request,
+    TabularQueryResult,
+    LegacyQueryResult,
+    Interval,
+)
 from .query.aggregation import AggregationOperation
 from .query.result import MessageCode, MessagePriority
 from .query.filter import FilterOperation
@@ -22,21 +30,28 @@ class Util:
         cfg = dacite.Config(
             type_hooks={
                 QueryKind: QueryKind,
-                datetime: cls.convert_string_to_datetime,
                 AggregationOperation: AggregationOperation,
                 FilterOperation: FilterOperation,
                 MessageCode: MessageCode,
                 MessagePriority: MessagePriority,
+                QueryStatus: cls.convert_keys_to_snakecase,
+                Request: cls.convert_keys_to_snakecase,
+                TabularQueryResult: cls.convert_keys_to_snakecase,
+                LegacyQueryResult: cls.convert_keys_to_snakecase,
+                Interval: cls.convert_keys_to_snakecase,
+                datetime: cls.convert_string_to_datetime,
                 timedelta: cls.convert_string_to_timedelta,
             }
         )
-
         return dacite.from_dict(data_class=data_class, data=data, config=cfg)
 
     @classmethod
+    def convert_keys_to_snakecase(cls, d: dict) -> datetime:
+        return {inflection.underscore(key): value for key, value in d.items()}
+
+    @classmethod
     def convert_string_to_datetime(cls, val: str) -> datetime:
-        d = iso8601.parse_date(val)
-        return d
+        return iso8601.parse_date(val)
 
     @classmethod
     def convert_string_to_timedelta(cls, val: str) -> timedelta:

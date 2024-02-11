@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Dict, Any, Optional
 from enum import Enum
 
@@ -41,37 +41,37 @@ class Message:
     msg: str
 
 
-@dataclass
+@dataclass()
 class QueryStatus:
     """the status of a query result."""
 
     # the duration it took the query to execute.
-    elapsedTime: int
+    elapsed_time: int
     # the amount of blocks that have been examined by the query.
-    blocksExamined: int
+    blocks_examined: int
     # the amount of rows that have been examined by the query.
-    rowsExamined: int
+    rows_examined: int
     # the amount of rows that matched the query.
-    rowsMatched: int
+    rows_matched: int
     # the amount of groups returned by the query.
-    numGroups: int
+    num_groups: int
     # describes if the query result is a partial result.
-    isPartial: bool
+    is_partial: bool
     # ContinuationToken is populated when isPartial is true and must be passed
     # to the next query request to retrieve the next result set.
-    continuationToken: Optional[str] = field(default=None)
+    continuation_token: Optional[str] = field(default=None)
     # describes if the query result is estimated.
-    isEstimate: Optional[bool] = field(default=None)
+    is_estimate: Optional[bool] = field(default=None)
     # the timestamp of the oldest block examined.
-    minBlockTime: Optional[str] = field(default=None)
+    min_block_time: Optional[str] = field(default=None)
     # the timestamp of the newest block examined.
-    maxBlockTime: Optional[str] = field(default=None)
+    max_block_time: Optional[str] = field(default=None)
     # messages associated with the query.
     messages: List[Message] = field(default_factory=lambda: [])
     # row id of the newest row, as seen server side.
-    maxCursor: Optional[str] = field(default=None)
+    max_cursor: Optional[str] = field(default=None)
     # row id of the oldest row, as seen server side.
-    minCursor: Optional[str] = field(default=None)
+    min_cursor: Optional[str] = field(default=None)
 
 
 @dataclass
@@ -117,10 +117,10 @@ class EntryGroup:
 class Interval:
     """the interval of queried time series."""
 
-    # startTime of the interval.
-    startTime: datetime
-    # endTime of the interval.
-    endTime: datetime
+    # start_time of the interval.
+    start_time: datetime
+    # end_time of the interval.
+    end_time: datetime
     # groups of the interval.
     groups: Optional[List[EntryGroup]]
 
@@ -145,14 +145,14 @@ class QueryLegacyResult:
     matches: List[Entry]
     # Buckets are the time series buckets.
     buckets: Timeseries
-    # savedQueryID is the ID of the query that generated this result when it
-    # was saved on the server. This is only set when the query was send with
-    # the `saveAsKind` option specified.
-    savedQueryID: Optional[str] = field(default=None)
+    # save_query_id is the ID of the query that generated this result when it
+    # was saved on the server. This is only set when the query was sent with
+    # the `save_as_kind` option specified.
+    save_query_id: Optional[str] = field(default=None)
 
 
 @dataclass
-class QueryResult:
+class LegacyQueryResult:
     """Result is the result of apl query."""
 
     request: QueryLegacy
@@ -164,7 +164,144 @@ class QueryResult:
     buckets: Timeseries
     # Dataset names are the datasets that were used in the apl query.
     dataset_names: List[str] = field(default_factory=lambda: [])
-    # savedQueryID is the ID of the apl query that generated this result when it
-    # was saved on the server. This is only set when the apl query was send with
-    # the `saveAsKind` option specified.
-    savedQueryID: Optional[str] = field(default=None)
+    # save_query_id is the ID of the apl query that generated this result when it
+    # was saved on the server. This is only set when the apl query was sent with
+    # the `save_as_kind` option specified.
+    save_query_id: Optional[str] = field(default=None)
+
+
+@dataclass
+class Field:
+    """
+    Represents a field in a table, including its name and data type.
+
+    Attributes:
+        name (str): The name of the field.
+        type (str): The data type of the field.
+    """
+
+    name: str
+    type: str
+
+
+@dataclass
+class Source:
+    """
+    Represents the source of data for a table.
+
+    Attributes:
+        name (str): The name of the source.
+    """
+
+    name: str
+
+
+@dataclass
+class Order:
+    """
+    Specifies the ordering of rows in a table.
+
+    Attributes:
+        field (str): The name of the field to sort by.
+        desc (bool): Specifies whether the sorting should be in descending order.
+    """
+
+    field: str
+    desc: bool
+
+
+@dataclass
+class Range:
+    """
+    Defines a range of values for filtering data in a table based on a specific field.
+
+    Attributes:
+        field (str): The name of the field to filter by.
+        start (str): The starting value of the range (inclusive).
+        end (str): The ending value of the range (inclusive).
+    """
+
+    field: str
+    start: str
+    end: str
+
+
+@dataclass
+class Table:
+    """
+    Represents a table of data, including its structure and contents.
+
+    Attributes:
+        name (str): The name of the table.
+        sources (List[Source]): A list of data sources for the table.
+        fields (List[Field]): The fields (columns) in the table.
+        order (List[Order]): The sorting order of rows in the table.
+        range (Range): The range filter applied to the table.
+        columns (List[List[Any]]): The data contained in the table, organized by columns.
+        groups (List[Any]): Groups of aggregated data in the table (default is an empty list).
+    """
+
+    name: str
+    sources: List[Source]
+    fields: List[Field]
+    order: List[Order]
+    range: Range
+    columns: List[List[Any]]
+    groups: List[Any] = field(default_factory=list)
+
+
+@dataclass
+class Request:
+    """
+    Represents a request for querying data, including filters and parameters for the query.
+
+    Attributes:
+        start_time (str): The start time for the query range.
+        end_time (str): The end time for the query range.
+        resolution (str): The resolution of the aggregated data.
+        aggregations (Optional[Any]): Specifies aggregation functions to be applied.
+        group_by (Optional[Any]): Specifies the fields to group by in the aggregation.
+        order (List[Order]): Specifies the ordering of the results.
+        limit (int): The maximum number of rows to return.
+        virtual_fields (Optional[Any]): Specifies virtual fields to be calculated.
+        project (List[Dict[str, str]]): Specifies the fields to include in the result set.
+        cursor (str): A cursor for pagination.
+        include_cursor (bool): Indicates whether to include the cursor in the response.
+    """
+
+    start_time: str
+    end_time: str
+    resolution: str
+    aggregations: Optional[Any]
+    group_by: Optional[Any]
+    order: List[Order]
+    limit: int
+    virtual_fields: Optional[Any]
+    project: List[Dict[str, str]]
+    cursor: str
+    include_cursor: bool
+
+
+@dataclass
+class TabularQueryResult:
+    """
+    Represents the result of a tabular query, including the data format and status.
+
+    Attributes:
+        format (str): The format of the query result.
+        status (QueryStatus): The status of the query execution.
+        tables (List[Table]): The tables resulting from the query.
+        request (Request): The request that generated this result.
+        dataset_names (List[str]): The names of datasets included in the result.
+        fields_meta_map (Dict[str, List[Any]]): Metadata for the fields in the result.
+        save_query_id (Optional[str]): The ID of the saved query that generated this result, if applicable.
+    """
+
+    format: str
+    status: QueryStatus
+    tables: List[Table]
+    request: Request
+    # save_query_id is the ID of the query that generated this result when it
+    # was saved on the server. This is only set when the query was sent with
+    # the `save_as_kind` option specified.
+    save_query_id: Optional[str] = field(default=None)

@@ -4,7 +4,7 @@ from dataclasses import dataclass, field as dataclass_field
 
 
 class FilterOperation(Enum):
-    """A FilterOperatuib can be applied on queries to filter based on different conditions."""
+    """A FilterOperation can be applied on queries to filter based on different conditions."""
 
     EMPTY = ""
     AND = "and"
