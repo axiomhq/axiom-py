@@ -41,7 +41,7 @@ class Message:
     msg: str
 
 
-@dataclass()
+@dataclass
 class QueryStatus:
     """the status of a query result."""
 
@@ -145,10 +145,10 @@ class QueryLegacyResult:
     matches: List[Entry]
     # Buckets are the time series buckets.
     buckets: Timeseries
-    # save_query_id is the ID of the query that generated this result when it
+    # query_id is the ID of the query that generated this result when it
     # was saved on the server. This is only set when the query was sent with
     # the `save_as_kind` option specified.
-    save_query_id: Optional[str] = field(default=None)
+    query_id: Optional[str] = field(default=None)
 
 
 @dataclass
@@ -164,10 +164,10 @@ class LegacyQueryResult:
     buckets: Timeseries
     # Dataset names are the datasets that were used in the apl query.
     dataset_names: List[str] = field(default_factory=lambda: [])
-    # save_query_id is the ID of the apl query that generated this result when it
+    # query_id is the ID of the apl query that generated this result when it
     # was saved on the server. This is only set when the apl query was sent with
     # the `save_as_kind` option specified.
-    save_query_id: Optional[str] = field(default=None)
+    query_id: Optional[str] = field(default=None)
 
 
 @dataclass
@@ -294,14 +294,14 @@ class TabularQueryResult:
         request (Request): The request that generated this result.
         dataset_names (List[str]): The names of datasets included in the result.
         fields_meta_map (Dict[str, List[Any]]): Metadata for the fields in the result.
-        save_query_id (Optional[str]): The ID of the saved query that generated this result, if applicable.
+        query_id (Optional[str]): The ID of the saved query that generated this result, if applicable.
     """
 
     format: str
     status: QueryStatus
     tables: List[Table]
     request: Request
-    # save_query_id is the ID of the query that generated this result when it
+    # query_id is the ID of the query that generated this result when it
     # was saved on the server. This is only set when the query was sent with
     # the `save_as_kind` option specified.
-    save_query_id: Optional[str] = field(default=None)
+    query_id: Optional[str] = field(default=None)

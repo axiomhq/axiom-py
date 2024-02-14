@@ -253,7 +253,7 @@ class Client:  # pylint: disable=R0903
         self.logger.debug(f"query result: {result}")
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         self.logger.info(f"received query result with query_id: {query_id}")
-        result.saved_query_id = query_id
+        result.query_id = query_id
         return result
 
     def apl_query(
@@ -276,16 +276,16 @@ class Client:  # pylint: disable=R0903
         res = self.session.post(path, data=payload, params=params)
         result = Util.from_dict(
             (
-                TabularQueryResult
-                if opts.format == AplResultFormat.Tabular
-                else LegacyQueryResult
+                LegacyQueryResult
+                if opts is None or opts.format == AplResultFormat.Legacy
+                else TabularQueryResult
             ),
             res.json(),
         )
         self.logger.debug(f"apl query result: {result}")
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         self.logger.info(f"received query result with query_id: {query_id}")
-        result.saved_query_id = query_id
+        result.query_id = query_id
         return result
 
     def df(

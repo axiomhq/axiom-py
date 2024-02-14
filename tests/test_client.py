@@ -155,7 +155,7 @@ class TestClient(unittest.TestCase):
         )
         qr = self.client.query_legacy(self.dataset_name, q, opts)
 
-        self.assertIsNotNone(qr.save_query_id)
+        self.assertIsNotNone(qr.query_id)
         self.assertEqual(len(qr.matches), len(self.events))
 
     def test_step005_apl_query(self):
