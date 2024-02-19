@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Optional
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from .aggregation import Aggregation
 from .filter import Filter
 

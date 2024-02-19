@@ -1,4 +1,5 @@
 """Logging contains the AxiomHandler and related methods to do with logging."""
+
 import time
 import atexit
 

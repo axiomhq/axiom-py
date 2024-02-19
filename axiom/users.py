@@ -1,7 +1,7 @@
 from typing import List
-from .util import Util
 from dataclasses import dataclass
 from requests import Session
+from .util import Util
 
 
 @dataclass

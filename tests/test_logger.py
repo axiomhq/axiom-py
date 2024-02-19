@@ -32,14 +32,14 @@ class TestLogger(unittest.TestCase):
 
         # this log shouldn't be ingested yet
         res = client.apl_query(dataset_name)
-        self.assertEqual(0, res.status.rowsExamined)
+        self.assertEqual(0, res.status.rows_examined)
 
         # flush events
         axiom_handler.flush()
 
         # now we should have a log
         res = client.apl_query(dataset_name)
-        self.assertEqual(1, res.status.rowsExamined)
+        self.assertEqual(1, res.status.rows_examined)
 
         # cleanup created dataset
         client.datasets.delete(dataset_name)

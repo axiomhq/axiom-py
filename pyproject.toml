@@ -20,6 +20,8 @@ pyhumps = ">=1.6.1,<4.0.0"
 ndjson = "^0.3.1"
 rfc3339 = "^6.2"
 iso8601 = ">=1.0.2,<3.0.0"
+pandas = ">2"
+inflection = "^0.5.1"
 
 [tool.poetry.dev-dependencies]
 black = "^23.3.0"
