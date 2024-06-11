@@ -1,4 +1,5 @@
 """Client provides an easy-to use client library to connect to Axiom."""
+
 import ndjson
 import dacite
 import gzip
@@ -16,6 +17,7 @@ from requests_toolbelt.utils.dump import dump_response
 from requests.adapters import HTTPAdapter, Retry
 from .datasets import DatasetsClient
 from .query import QueryLegacy, QueryResult, QueryOptions, QueryLegacyResult, QueryKind
+from .annotations import AnnotationsClient
 from .users import UsersClient
 from .__init__ import __version__
 
@@ -129,6 +131,7 @@ class Client:  # pylint: disable=R0903
 
     datasets: DatasetsClient
     users: UsersClient
+    annotations: AnnotationsClient
 
     def __init__(
         self,
@@ -143,15 +146,14 @@ class Client:  # pylint: disable=R0903
             org_id = os.getenv("AXIOM_ORG_ID")
         if url_base is None:
             url_base = AXIOM_URL
-        # Append /v1 to the url_base
-        url_base = url_base.rstrip("/") + "/v1/"
 
         self.logger = getLogger()
-        self.session = BaseUrlSession(url_base)
         # set exponential retries
         retries = Retry(
             total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504]
         )
+
+        self.session = BaseUrlSession(url_base.rstrip("/"))
         self.session.mount("http://", HTTPAdapter(max_retries=retries))
         self.session.mount("https://", HTTPAdapter(max_retries=retries))
         # hook on responses, raise error when response is not successfull
@@ -175,6 +177,7 @@ class Client:  # pylint: disable=R0903
 
         self.datasets = DatasetsClient(self.session, self.logger)
         self.users = UsersClient(self.session)
+        self.annotations = AnnotationsClient(self.session, self.logger)
 
     def ingest(
         self,
@@ -185,7 +188,7 @@ class Client:  # pylint: disable=R0903
         opts: Optional[IngestOptions] = None,
     ) -> IngestStatus:
         """Ingest the events into the named dataset and returns the status."""
-        path = "datasets/%s/ingest" % dataset
+        path = "/v1/datasets/%s/ingest" % dataset
 
         # check if passed content type and encoding are correct
         if not contentType:
@@ -231,7 +234,7 @@ class Client:  # pylint: disable=R0903
                 % (opts.saveAsKind, QueryKind.ANALYTICS, QueryKind.STREAM)
             )
 
-        path = "datasets/%s/query" % id
+        path = "/v1/datasets/%s/query" % id
         payload = ujson.dumps(asdict(query), default=Util.handle_json_serialization)
         self.logger.debug("sending query %s" % payload)
         params = self._prepare_query_options(opts)
@@ -249,7 +252,7 @@ class Client:  # pylint: disable=R0903
 
     def query(self, apl: str, opts: Optional[AplOptions] = None) -> QueryResult:
         """Executes the given apl query on the dataset identified by its id."""
-        path = "datasets/_apl"
+        path = "/v1/datasets/_apl"
         payload = ujson.dumps(
             self._prepare_apl_payload(apl, opts),
             default=Util.handle_json_serialization,

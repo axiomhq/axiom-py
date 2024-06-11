@@ -21,6 +21,6 @@ class UsersClient:
 
     def current(self) -> User:
         """Get the current authenticated user."""
-        res = self.session.get("user")
+        res = self.session.get("/v1/user")
         user = Util.from_dict(User, res.json())
         return user
