@@ -5,12 +5,14 @@ import dacite
 import gzip
 import ujson
 import os
+
+from .tokens import TokenAttributes
 from .util import Util
 from enum import Enum
 from humps import decamelize
 from typing import Optional, List, Dict, Any
 from logging import getLogger
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from requests_toolbelt.sessions import BaseUrlSession
 from requests_toolbelt.utils.dump import dump_response
@@ -265,7 +267,20 @@ class Client:  # pylint: disable=R0903
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         self.logger.info(f"received query result with query_id: {query_id}")
         result.savedQueryID = query_id
+
         return result
+
+    def create_api_token(self, opts: TokenAttributes) -> str:
+        res = self.session.post('/v2/tokens', data=asdict(opts))
+
+        # Return ID/token for debugging purposes.
+        # TODO: error checking and reporting, return a dataclass with id/token attrs
+        response = res.json()
+        return f'{response["id"]}:{response["token"]}'
+
+    def delete_api_token(self, token_id: str) -> None:
+        self.session.delete(f'/v2/tokens/{token_id}')
+        # TODO: Error checking and reporting.
 
     def _prepare_query_options(self, opts: QueryOptions) -> Dict[str, Any]:
         """returns the query options as a Dict, handles any renaming for key fields."""
