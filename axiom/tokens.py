@@ -73,3 +73,13 @@ class TokenAttributes:
     expiresAt: str | None = None
     # The token's organization-level capabilities. Optional.
     orgCapabilities: TokenOrganizationCapabilities | None = None
+
+
+@dataclass
+class Token:
+    """
+    Token contains the response from a call to POST /tokens.
+    It includes the API token itself, and an ID which can be used to reference it later.
+    """
+    id: str
+    token: str

@@ -6,7 +6,7 @@ import gzip
 import ujson
 import os
 
-from .tokens import TokenAttributes
+from .tokens import TokenAttributes, Token
 from .util import Util
 from enum import Enum
 from humps import decamelize
@@ -270,7 +270,7 @@ class Client:  # pylint: disable=R0903
 
         return result
 
-    def create_api_token(self, opts: TokenAttributes) -> str:
+    def create_api_token(self, opts: TokenAttributes) -> Token:
         """Creates a new API token with permissions specified in a TokenAttributes object."""
         res = self.session.post(
             '/v2/tokens',
@@ -280,10 +280,9 @@ class Client:  # pylint: disable=R0903
             )
         )
 
-        # Return ID/token for debugging purposes.
-        # TODO: return a dataclass with id/token attrs
+        # Return the new token and ID.
         response = res.json()
-        return f'{response["id"]}:{response["token"]}'
+        return Token(id=response["id"], token=response["token"])
 
     def delete_api_token(self, token_id: str) -> None:
         """Delete an API token using its ID string."""
