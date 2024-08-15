@@ -271,16 +271,23 @@ class Client:  # pylint: disable=R0903
         return result
 
     def create_api_token(self, opts: TokenAttributes) -> str:
-        res = self.session.post('/v2/tokens', data=asdict(opts))
+        """Creates a new API token with permissions specified in a TokenAttributes object."""
+        res = self.session.post(
+            '/v2/tokens',
+            data=ujson.dumps(
+                asdict(opts),
+                default=Util.handle_json_serialization
+            )
+        )
 
         # Return ID/token for debugging purposes.
-        # TODO: error checking and reporting, return a dataclass with id/token attrs
+        # TODO: return a dataclass with id/token attrs
         response = res.json()
         return f'{response["id"]}:{response["token"]}'
 
     def delete_api_token(self, token_id: str) -> None:
+        """Delete an API token using its ID string."""
         self.session.delete(f'/v2/tokens/{token_id}')
-        # TODO: Error checking and reporting.
 
     def _prepare_query_options(self, opts: QueryOptions) -> Dict[str, Any]:
         """returns the query options as a Dict, handles any renaming for key fields."""

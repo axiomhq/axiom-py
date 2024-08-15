@@ -12,13 +12,13 @@ class TokenDatasetCapabilities:
     """
 
     # Ability to ingest data. Optional.
-    ingest: Literal["create"]
+    ingest: Literal["create"] | None = None
     # Ability to query data. Optional.
-    query: Literal["read"]
+    query: Literal["read"] | None = None
     # Ability to use starred queries. Optional.
-    starredQueries: Literal["create", "read", "update", "delete"]
+    starredQueries: Literal["create", "read", "update", "delete"] | None = None
     # Ability to use virtual fields. Optional.
-    virtualFields: Literal["create", "read", "update", "delete"]
+    virtualFields: Literal["create", "read", "update", "delete"] | None = None
 
 
 @dataclass
@@ -29,31 +29,31 @@ class TokenOrganizationCapabilities:
     """
 
     # Ability to use annotations. Optional.
-    annotations: Literal["create", "read", "update", "delete"]
+    annotations: Literal["create", "read", "update", "delete"] | None = None
     # Ability to use api tokens. Optional.
-    apiTokens: Literal["create", "read", "update", "delete"]
+    apiTokens: Literal["create", "read", "update", "delete"] | None = None
     # Ability to access billing. Optional.
-    billing: Literal["read", "update"]
+    billing: Literal["read", "update"] | None = None
     # Ability to use dashboards. Optional.
-    dashboards: Literal["create", "read", "update", "delete"]
+    dashboards: Literal["create", "read", "update", "delete"] | None = None
     # Ability to use datasets. Optional.
-    datasets: Literal["create", "read", "update", "delete"]
+    datasets: Literal["create", "read", "update", "delete"] | None = None
     # Ability to use endpoints. Optional.
-    endpoints: Literal["create", "read", "update", "delete"]
+    endpoints: Literal["create", "read", "update", "delete"] | None = None
     # Ability to use flows. Optional.
-    flows: Literal["create", "read", "update", "delete"]
+    flows: Literal["create", "read", "update", "delete"] | None = None
     # Ability to use integrations. Optional.
-    integrations: Literal["create", "read", "update", "delete"]
+    integrations: Literal["create", "read", "update", "delete"] | None = None
     # Ability to use monitors. Optional.
-    monitors: Literal["create", "read", "update", "delete"]
+    monitors: Literal["create", "read", "update", "delete"] | None = None
     # Ability to use notifiers. Optional.
-    notifiers: Literal["create", "read", "update", "delete"]
+    notifiers: Literal["create", "read", "update", "delete"] | None = None
     # Ability to use role-based access controls. Optional.
-    rbac: Literal["create", "read", "update", "delete"]
+    rbac: Literal["create", "read", "update", "delete"] | None = None
     # Ability to use shared access keys. Optional.
-    sharedAccessKeys: Literal["read", "update"]
+    sharedAccessKeys: Literal["read", "update"] | None = None
     # Ability to use users. Optional.
-    users: Literal["create", "read", "update", "delete"]
+    users: Literal["create", "read", "update", "delete"] | None = None
 
 
 @dataclass
@@ -63,13 +63,13 @@ class TokenAttributes:
     POST /tokens API accepts.
     """
 
-    # The token's dataset-level capabilities. Keyed on dataset name. Optional.
-    datasetCapabilities: dict[str, TokenDatasetCapabilities]
-    # Description for the API token. Optional.
-    description: str
-    # Expiration date for the API token. Optional.
-    expiresAt: str | None
     # Name for the token. Required.
     name: str
+    # The token's dataset-level capabilities. Keyed on dataset name. Optional.
+    datasetCapabilities: dict[str, TokenDatasetCapabilities] | None = None
+    # Description for the API token. Optional.
+    description: str | None = None
+    # Expiration date for the API token. Optional.
+    expiresAt: str | None = None
     # The token's organization-level capabilities. Optional.
-    orgCapabilities: TokenOrganizationCapabilities
+    orgCapabilities: TokenOrganizationCapabilities | None = None
