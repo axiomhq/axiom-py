@@ -12,13 +12,13 @@ class TokenDatasetCapabilities:
     """
 
     # Ability to ingest data. Optional.
-    ingest: Literal["create"] | None = None
+    ingest: list[Literal["create"]] | None = None
     # Ability to query data. Optional.
-    query: Literal["read"] | None = None
+    query: list[Literal["read"]] | None = None
     # Ability to use starred queries. Optional.
-    starredQueries: Literal["create", "read", "update", "delete"] | None = None
+    starredQueries: list[Literal["create", "read", "update", "delete"]] | None = None
     # Ability to use virtual fields. Optional.
-    virtualFields: Literal["create", "read", "update", "delete"] | None = None
+    virtualFields: list[Literal["create", "read", "update", "delete"]] | None = None
 
 
 @dataclass
@@ -29,31 +29,31 @@ class TokenOrganizationCapabilities:
     """
 
     # Ability to use annotations. Optional.
-    annotations: Literal["create", "read", "update", "delete"] | None = None
+    annotations: list[Literal["create", "read", "update", "delete"]] | None = None
     # Ability to use api tokens. Optional.
-    apiTokens: Literal["create", "read", "update", "delete"] | None = None
+    apiTokens: list[Literal["create", "read", "update", "delete"]] | None = None
     # Ability to access billing. Optional.
-    billing: Literal["read", "update"] | None = None
+    billing: list[Literal["read", "update"]] | None = None
     # Ability to use dashboards. Optional.
-    dashboards: Literal["create", "read", "update", "delete"] | None = None
+    dashboards: list[Literal["create", "read", "update", "delete"]] | None = None
     # Ability to use datasets. Optional.
-    datasets: Literal["create", "read", "update", "delete"] | None = None
+    datasets: list[Literal["create", "read", "update", "delete"]] | None = None
     # Ability to use endpoints. Optional.
-    endpoints: Literal["create", "read", "update", "delete"] | None = None
+    endpoints: list[Literal["create", "read", "update", "delete"]] | None = None
     # Ability to use flows. Optional.
-    flows: Literal["create", "read", "update", "delete"] | None = None
+    flows: list[Literal["create", "read", "update", "delete"]] | None = None
     # Ability to use integrations. Optional.
-    integrations: Literal["create", "read", "update", "delete"] | None = None
+    integrations: list[Literal["create", "read", "update", "delete"]] | None = None
     # Ability to use monitors. Optional.
-    monitors: Literal["create", "read", "update", "delete"] | None = None
+    monitors: list[Literal["create", "read", "update", "delete"]] | None = None
     # Ability to use notifiers. Optional.
-    notifiers: Literal["create", "read", "update", "delete"] | None = None
+    notifiers: list[Literal["create", "read", "update", "delete"]] | None = None
     # Ability to use role-based access controls. Optional.
-    rbac: Literal["create", "read", "update", "delete"] | None = None
+    rbac: list[Literal["create", "read", "update", "delete"]] | None = None
     # Ability to use shared access keys. Optional.
-    sharedAccessKeys: Literal["read", "update"] | None = None
+    sharedAccessKeys: list[Literal["read", "update"]] | None = None
     # Ability to use users. Optional.
-    users: Literal["create", "read", "update", "delete"] | None = None
+    users: list[Literal["create", "read", "update", "delete"]] | None = None
 
 
 @dataclass
