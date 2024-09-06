@@ -98,11 +98,18 @@ class WrongQueryKindException(Exception):
 class AplOptions:
     """AplOptions specifies the optional parameters for the apl query method."""
 
+    # Start time for the interval to query.
     start_time: Optional[datetime] = field(default=None)
+    # End time for the interval to query.
     end_time: Optional[datetime] = field(default=None)
-    no_cache: bool = field(default=False)
-    save: bool = field(default=False)
+    # The result format.
     format: AplResultFormat = field(default=AplResultFormat.Legacy)
+    # Cursor is the query cursor. It should be set to the Cursor returned with
+    # a previous query result if it was partial.
+    cursor: str = field(default=None)
+    # IncludeCursor will return the Cursor as part of the query result, if set
+    # to true.
+    includeCursor: bool = field(default=False)
 
 
 def raise_response_error(r):
@@ -303,16 +310,8 @@ class Client:  # pylint: disable=R0903
 
     def _prepare_apl_options(self, opts: Optional[AplOptions]) -> Dict[str, Any]:
         """Prepare the apl query options for the request."""
-        params = {}
+        params = {"format": AplResultFormat.Legacy.value}
 
-        if opts is None:
-            params["format"] = AplResultFormat.Legacy.value
-            return params
-
-        if opts.no_cache:
-            params["nocache"] = opts.no_cache.__str__()
-        if opts.save:
-            params["save"] = opts.save
         if opts.format:
             params["format"] = opts.format.value
 
@@ -330,5 +329,9 @@ class Client:  # pylint: disable=R0903
                 params["startTime"] = opts.start_time
             if opts.end_time:
                 params["endTime"] = opts.end_time
+            if opts.cursor:
+                params["cursor"] = opts.cursor
+            if opts.includeCursor:
+                params["includeCursor"] = opts.includeCursor
 
         return params
