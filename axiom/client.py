@@ -312,8 +312,9 @@ class Client:  # pylint: disable=R0903
         """Prepare the apl query options for the request."""
         params = {"format": AplResultFormat.Legacy.value}
 
-        if opts.format:
-            params["format"] = opts.format.value
+        if opts is not None:
+            if opts.format:
+                params["format"] = opts.format.value
 
         return params
 
