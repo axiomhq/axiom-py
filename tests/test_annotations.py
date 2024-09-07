@@ -33,7 +33,7 @@ class TestAnnotations(unittest.TestCase):
             name=cls.dataset_name,
             description="test_annotations.py (dataset_name)",
         )
-        res = cls.client.datasets.create(req)
+        cls.client.datasets.create(req)
 
     def test_happy_path_crud(self):
         """Test the happy path of creating, reading, updating, and deleting an annotation."""
