@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - run: pip install poetry==${{ env.POETRY_VERSION }}
@@ -53,7 +53,7 @@ jobs:
             org_id: TESTING_STAGING_ORG_ID
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
       - run: pip install poetry==${{ env.POETRY_VERSION }}
@@ -72,7 +72,7 @@ jobs:
       - test-integration
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - run: pip install poetry==${{ env.POETRY_VERSION }}
