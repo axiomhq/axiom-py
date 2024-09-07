@@ -106,7 +106,7 @@ class AplOptions:
     format: AplResultFormat = field(default=AplResultFormat.Legacy)
     # Cursor is the query cursor. It should be set to the Cursor returned with
     # a previous query result if it was partial.
-    cursor: str = field(default=None)
+    cursor: Optional[str] = field(default=None)
     # IncludeCursor will return the Cursor as part of the query result, if set
     # to true.
     includeCursor: bool = field(default=False)
@@ -326,11 +326,11 @@ class Client:  # pylint: disable=R0903
         params["apl"] = apl
 
         if opts is not None:
-            if opts.start_time:
+            if opts.start_time is not None:
                 params["startTime"] = opts.start_time
-            if opts.end_time:
+            if opts.end_time is not None:
                 params["endTime"] = opts.end_time
-            if opts.cursor:
+            if opts.cursor is not None:
                 params["cursor"] = opts.cursor
             if opts.includeCursor:
                 params["includeCursor"] = opts.includeCursor
