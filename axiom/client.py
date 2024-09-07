@@ -283,7 +283,9 @@ class Client:  # pylint: disable=R0903
 
         return params
 
-    def _prepare_ingest_options(self, opts: Optional[IngestOptions]) -> Dict[str, object]:
+    def _prepare_ingest_options(
+        self, opts: Optional[IngestOptions]
+    ) -> Dict[str, object]:
         """the query params for ingest api are expected in a format
         that couldn't be defined as a variable name because it has a dash.
         As a work around, we create the params dict manually."""
