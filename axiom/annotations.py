@@ -84,9 +84,9 @@ class AnnotationsClient:  # pylint: disable=R0903
         query_params = {}
         if len(datasets) > 0:
             query_params["datasets"] = ",".join(datasets)
-        if start != None:
+        if start is not None:
             query_params["start"] = start.isoformat()
-        if end != None:
+        if end is not None:
             query_params["end"] = end.isoformat()
         path = f"/v2/annotations?{urlencode(query_params, doseq=True)}"
 
