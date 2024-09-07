@@ -22,10 +22,9 @@ rfc3339 = "^6.2"
 iso8601 = ">=1.0.2,<3.0.0"
 
 [tool.poetry.dev-dependencies]
-black = "^24.4.2"
 pytest = "^8.2.1"
-pylint = "^3.2.1"
 responses = "^0.25.0"
+ruff = "^0.6.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

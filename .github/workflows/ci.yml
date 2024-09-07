@@ -15,18 +15,15 @@ env:
   POETRY_VERSION: "1.5"
 
 jobs:
-  lint:
-    name: Lint
+  check:
+    name: Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: chartboost/ruff-action@v1
+      - uses: chartboost/ruff-action@v1
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - run: pip install poetry==${{ env.POETRY_VERSION }}
-      - run: poetry install
-      - run: poetry run black --check axiom tests examples
-      - run: poetry run pylint -E axiom tests examples
+          args: 'format --check'
 
   test-integration:
     name: Test Integration
