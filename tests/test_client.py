@@ -185,7 +185,7 @@ class TestClient(unittest.TestCase):
 
         try:
             self.client.query_legacy(self.dataset_name, q, opts)
-        except WrongQueryKindException as err:
+        except WrongQueryKindException:
             self.logger.info("passing kind apl to query raised exception as expected")
             return
 
