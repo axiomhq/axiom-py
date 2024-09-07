@@ -1,4 +1,5 @@
 """This module contains the tests for the axiom client."""
+
 import os
 import unittest
 import gzip
@@ -165,8 +166,6 @@ class TestClient(unittest.TestCase):
         opts = AplOptions(
             start_time=startTime,
             end_time=endTime,
-            no_cache=True,
-            save=False,
             format=AplResultFormat.Legacy,
         )
         qr = self.client.query(apl, opts)
