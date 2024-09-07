@@ -1,4 +1,5 @@
 """This package provides dataset models and methods as well as a DatasetClient"""
+
 import ujson
 from logging import Logger
 from requests import Session
@@ -82,14 +83,14 @@ class DatasetsClient:  # pylint: disable=R0903
 
     def get(self, id: str) -> Dataset:
         """Get a dataset by id."""
-        path = "datasets/%s" % id
+        path = "/v1/datasets/%s" % id
         res = self.session.get(path)
         decoded_response = res.json()
         return Util.from_dict(Dataset, decoded_response)
 
     def create(self, req: DatasetCreateRequest) -> Dataset:
         """Create a dataset with the given properties."""
-        path = "datasets"
+        path = "/v1/datasets"
         res = self.session.post(path, data=ujson.dumps(asdict(req)))
         ds = Util.from_dict(Dataset, res.json())
         self.logger.info(f"created new dataset: {ds.name}")
@@ -97,7 +98,7 @@ class DatasetsClient:  # pylint: disable=R0903
 
     def get_list(self) -> List[Dataset]:
         """List all available datasets."""
-        path = "datasets"
+        path = "/v1/datasets"
         res = self.session.get(path)
 
         datasets = []
@@ -109,7 +110,7 @@ class DatasetsClient:  # pylint: disable=R0903
 
     def update(self, id: str, req: DatasetUpdateRequest) -> Dataset:
         """Update a dataset with the given properties."""
-        path = "datasets/%s" % id
+        path = "/v1/datasets/%s" % id
         res = self.session.put(path, data=ujson.dumps(asdict(req)))
         ds = Util.from_dict(Dataset, res.json())
         self.logger.info(f"updated dataset({ds.name}) with new desc: {ds.description}")
@@ -117,7 +118,7 @@ class DatasetsClient:  # pylint: disable=R0903
 
     def delete(self, id: str):
         """Deletes a dataset with the given id."""
-        path = "datasets/%s" % id
+        path = "/v1/datasets/%s" % id
         self.session.delete(path)
 
     def trim(self, id: str, maxDuration: timedelta):
@@ -126,14 +127,14 @@ class DatasetsClient:  # pylint: disable=R0903
         given will mark the oldest timestamp an event can have. Older ones will be
         deleted from the dataset.
         """
-        path = "datasets/%s/trim" % id
+        path = "/v1/datasets/%s/trim" % id
         # prepare request payload and format masDuration to append time unit at the end, e.g `1s`
         req = TrimRequest(f"{maxDuration.seconds}s")
         self.session.post(path, data=ujson.dumps(asdict(req)))
 
     def info(self, id: str) -> DatasetInfo:
         """Returns the info about a dataset."""
-        path = "datasets/%s/info" % id
+        path = "/v1/datasets/%s/info" % id
         res = self.session.get(path)
         decoded_response = res.json()
         return Util.from_dict(DatasetInfo, decoded_response)

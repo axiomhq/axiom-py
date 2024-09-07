@@ -6,3 +6,4 @@ __version__ = "0.1.0-beta.2"
 
 from .client import *
 from .datasets import *
+from .annotations import *
