@@ -8,7 +8,7 @@ import os
 from .util import Util
 from enum import Enum
 from humps import decamelize
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict
 from logging import getLogger
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
@@ -274,7 +274,7 @@ class Client:  # pylint: disable=R0903
         result.savedQueryID = query_id
         return result
 
-    def _prepare_query_options(self, opts: QueryOptions) -> Dict[str, Any]:
+    def _prepare_query_options(self, opts: QueryOptions) -> Dict[str, object]:
         """returns the query options as a Dict, handles any renaming for key fields."""
         if opts is None:
             return {}
@@ -290,7 +290,9 @@ class Client:  # pylint: disable=R0903
 
         return params
 
-    def _prepare_ingest_options(self, opts: Optional[IngestOptions]) -> Dict[str, Any]:
+    def _prepare_ingest_options(
+        self, opts: Optional[IngestOptions]
+    ) -> Dict[str, object]:
         """the query params for ingest api are expected in a format
         that couldn't be defined as a variable name because it has a dash.
         As a work around, we create the params dict manually."""
@@ -308,7 +310,7 @@ class Client:  # pylint: disable=R0903
 
         return params
 
-    def _prepare_apl_options(self, opts: Optional[AplOptions]) -> Dict[str, Any]:
+    def _prepare_apl_options(self, opts: Optional[AplOptions]) -> Dict[str, object]:
         """Prepare the apl query options for the request."""
         params = {"format": AplResultFormat.Legacy.value}
 
@@ -320,7 +322,7 @@ class Client:  # pylint: disable=R0903
 
     def _prepare_apl_payload(
         self, apl: str, opts: Optional[AplOptions]
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, object]:
         """Prepare the apl query options for the request."""
         params = {}
         params["apl"] = apl
