@@ -3,9 +3,9 @@
 import ujson
 from logging import Logger
 from requests import Session
-from typing import List, Dict, Optional
+from typing import List, Optional
 from dataclasses import dataclass, asdict, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from urllib.parse import urlencode
 from .util import Util
 
