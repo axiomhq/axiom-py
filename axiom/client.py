@@ -1,4 +1,5 @@
 """Client provides an easy-to use client library to connect to Axiom."""
+
 import ndjson
 import dacite
 import gzip
@@ -16,6 +17,7 @@ from requests_toolbelt.utils.dump import dump_response
 from requests.adapters import HTTPAdapter, Retry
 from .datasets import DatasetsClient
 from .query import QueryLegacy, QueryResult, QueryOptions, QueryLegacyResult, QueryKind
+from .annotations import AnnotationsClient
 from .users import UsersClient
 from .__init__ import __version__
 
@@ -96,11 +98,18 @@ class WrongQueryKindException(Exception):
 class AplOptions:
     """AplOptions specifies the optional parameters for the apl query method."""
 
+    # Start time for the interval to query.
     start_time: Optional[datetime] = field(default=None)
+    # End time for the interval to query.
     end_time: Optional[datetime] = field(default=None)
-    no_cache: bool = field(default=False)
-    save: bool = field(default=False)
+    # The result format.
     format: AplResultFormat = field(default=AplResultFormat.Legacy)
+    # Cursor is the query cursor. It should be set to the Cursor returned with
+    # a previous query result if it was partial.
+    cursor: Optional[str] = field(default=None)
+    # IncludeCursor will return the Cursor as part of the query result, if set
+    # to true.
+    includeCursor: bool = field(default=False)
 
 
 def raise_response_error(r):
@@ -129,6 +138,7 @@ class Client:  # pylint: disable=R0903
 
     datasets: DatasetsClient
     users: UsersClient
+    annotations: AnnotationsClient
 
     def __init__(
         self,
@@ -143,15 +153,14 @@ class Client:  # pylint: disable=R0903
             org_id = os.getenv("AXIOM_ORG_ID")
         if url_base is None:
             url_base = AXIOM_URL
-        # Append /v1 to the url_base
-        url_base = url_base.rstrip("/") + "/v1/"
 
         self.logger = getLogger()
-        self.session = BaseUrlSession(url_base)
         # set exponential retries
         retries = Retry(
             total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504]
         )
+
+        self.session = BaseUrlSession(url_base.rstrip("/"))
         self.session.mount("http://", HTTPAdapter(max_retries=retries))
         self.session.mount("https://", HTTPAdapter(max_retries=retries))
         # hook on responses, raise error when response is not successfull
@@ -175,6 +184,7 @@ class Client:  # pylint: disable=R0903
 
         self.datasets = DatasetsClient(self.session, self.logger)
         self.users = UsersClient(self.session)
+        self.annotations = AnnotationsClient(self.session, self.logger)
 
     def ingest(
         self,
@@ -185,7 +195,7 @@ class Client:  # pylint: disable=R0903
         opts: Optional[IngestOptions] = None,
     ) -> IngestStatus:
         """Ingest the events into the named dataset and returns the status."""
-        path = "datasets/%s/ingest" % dataset
+        path = "/v1/datasets/%s/ingest" % dataset
 
         # check if passed content type and encoding are correct
         if not contentType:
@@ -231,7 +241,7 @@ class Client:  # pylint: disable=R0903
                 % (opts.saveAsKind, QueryKind.ANALYTICS, QueryKind.STREAM)
             )
 
-        path = "datasets/%s/query" % id
+        path = "/v1/datasets/%s/query" % id
         payload = ujson.dumps(asdict(query), default=Util.handle_json_serialization)
         self.logger.debug("sending query %s" % payload)
         params = self._prepare_query_options(opts)
@@ -249,7 +259,7 @@ class Client:  # pylint: disable=R0903
 
     def query(self, apl: str, opts: Optional[AplOptions] = None) -> QueryResult:
         """Executes the given apl query on the dataset identified by its id."""
-        path = "datasets/_apl"
+        path = "/v1/datasets/_apl"
         payload = ujson.dumps(
             self._prepare_apl_payload(apl, opts),
             default=Util.handle_json_serialization,
@@ -300,18 +310,11 @@ class Client:  # pylint: disable=R0903
 
     def _prepare_apl_options(self, opts: Optional[AplOptions]) -> Dict[str, Any]:
         """Prepare the apl query options for the request."""
-        params = {}
+        params = {"format": AplResultFormat.Legacy.value}
 
-        if opts is None:
-            params["format"] = AplResultFormat.Legacy.value
-            return params
-
-        if opts.no_cache:
-            params["nocache"] = opts.no_cache.__str__()
-        if opts.save:
-            params["save"] = opts.save
-        if opts.format:
-            params["format"] = opts.format.value
+        if opts is not None:
+            if opts.format:
+                params["format"] = opts.format.value
 
         return params
 
@@ -323,9 +326,13 @@ class Client:  # pylint: disable=R0903
         params["apl"] = apl
 
         if opts is not None:
-            if opts.start_time:
+            if opts.start_time is not None:
                 params["startTime"] = opts.start_time
-            if opts.end_time:
+            if opts.end_time is not None:
                 params["endTime"] = opts.end_time
+            if opts.cursor is not None:
+                params["cursor"] = opts.cursor
+            if opts.includeCursor:
+                params["includeCursor"] = opts.includeCursor
 
         return params
