@@ -113,7 +113,9 @@ class DatasetsClient:  # pylint: disable=R0903
         path = "/v1/datasets/%s" % id
         res = self.session.put(path, data=ujson.dumps(asdict(req)))
         ds = Util.from_dict(Dataset, res.json())
-        self.logger.info(f"updated dataset({ds.name}) with new desc: {ds.description}")
+        self.logger.info(
+            f"updated dataset({ds.name}) with new desc: {ds.description}"
+        )
         return ds
 
     def delete(self, id: str):

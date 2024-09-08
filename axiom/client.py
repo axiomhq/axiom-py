@@ -16,7 +16,13 @@ from requests_toolbelt.sessions import BaseUrlSession
 from requests_toolbelt.utils.dump import dump_response
 from requests.adapters import HTTPAdapter, Retry
 from .datasets import DatasetsClient
-from .query import QueryLegacy, QueryResult, QueryOptions, QueryLegacyResult, QueryKind
+from .query import (
+    QueryLegacy,
+    QueryResult,
+    QueryOptions,
+    QueryLegacyResult,
+    QueryKind,
+)
 from .annotations import AnnotationsClient
 from .users import UsersClient
 from .version import __version__
@@ -198,12 +204,17 @@ class Client:  # pylint: disable=R0903
         path = "/v1/datasets/%s/ingest" % dataset
 
         # set headers
-        headers = {"Content-Type": contentType.value, "Content-Encoding": enc.value}
+        headers = {
+            "Content-Type": contentType.value,
+            "Content-Encoding": enc.value,
+        }
         # prepare query params
         params = self._prepare_ingest_options(opts)
 
         # override the default header and set the value from the passed parameter
-        res = self.session.post(path, data=payload, headers=headers, params=params)
+        res = self.session.post(
+            path, data=payload, headers=headers, params=params
+        )
         status_snake = decamelize(res.json())
         return Util.from_dict(IngestStatus, status_snake)
 
@@ -215,9 +226,9 @@ class Client:  # pylint: disable=R0903
     ) -> IngestStatus:
         """Ingest the events into the named dataset and returns the status."""
         # encode request payload to NDJSON
-        content = ndjson.dumps(events, default=Util.handle_json_serialization).encode(
-            "UTF-8"
-        )
+        content = ndjson.dumps(
+            events, default=Util.handle_json_serialization
+        ).encode("UTF-8")
         gzipped = gzip.compress(content)
 
         return self.ingest(
@@ -235,7 +246,9 @@ class Client:  # pylint: disable=R0903
             )
 
         path = "/v1/datasets/%s/query" % id
-        payload = ujson.dumps(asdict(query), default=Util.handle_json_serialization)
+        payload = ujson.dumps(
+            asdict(query), default=Util.handle_json_serialization
+        )
         self.logger.debug("sending query %s" % payload)
         params = self._prepare_query_options(opts)
         res = self.session.post(path, data=payload, params=params)
@@ -246,11 +259,15 @@ class Client:  # pylint: disable=R0903
         result.savedQueryID = query_id
         return result
 
-    def apl_query(self, apl: str, opts: Optional[AplOptions] = None) -> QueryResult:
+    def apl_query(
+        self, apl: str, opts: Optional[AplOptions] = None
+    ) -> QueryResult:
         """Executes the given apl query on the dataset identified by its id."""
         return self.query(apl, opts)
 
-    def query(self, apl: str, opts: Optional[AplOptions] = None) -> QueryResult:
+    def query(
+        self, apl: str, opts: Optional[AplOptions] = None
+    ) -> QueryResult:
         """Executes the given apl query on the dataset identified by its id."""
         path = "/v1/datasets/_apl"
         payload = ujson.dumps(
@@ -303,7 +320,9 @@ class Client:  # pylint: disable=R0903
 
         return params
 
-    def _prepare_apl_options(self, opts: Optional[AplOptions]) -> Dict[str, object]:
+    def _prepare_apl_options(
+        self, opts: Optional[AplOptions]
+    ) -> Dict[str, object]:
         """Prepare the apl query options for the request."""
         params = {"format": AplResultFormat.Legacy.value}
 

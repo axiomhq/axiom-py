@@ -62,7 +62,9 @@ class QueryLegacy:
     # serve-side auto-detection.
     resolution: str = field(default="auto")
     # Aggregations performed as part of the query.
-    aggregations: Optional[List[Aggregation]] = field(default_factory=lambda: [])
+    aggregations: Optional[List[Aggregation]] = field(
+        default_factory=lambda: []
+    )
     # GroupBy is a list of field names to group the query result by. Only valid
     # when at least one aggregation is specified.
     groupBy: Optional[List[str]] = field(default_factory=lambda: [])
@@ -75,7 +77,9 @@ class QueryLegacy:
     limit: int = field(default=10)
     # VirtualFields is a list of virtual fields that can be referenced by
     # aggregations, filters and orders.
-    virtualFields: Optional[List[VirtualField]] = field(default_factory=lambda: [])
+    virtualFields: Optional[List[VirtualField]] = field(
+        default_factory=lambda: []
+    )
     # Projections is a list of projections that can be referenced by
     # aggregations, filters and orders. Leaving it empty projects all available
     # fields to the query result.
