@@ -10,7 +10,7 @@ from logging import getLogger
 from datetime import datetime, timedelta
 from .helpers import get_random_name
 from requests.exceptions import HTTPError
-from axiom import (
+from axiom_py import (
     Client,
     AplOptions,
     AplResultFormat,
@@ -20,7 +20,7 @@ from axiom import (
     WrongQueryKindException,
     DatasetCreateRequest,
 )
-from axiom.query import (
+from axiom_py.query import (
     QueryLegacy,
     QueryOptions,
     QueryKind,

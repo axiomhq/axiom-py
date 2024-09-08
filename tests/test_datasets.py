@@ -8,7 +8,7 @@ from logging import getLogger
 from requests.exceptions import HTTPError
 from datetime import timedelta
 from .helpers import get_random_name
-from axiom import (
+from axiom_py import (
     Client,
     DatasetCreateRequest,
     DatasetUpdateRequest,

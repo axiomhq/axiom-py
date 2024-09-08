@@ -1,34 +1,30 @@
-[tool.poetry]
+[project]
 name = "axiom-py"
 version = "0.5.0"
-description = "Axiom API Python bindings."
-authors = ["Axiom, Inc."]
-license = "MIT"
-packages = [
-	{ include = "axiom" },
+description = "Official bindings for the Axiom API"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.32.3",
+    "requests-toolbelt>=1.0.0",
+    "ujson>=5.10.0",
+    "dacite>=1.8.1",
+    "pyhumps>=3.8.0",
+    "ndjson>=0.3.1",
 ]
 
-[tool.poetry.dependencies]
-# urllib 3 has a breaking change in 2.0.0
-urllib3 = "<3.0.0"
-python = "^3.8"
-requests = "^2.30.0"
-requests-toolbelt = ">= 0.9.1, <1.1.0"
-ujson = "^5.2.0"
-dacite = "^1.6.0"
-pyhumps = ">=1.6.1,<4.0.0"
-ndjson = "^0.3.1"
-rfc3339 = "^6.2"
-iso8601 = ">=1.0.2,<3.0.0"
-
-[tool.poetry.dev-dependencies]
-pytest = "^8.2.1"
-responses = "^0.25.0"
-ruff = "^0.6.4"
-
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 79 # PEP 8
+
+[tool.uv]
+dev-dependencies = [
+    "ruff>=0.6.4",
+    "pytest>=8.3.2",
+    "responses>=0.25.3",
+    "rfc3339>=6.2",
+    "iso8601>=1.0.2",
+]

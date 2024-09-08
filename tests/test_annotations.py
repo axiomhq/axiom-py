@@ -5,7 +5,7 @@ import os
 import unittest
 from logging import getLogger
 from .helpers import get_random_name
-from axiom import (
+from axiom_py import (
     Client,
     DatasetCreateRequest,
     AnnotationCreateRequest,
