@@ -19,8 +19,6 @@ from .datasets import (
     DatasetCreateRequest,
     DatasetUpdateRequest,
     TrimRequest,
-    Field,
-    DatasetInfo,
     DatasetsClient,
 )
 from .annotations import (
@@ -45,8 +43,6 @@ _all_ = [
     DatasetCreateRequest,
     DatasetUpdateRequest,
     TrimRequest,
-    Field,
-    DatasetInfo,
     DatasetsClient,
     Annotation,
     AnnotationCreateRequest,
