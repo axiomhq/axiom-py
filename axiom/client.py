@@ -19,7 +19,7 @@ from .datasets import DatasetsClient
 from .query import QueryLegacy, QueryResult, QueryOptions, QueryLegacyResult, QueryKind
 from .annotations import AnnotationsClient
 from .users import UsersClient
-from .__init__ import __version__
+from .version import __version__
 
 
 AXIOM_URL = "https://api.axiom.co"
