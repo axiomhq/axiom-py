@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 from enum import Enum
 
 from .query import QueryLegacy
@@ -87,7 +87,7 @@ class Entry:
     _rowId: str
     # contains the raw data of the event (with filters and aggregations
     # applied).
-    data: Dict[str, Any]
+    data: Dict[str, object]
 
 
 @dataclass
@@ -96,7 +96,7 @@ class EntryGroupAgg:
 
     # alias is the aggregations alias. If it wasn't specified at query time, it
     # is the uppercased string representation of the aggregation operation.
-    value: Any
+    value: object
     op: str = field(default="")
     # value is the result value of the aggregation.
 
@@ -108,7 +108,7 @@ class EntryGroup:
     # the unique id of the group.
     id: int
     # group maps the fieldnames to the unique values for the entry.
-    group: Dict[str, Any]
+    group: Dict[str, object]
     # aggregations of the group.
     aggregations: List[EntryGroupAgg]
 

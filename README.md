@@ -1,13 +1,18 @@
-![axiom-py: The official Python bindings for the Axiom API](.github/images/banner-dark.svg#gh-dark-mode-only)
-![axiom-py: The official Python bindings for the Axiom API](.github/images/banner-light.svg#gh-light-mode-only)
+# axiom-py
 
-<div align="center">
+<a href="https://axiom.co">
+<picture>
+  <source media="(prefers-color-scheme: dark) and (min-width: 600px)" srcset="https://axiom.co/assets/github/axiom-github-banner-light-vertical.svg">
+  <source media="(prefers-color-scheme: light) and (min-width: 600px)" srcset="https://axiom.co/assets/github/axiom-github-banner-dark-vertical.svg">
+  <source media="(prefers-color-scheme: dark) and (max-width: 599px)" srcset="https://axiom.co/assets/github/axiom-github-banner-light-horizontal.svg">
+  <img alt="Axiom.co banner" src="https://axiom.co/assets/github/axiom-github-banner-dark-horizontal.svg" align="right">
+</picture>
+</a>
+&nbsp;
 
 [![CI][ci_badge]][ci]
 [![PyPI version][pypi_badge]][pypi]
 [![Python version][version_badge]][pypi]
-
-</div>
 
 [Axiom](https://axiom.co) unlocks observability at any scale.
 

@@ -10,7 +10,7 @@ from .tokens import TokenAttributes, Token
 from .util import Util
 from enum import Enum
 from humps import decamelize
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict
 from logging import getLogger
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
@@ -100,11 +100,18 @@ class WrongQueryKindException(Exception):
 class AplOptions:
     """AplOptions specifies the optional parameters for the apl query method."""
 
+    # Start time for the interval to query.
     start_time: Optional[datetime] = field(default=None)
+    # End time for the interval to query.
     end_time: Optional[datetime] = field(default=None)
-    no_cache: bool = field(default=False)
-    save: bool = field(default=False)
+    # The result format.
     format: AplResultFormat = field(default=AplResultFormat.Legacy)
+    # Cursor is the query cursor. It should be set to the Cursor returned with
+    # a previous query result if it was partial.
+    cursor: Optional[str] = field(default=None)
+    # IncludeCursor will return the Cursor as part of the query result, if set
+    # to true.
+    includeCursor: bool = field(default=False)
 
 
 def raise_response_error(r):
@@ -288,7 +295,7 @@ class Client:  # pylint: disable=R0903
         """Delete an API token using its ID string."""
         self.session.delete(f'/v2/tokens/{token_id}')
 
-    def _prepare_query_options(self, opts: QueryOptions) -> Dict[str, Any]:
+    def _prepare_query_options(self, opts: QueryOptions) -> Dict[str, object]:
         """returns the query options as a Dict, handles any renaming for key fields."""
         if opts is None:
             return {}
@@ -304,7 +311,9 @@ class Client:  # pylint: disable=R0903
 
         return params
 
-    def _prepare_ingest_options(self, opts: Optional[IngestOptions]) -> Dict[str, Any]:
+    def _prepare_ingest_options(
+        self, opts: Optional[IngestOptions]
+    ) -> Dict[str, object]:
         """the query params for ingest api are expected in a format
         that couldn't be defined as a variable name because it has a dash.
         As a work around, we create the params dict manually."""
@@ -322,34 +331,31 @@ class Client:  # pylint: disable=R0903
 
         return params
 
-    def _prepare_apl_options(self, opts: Optional[AplOptions]) -> Dict[str, Any]:
+    def _prepare_apl_options(self, opts: Optional[AplOptions]) -> Dict[str, object]:
         """Prepare the apl query options for the request."""
-        params = {}
+        params = {"format": AplResultFormat.Legacy.value}
 
-        if opts is None:
-            params["format"] = AplResultFormat.Legacy.value
-            return params
-
-        if opts.no_cache:
-            params["nocache"] = opts.no_cache.__str__()
-        if opts.save:
-            params["save"] = opts.save
-        if opts.format:
-            params["format"] = opts.format.value
+        if opts is not None:
+            if opts.format:
+                params["format"] = opts.format.value
 
         return params
 
     def _prepare_apl_payload(
         self, apl: str, opts: Optional[AplOptions]
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, object]:
         """Prepare the apl query options for the request."""
         params = {}
         params["apl"] = apl
 
         if opts is not None:
-            if opts.start_time:
+            if opts.start_time is not None:
                 params["startTime"] = opts.start_time
-            if opts.end_time:
+            if opts.end_time is not None:
                 params["endTime"] = opts.end_time
+            if opts.cursor is not None:
+                params["cursor"] = opts.cursor
+            if opts.includeCursor:
+                params["includeCursor"] = opts.includeCursor
 
         return params

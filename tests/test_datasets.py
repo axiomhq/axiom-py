@@ -3,7 +3,7 @@
 import os
 
 import unittest
-from typing import List, Dict, Any
+from typing import List, Dict
 from logging import getLogger
 from requests.exceptions import HTTPError
 from datetime import timedelta
@@ -17,7 +17,7 @@ from axiom import (
 
 class TestDatasets(unittest.TestCase):
     dataset_name: str
-    events: List[Dict[str, Any]]
+    events: List[Dict[str, object]]
     client: Client
     events_time_format = "%d/%b/%Y:%H:%M:%S +0000"
 
