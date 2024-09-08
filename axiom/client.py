@@ -197,13 +197,6 @@ class Client:  # pylint: disable=R0903
         """Ingest the events into the named dataset and returns the status."""
         path = "/v1/datasets/%s/ingest" % dataset
 
-        # check if passed content type and encoding are correct
-        if not contentType:
-            raise ValueError("unknown content-type, choose one of json,x-ndjson or csv")
-
-        if not enc:
-            raise ValueError("unknown content-encoding")
-
         # set headers
         headers = {"Content-Type": contentType.value, "Content-Encoding": enc.value}
         # prepare query params
