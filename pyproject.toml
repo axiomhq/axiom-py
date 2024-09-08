@@ -12,6 +12,12 @@ dependencies = [
     "pyhumps>=3.8.0",
     "ndjson>=0.3.1",
 ]
+license = { file = "LICENSE" }
+
+[project.urls]
+Homepage = "https://axiom.co"
+Repository = "https://github.com/axiomhq/axiom-py.git"
+Issues = "https://github.com/axiomhq/axiom-py/issues"
 
 [build-system]
 requires = ["hatchling"]
