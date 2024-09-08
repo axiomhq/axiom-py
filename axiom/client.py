@@ -280,11 +280,8 @@ class Client:  # pylint: disable=R0903
     def create_api_token(self, opts: TokenAttributes) -> Token:
         """Creates a new API token with permissions specified in a TokenAttributes object."""
         res = self.session.post(
-            '/v2/tokens',
-            data=ujson.dumps(
-                asdict(opts),
-                default=Util.handle_json_serialization
-            )
+            "/v2/tokens",
+            data=ujson.dumps(asdict(opts), default=Util.handle_json_serialization),
         )
 
         # Return the new token and ID.
@@ -293,7 +290,7 @@ class Client:  # pylint: disable=R0903
 
     def delete_api_token(self, token_id: str) -> None:
         """Delete an API token using its ID string."""
-        self.session.delete(f'/v2/tokens/{token_id}')
+        self.session.delete(f"/v2/tokens/{token_id}")
 
     def _prepare_query_options(self, opts: QueryOptions) -> Dict[str, object]:
         """returns the query options as a Dict, handles any renaming for key fields."""
