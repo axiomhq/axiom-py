@@ -10,10 +10,6 @@ on:
     tags:
       - "v*"
 
-env:
-  PYTHON_VERSION: "3.8"
-  POETRY_VERSION: "1.5"
-
 jobs:
   lint:
     name: Lint
@@ -53,9 +49,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - run: pip install poetry==${{ env.POETRY_VERSION }}
-      - run: poetry install
-      - run: poetry run python -m pytest
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+      - run: uv run pytest
         env:
           AXIOM_URL: ${{ secrets[matrix.url] }}
           AXIOM_TOKEN: ${{ secrets[matrix.token] }}
@@ -69,8 +65,13 @@ jobs:
       - test-integration
     steps:
       - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - run: pip install poetry==${{ env.POETRY_VERSION }}
-      - run: poetry publish --build -u __token__ -p "${{ secrets.PYPI_TOKEN }}"
+          python-version-file: "pyproject.toml"
+      - run: uv build
+      - run: uvx twine upload dist/*
+        env:
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: "${{ secrets.PYPI_TOKEN }}"
