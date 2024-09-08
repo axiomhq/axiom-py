@@ -20,7 +20,11 @@ class UsersClient:
         self.session = session
 
     def current(self) -> User:
-        """Get the current authenticated user."""
+        """
+        Get the current authenticated user.
+
+        See https://axiom.co/docs/restapi/endpoints/getCurrentUser
+        """
         res = self.session.get("/v1/user")
         user = Util.from_dict(User, res.json())
         return user

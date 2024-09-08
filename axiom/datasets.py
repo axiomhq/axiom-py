@@ -1,4 +1,6 @@
-"""This package provides dataset models and methods as well as a DatasetClient"""
+"""
+This package provides dataset models and methods as well as a DatasetClient
+"""
 
 import ujson
 from logging import Logger
@@ -37,7 +39,10 @@ class DatasetUpdateRequest:
 
 @dataclass
 class TrimRequest:
-    """MaxDuration marks the oldest timestamp an event can have before getting deleted."""
+    """
+    MaxDuration marks the oldest timestamp an event can have before getting
+    deleted.
+    """
 
     maxDuration: str
 
@@ -82,14 +87,22 @@ class DatasetsClient:  # pylint: disable=R0903
         self.logger = logger
 
     def get(self, id: str) -> Dataset:
-        """Get a dataset by id."""
+        """
+        Get a dataset by id.
+
+        See https://axiom.co/docs/restapi/endpoints/getDataset
+        """
         path = "/v1/datasets/%s" % id
         res = self.session.get(path)
         decoded_response = res.json()
         return Util.from_dict(Dataset, decoded_response)
 
     def create(self, req: DatasetCreateRequest) -> Dataset:
-        """Create a dataset with the given properties."""
+        """
+        Create a dataset with the given properties.
+
+        See https://axiom.co/docs/restapi/endpoints/createDataset
+        """
         path = "/v1/datasets"
         res = self.session.post(path, data=ujson.dumps(asdict(req)))
         ds = Util.from_dict(Dataset, res.json())
@@ -97,7 +110,11 @@ class DatasetsClient:  # pylint: disable=R0903
         return ds
 
     def get_list(self) -> List[Dataset]:
-        """List all available datasets."""
+        """
+        List all available datasets.
+
+        See https://axiom.co/docs/restapi/endpoints/getDatasets
+        """
         path = "/v1/datasets"
         res = self.session.get(path)
 
@@ -109,7 +126,11 @@ class DatasetsClient:  # pylint: disable=R0903
         return datasets
 
     def update(self, id: str, req: DatasetUpdateRequest) -> Dataset:
-        """Update a dataset with the given properties."""
+        """
+        Update a dataset with the given properties.
+
+        See https://axiom.co/docs/restapi/endpoints/updateDataset
+        """
         path = "/v1/datasets/%s" % id
         res = self.session.put(path, data=ujson.dumps(asdict(req)))
         ds = Util.from_dict(Dataset, res.json())
@@ -119,18 +140,25 @@ class DatasetsClient:  # pylint: disable=R0903
         return ds
 
     def delete(self, id: str):
-        """Deletes a dataset with the given id."""
+        """
+        Deletes a dataset with the given id.
+
+        See https://axiom.co/docs/restapi/endpoints/deleteDataset
+        """
         path = "/v1/datasets/%s" % id
         self.session.delete(path)
 
     def trim(self, id: str, maxDuration: timedelta):
         """
-        Trim the dataset identified by its id to a given length. The max duration
-        given will mark the oldest timestamp an event can have. Older ones will be
-        deleted from the dataset.
+        Trim the dataset identified by its id to a given length. The max
+        duration given will mark the oldest timestamp an event can have.
+        Older ones will be deleted from the dataset.
+
+        See https://axiom.co/docs/restapi/endpoints/trimDataset
         """
         path = "/v1/datasets/%s/trim" % id
-        # prepare request payload and format masDuration to append time unit at the end, e.g `1s`
+        # prepare request payload and format masDuration to append time unit at
+        # the end, e.g `1s`
         req = TrimRequest(f"{maxDuration.seconds}s")
         self.session.post(path, data=ujson.dumps(asdict(req)))
 
