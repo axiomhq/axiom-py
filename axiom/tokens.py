@@ -29,31 +29,53 @@ class TokenOrganizationCapabilities:
     """
 
     # Ability to use annotations. Optional.
-    annotations: Optional[list[Literal["create", "read", "update", "delete"]]] = field(default=None)
+    annotations: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use api tokens. Optional.
-    apiTokens: Optional[list[Literal["create", "read", "update", "delete"]]] = field(default=None)
+    apiTokens: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to access billing. Optional.
     billing: Optional[list[Literal["read", "update"]]] = field(default=None)
     # Ability to use dashboards. Optional.
-    dashboards: Optional[list[Literal["create", "read", "update", "delete"]]] = field(default=None)
+    dashboards: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use datasets. Optional.
-    datasets: Optional[list[Literal["create", "read", "update", "delete"]]] = field(default=None)
+    datasets: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use endpoints. Optional.
-    endpoints: Optional[list[Literal["create", "read", "update", "delete"]]] = field(default=None)
+    endpoints: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use flows. Optional.
-    flows: Optional[list[Literal["create", "read", "update", "delete"]]] = field(default=None)
+    flows: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use integrations. Optional.
-    integrations: Optional[list[Literal["create", "read", "update", "delete"]]] = field(default=None)
+    integrations: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use monitors. Optional.
-    monitors: Optional[list[Literal["create", "read", "update", "delete"]]] = field(default=None)
+    monitors: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use notifiers. Optional.
-    notifiers: Optional[list[Literal["create", "read", "update", "delete"]]] = field(default=None)
+    notifiers: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use role-based access controls. Optional.
-    rbac: Optional[list[Literal["create", "read", "update", "delete"]]] = field(default=None)
+    rbac: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use shared access keys. Optional.
     sharedAccessKeys: Optional[list[Literal["read", "update"]]] = field(default=None)
     # Ability to use users. Optional.
-    users: Optional[list[Literal["create", "read", "update", "delete"]]] = field(default=None)
+    users: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
 
 
 @dataclass
@@ -66,7 +88,9 @@ class TokenAttributes:
     # Name for the token. Required.
     name: str
     # The token's dataset-level capabilities. Keyed on dataset name. Optional.
-    datasetCapabilities: Optional[dict[str, TokenDatasetCapabilities]] = field(default=None)
+    datasetCapabilities: Optional[dict[str, TokenDatasetCapabilities]] = field(
+        default=None
+    )
     # Description for the API token. Optional.
     description: Optional[str] = field(default=None)
     # Expiration date for the API token. Optional.
