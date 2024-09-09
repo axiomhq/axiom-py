@@ -79,8 +79,8 @@ For more examples, see [`examples/client.py`](examples/client.py).
 
 ## Logger
 
-You can use `axiom_py.logging.AxiomHandler` to send logs from the `logging`
-module to Axiom:
+You can use the `AxiomHandler` to send logs from the `logging` module to Axiom
+like this:
 
 ```python
 import axiom_py
@@ -94,7 +94,7 @@ def setup_logger():
     logging.getLogger().addHandler(handler)
 ```
 
-For more examples, see [`examples/logger.py`](examples/logger.py).
+For a full example, see [`examples/logger.py`](examples/logger.py).
 
 ## Contributing
 
