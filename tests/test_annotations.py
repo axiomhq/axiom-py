@@ -3,10 +3,7 @@
 import os
 
 import unittest
-from typing import List, Dict, Optional
 from logging import getLogger
-from requests.exceptions import HTTPError
-from datetime import timedelta
 from .helpers import get_random_name
 from axiom import (
     Client,
@@ -36,7 +33,7 @@ class TestAnnotations(unittest.TestCase):
             name=cls.dataset_name,
             description="test_annotations.py (dataset_name)",
         )
-        res = cls.client.datasets.create(req)
+        cls.client.datasets.create(req)
 
     def test_happy_path_crud(self):
         """Test the happy path of creating, reading, updating, and deleting an annotation."""

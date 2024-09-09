@@ -3,9 +3,9 @@
 import ujson
 from logging import Logger
 from requests import Session
-from typing import List, Dict, Optional
+from typing import List, Optional
 from dataclasses import dataclass, asdict, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from urllib.parse import urlencode
 from .util import Util
 
@@ -84,9 +84,9 @@ class AnnotationsClient:  # pylint: disable=R0903
         query_params = {}
         if len(datasets) > 0:
             query_params["datasets"] = ",".join(datasets)
-        if start != None:
+        if start is not None:
             query_params["start"] = start.isoformat()
-        if end != None:
+        if end is not None:
             query_params["end"] = end.isoformat()
         path = f"/v2/annotations?{urlencode(query_params, doseq=True)}"
 
