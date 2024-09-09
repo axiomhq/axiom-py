@@ -79,7 +79,7 @@ for more examples, check out `examples.py`.
 
 ## Contributing
 
-This project uses [uv](https://docs.astral.sh/uv) for dependecy management
+This project uses [uv](https://docs.astral.sh/uv) for dependency management
 and packaging, so make sure that this is installed.
 
 ## License
