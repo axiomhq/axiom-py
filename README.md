@@ -75,7 +75,26 @@ client.ingest_events(
 client.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
 
-for more examples, check out `examples.py`.
+For more examples, see [`examples/client.py`](examples/client.py).
+
+## Logger
+
+You can use the `AxiomHandler` to send logs from the `logging` module to Axiom
+like this:
+
+```python
+import axiom_py
+from axiom_py.logging import AxiomHandler
+import logging
+
+
+def setup_logger():
+    client = axiom_py.Client()
+    handler = AxiomHandler(client, "my-dataset")
+    logging.getLogger().addHandler(handler)
+```
+
+For a full example, see [`examples/logger.py`](examples/logger.py).
 
 ## Contributing
 
