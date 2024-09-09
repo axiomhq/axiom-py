@@ -35,7 +35,10 @@ class AxiomHandler(Handler):
     def emit(self, record):
         """emit sends a log to Axiom."""
         self.buffer.append(record.__dict__)
-        if len(self.buffer) >= 1000 or time.monotonic() - self.last_run > self.interval:
+        if (
+            len(self.buffer) >= 1000
+            or time.monotonic() - self.last_run > self.interval
+        ):
             self.flush()
 
     def flush(self):

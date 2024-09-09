@@ -48,7 +48,9 @@ class Util:
 
         found = re.search(exp, val)
         if not found:
-            raise Exception(f"failed to parse timedelta field from value {val}")
+            raise Exception(
+                f"failed to parse timedelta field from value {val}"
+            )
 
         v = int(found.groups()[0])
         unit = found.groups()[1]
@@ -62,7 +64,9 @@ class Util:
         elif unit == "d":
             return timedelta(days=v)
         else:
-            raise Exception(f"failed to parse timedelta field from value {val}")
+            raise Exception(
+                f"failed to parse timedelta field from value {val}"
+            )
 
     @classmethod
     def handle_json_serialization(cls, obj):

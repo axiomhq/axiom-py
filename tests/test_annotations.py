@@ -56,7 +56,9 @@ class TestAnnotations(unittest.TestCase):
         assert annotation.id == created_annotation.id
 
         # List annotations
-        annotations = self.client.annotations.list(datasets=[self.dataset_name])
+        annotations = self.client.annotations.list(
+            datasets=[self.dataset_name]
+        )
         self.logger.debug(annotations)
         assert len(annotations) == 1
 
@@ -71,7 +73,9 @@ class TestAnnotations(unittest.TestCase):
             description=None,
             url=None,
         )
-        updated_annotation = self.client.annotations.update(annotation.id, updateReq)
+        updated_annotation = self.client.annotations.update(
+            annotation.id, updateReq
+        )
         self.logger.debug(updated_annotation)
         assert updated_annotation.title == newTitle
 

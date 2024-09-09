@@ -26,7 +26,9 @@ class TestDatasets(unittest.TestCase):
         cls.logger = getLogger()
 
         cls.dataset_name = get_random_name()
-        cls.logger.info(f"generated random dataset name is: {cls.dataset_name}")
+        cls.logger.info(
+            f"generated random dataset name is: {cls.dataset_name}"
+        )
 
         cls.client = Client(
             os.getenv("AXIOM_TOKEN"),
@@ -77,7 +79,8 @@ class TestDatasets(unittest.TestCase):
             dataset = self.client.datasets.get(self.dataset_name)
 
             self.assertIsNone(
-                dataset, f"expected test dataset (%{self.dataset_name}) to be deleted"
+                dataset,
+                f"expected test dataset (%{self.dataset_name}) to be deleted",
             )
         except HTTPError as err:
             # the get method returns 404 error if dataset doesn't exist, so that means

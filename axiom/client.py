@@ -14,7 +14,13 @@ from datetime import datetime
 from requests_toolbelt.sessions import BaseUrlSession
 from requests.adapters import HTTPAdapter, Retry
 from .datasets import DatasetsClient
-from .query import QueryLegacy, QueryResult, QueryOptions, QueryLegacyResult, QueryKind
+from .query import (
+    QueryLegacy,
+    QueryResult,
+    QueryOptions,
+    QueryLegacyResult,
+    QueryKind,
+)
 from .annotations import AnnotationsClient
 from .users import UsersClient
 from .version import __version__
@@ -177,23 +183,25 @@ class Client:  # pylint: disable=R0903
         enc: ContentEncoding,
         opts: Optional[IngestOptions] = None,
     ) -> IngestStatus:
-        """Ingest the events into the named dataset and returns the status."""
+        """
+        Ingest the payload into the named dataset and returns the status.
+
+        See https://axiom.co/docs/restapi/endpoints/ingestIntoDataset
+        """
         path = "/v1/datasets/%s/ingest" % dataset
 
-        # check if passed content type and encoding are correct
-        if not contentType:
-            raise ValueError("unknown content-type, choose one of json,x-ndjson or csv")
-
-        if not enc:
-            raise ValueError("unknown content-encoding")
-
         # set headers
-        headers = {"Content-Type": contentType.value, "Content-Encoding": enc.value}
+        headers = {
+            "Content-Type": contentType.value,
+            "Content-Encoding": enc.value,
+        }
         # prepare query params
         params = self._prepare_ingest_options(opts)
 
         # override the default header and set the value from the passed parameter
-        res = self.session.post(path, data=payload, headers=headers, params=params)
+        res = self.session.post(
+            path, data=payload, headers=headers, params=params
+        )
         status_snake = decamelize(res.json())
         return Util.from_dict(IngestStatus, status_snake)
 
@@ -203,11 +211,15 @@ class Client:  # pylint: disable=R0903
         events: List[dict],
         opts: Optional[IngestOptions] = None,
     ) -> IngestStatus:
-        """Ingest the events into the named dataset and returns the status."""
+        """
+        Ingest the events into the named dataset and returns the status.
+
+        See https://axiom.co/docs/restapi/endpoints/ingestIntoDataset
+        """
         # encode request payload to NDJSON
-        content = ndjson.dumps(events, default=Util.handle_json_serialization).encode(
-            "UTF-8"
-        )
+        content = ndjson.dumps(
+            events, default=Util.handle_json_serialization
+        ).encode("UTF-8")
         gzipped = gzip.compress(content)
 
         return self.ingest(
@@ -217,7 +229,11 @@ class Client:  # pylint: disable=R0903
     def query_legacy(
         self, id: str, query: QueryLegacy, opts: QueryOptions
     ) -> QueryLegacyResult:
-        """Executes the given query on the dataset identified by its id."""
+        """
+        Executes the given structured query on the dataset identified by its id.
+
+        See https://axiom.co/docs/restapi/endpoints/queryDataset
+        """
         if not opts.saveAsKind or (opts.saveAsKind == QueryKind.APL):
             raise WrongQueryKindException(
                 "invalid query kind %s: must be %s or %s"
@@ -225,7 +241,9 @@ class Client:  # pylint: disable=R0903
             )
 
         path = "/v1/datasets/%s/query" % id
-        payload = ujson.dumps(asdict(query), default=Util.handle_json_serialization)
+        payload = ujson.dumps(
+            asdict(query), default=Util.handle_json_serialization
+        )
         self.logger.debug("sending query %s" % payload)
         params = self._prepare_query_options(opts)
         res = self.session.post(path, data=payload, params=params)
@@ -236,12 +254,24 @@ class Client:  # pylint: disable=R0903
         result.savedQueryID = query_id
         return result
 
-    def apl_query(self, apl: str, opts: Optional[AplOptions] = None) -> QueryResult:
-        """Executes the given apl query on the dataset identified by its id."""
+    def apl_query(
+        self, apl: str, opts: Optional[AplOptions] = None
+    ) -> QueryResult:
+        """
+        Executes the given apl query on the dataset identified by its id.
+
+        See https://axiom.co/docs/restapi/endpoints/queryApl
+        """
         return self.query(apl, opts)
 
-    def query(self, apl: str, opts: Optional[AplOptions] = None) -> QueryResult:
-        """Executes the given apl query on the dataset identified by its id."""
+    def query(
+        self, apl: str, opts: Optional[AplOptions] = None
+    ) -> QueryResult:
+        """
+        Executes the given apl query on the dataset identified by its id.
+
+        See https://axiom.co/docs/restapi/endpoints/queryApl
+        """
         path = "/v1/datasets/_apl"
         payload = ujson.dumps(
             self._prepare_apl_payload(apl, opts),
@@ -293,7 +323,9 @@ class Client:  # pylint: disable=R0903
 
         return params
 
-    def _prepare_apl_options(self, opts: Optional[AplOptions]) -> Dict[str, object]:
+    def _prepare_apl_options(
+        self, opts: Optional[AplOptions]
+    ) -> Dict[str, object]:
         """Prepare the apl query options for the request."""
         params = {"format": AplResultFormat.Legacy.value}
 

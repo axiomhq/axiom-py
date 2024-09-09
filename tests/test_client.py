@@ -46,7 +46,9 @@ class TestClient(unittest.TestCase):
             os.getenv("AXIOM_URL"),
         )
         cls.dataset_name = get_random_name()
-        cls.logger.info(f"generated random dataset name is: {cls.dataset_name}")
+        cls.logger.info(
+            f"generated random dataset name is: {cls.dataset_name}"
+        )
         events_time_format = "%d/%b/%Y:%H:%M:%S +0000"
         # create events to ingest and query
         time = datetime.utcnow() - timedelta(minutes=1)
@@ -186,7 +188,9 @@ class TestClient(unittest.TestCase):
         try:
             self.client.query_legacy(self.dataset_name, q, opts)
         except WrongQueryKindException:
-            self.logger.info("passing kind apl to query raised exception as expected")
+            self.logger.info(
+                "passing kind apl to query raised exception as expected"
+            )
             return
 
         self.fail("was excepting WrongQueryKindException")
@@ -196,7 +200,9 @@ class TestClient(unittest.TestCase):
         startTime = datetime.utcnow() - timedelta(minutes=2)
         endTime = datetime.utcnow()
         aggregations = [
-            Aggregation(alias="event_count", op=AggregationOperation.COUNT, field="*")
+            Aggregation(
+                alias="event_count", op=AggregationOperation.COUNT, field="*"
+            )
         ]
         q = QueryLegacy(startTime, endTime, aggregations=aggregations)
         q.groupBy = ["success", "remote_ip"]
