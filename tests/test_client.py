@@ -1,7 +1,9 @@
 """This module contains the tests for the axiom client."""
 
+import sys
 import os
 import unittest
+from unittest.mock import patch
 import gzip
 import ujson
 import rfc3339
@@ -223,6 +225,17 @@ class TestClient(unittest.TestCase):
         if res.buckets.totals and len(res.buckets.totals):
             agg = res.buckets.totals[0].aggregations[0]
             self.assertEqual("event_count", agg.op)
+
+    @patch("sys.exit")
+    def test_client_shutdown_atexit(self, mock_exit):
+        """Test client shutdown atexit"""
+        # Use the mock to test the firing mechanism
+        self.assertEqual(self.client.is_closed, False)
+        sys.exit()
+        mock_exit.assert_called_once()
+        # Use the hook implementation to assert the client is closed closed
+        self.client.shutdown_hook()
+        self.assertEqual(self.client.is_closed, True)
 
     @classmethod
     def tearDownClass(cls):

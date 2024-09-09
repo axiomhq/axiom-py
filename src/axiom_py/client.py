@@ -1,6 +1,7 @@
 """Client provides an easy-to use client library to connect to Axiom."""
 
 import ndjson
+import atexit
 import gzip
 import ujson
 import os
@@ -128,6 +129,7 @@ class Client:  # pylint: disable=R0903
     datasets: DatasetsClient
     users: UsersClient
     annotations: AnnotationsClient
+    is_closed: bool  # track if the client has been closed ( for tests )
 
     def __init__(
         self,
@@ -174,6 +176,14 @@ class Client:  # pylint: disable=R0903
         self.datasets = DatasetsClient(self.session, self.logger)
         self.users = UsersClient(self.session)
         self.annotations = AnnotationsClient(self.session, self.logger)
+
+        # wrap shutdown hook in a lambda passing in self as a ref
+        atexit.register(lambda: self.shutdown_hook())
+        self.is_closed = False
+
+    def shutdown_hook(self):
+        self.session.close()
+        self.is_closed = True
 
     def ingest(
         self,
