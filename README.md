@@ -101,6 +101,8 @@ For a full example, see [`examples/logger.py`](examples/logger.py).
 This project uses [uv](https://docs.astral.sh/uv) for dependency management
 and packaging, so make sure that this is installed.
 
+To lint and format files before commit, run `uvx pre-commit install`.
+
 ## License
 
 Distributed under MIT License (`The MIT License`).

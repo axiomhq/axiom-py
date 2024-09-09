@@ -33,4 +33,5 @@ dev-dependencies = [
     "responses>=0.25.3",
     "rfc3339>=6.2",
     "iso8601>=1.0.2",
+    "pre-commit>=3.5.0",
 ]

@@ -106,7 +106,8 @@ class TestClient(unittest.TestCase):
         opts = IngestOptions(
             "_time",
             "2/Jan/2006:15:04:05 +0000",
-            # CSV_delimiter obviously not valid for JSON, but perfectly fine to test for its presence in this test.
+            # CSV_delimiter obviously not valid for JSON, but perfectly fine to
+            # test for its presence in this test.
             ";",
         )
         res = self.client.ingest(
