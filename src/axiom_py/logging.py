@@ -17,7 +17,7 @@ class AxiomHandler(Handler):
     last_run: float
 
     def __init__(self, client: Client, dataset: str, level=NOTSET, interval=1):
-        Handler.__init__(self, level)
+        super().__init__()
         # set urllib3 logging level to warning, check:
         # https://github.com/axiomhq/axiom-py/issues/23
         # This is a temp solution that would stop requests
