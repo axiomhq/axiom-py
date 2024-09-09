@@ -49,19 +49,19 @@ Otherwise create a personal token in [the Axiom settings](https://cloud.axiom.co
 You can also configure the client using options passed to the client constructor:
 
 ```py
-import axiom
+import axiom_py
 
-client = axiom.Client("<api token>", "<org id>")
+client = axiom_py.Client("<api token>", "<org id>")
 ```
 
 Create and use a client like this:
 
 ```py
-import axiom
+import axiom_py
 import rfc3339
 from datetime import datetime,timedelta
 
-client = axiom.Client()
+client = axiom_py.Client()
 
 time = datetime.utcnow() - timedelta(hours=1)
 time_formatted = rfc3339.format(time)
@@ -75,15 +75,12 @@ client.ingest_events(
 client.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
 
-for more examples, check out the [examples](examples) directory.
+for more examples, check out `examples.py`.
 
 ## Contributing
 
-This project uses [Poetry](https://python-poetry.org) for dependecy management
-and packaging, so make sure that this is installed (see [Poetry Installation](https://python-poetry.org/docs/#installation)).
-
-Run `poetry install` to install dependencies and `poetry shell` to activate a
-virtual environment.
+This project uses [uv](https://docs.astral.sh/uv) for dependency management
+and packaging, so make sure that this is installed.
 
 ## License
 

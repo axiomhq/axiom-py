@@ -4,8 +4,8 @@ import os
 import logging
 import unittest
 from .helpers import get_random_name
-from axiom import Client, DatasetCreateRequest
-from axiom.logging import AxiomHandler
+from axiom_py import Client, DatasetCreateRequest
+from axiom_py.logging import AxiomHandler
 
 
 class TestLogger(unittest.TestCase):
