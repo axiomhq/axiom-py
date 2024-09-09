@@ -1,7 +1,6 @@
 """Client provides an easy-to use client library to connect to Axiom."""
 
 import ndjson
-import dacite
 import gzip
 import ujson
 import os
@@ -13,7 +12,6 @@ from logging import getLogger
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from requests_toolbelt.sessions import BaseUrlSession
-from requests_toolbelt.utils.dump import dump_response
 from requests.adapters import HTTPAdapter, Retry
 from .datasets import DatasetsClient
 from .query import (
@@ -120,23 +118,8 @@ class AplOptions:
 
 def raise_response_error(r):
     if r.status_code >= 400:
-        print("==== Response Debugging ====")
-        print("##Request Headers", r.request.headers)
-
-        # extract content type
-        ct = r.headers["content-type"].split(";")[0]
-        if ct == ContentType.JSON.value:
-            dump = dump_response(r)
-            print(dump)
-            print("##Response:", dump.decode("UTF-8"))
-            err = dacite.from_dict(data_class=Error, data=r.json())
-            print(err)
-        elif ct == ContentType.NDJSON.value:
-            decoded = ndjson.loads(r.text)
-            print("##Response:", decoded)
-
-        r.raise_for_status()
         # TODO: Decode JSON https://github.com/axiomhq/axiom-go/blob/610cfbd235d3df17f96a4bb156c50385cfbd9edd/axiom/error.go#L35-L50
+        r.raise_for_status()
 
 
 class Client:  # pylint: disable=R0903
