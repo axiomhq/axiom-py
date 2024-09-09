@@ -83,8 +83,8 @@ class TestDatasets(unittest.TestCase):
                 f"expected test dataset (%{self.dataset_name}) to be deleted",
             )
         except HTTPError as err:
-            # the get method returns 404 error if dataset doesn't exist, so that means
-            # that our tests passed, otherwise, it should fail.
+            # the get method returns 404 error if dataset doesn't exist, so
+            # that means that our tests passed, otherwise, it should fail.
             if err.response.status_code != 404:
                 self.fail(err)
 
