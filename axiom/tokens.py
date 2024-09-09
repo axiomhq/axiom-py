@@ -4,6 +4,7 @@ from typing import Literal, Optional
 
 @dataclass
 class TokenDatasetCapabilities:
+    # pylint: disable=unsubscriptable-object
     """
     TokenDatasetCapabilities describes the dataset-level permissions
     which a token can be assigned.
@@ -12,17 +13,22 @@ class TokenDatasetCapabilities:
     """
 
     # Ability to ingest data. Optional.
-    ingest: list[Literal["create"]] | None = None
+    ingest: Optional[list[Literal["create"]]] = field(default=None)
     # Ability to query data. Optional.
-    query: list[Literal["read"]] | None = None
+    query: Optional[list[Literal["read"]]] = field(default=None)
     # Ability to use starred queries. Optional.
-    starredQueries: list[Literal["create", "read", "update", "delete"]] | None = None
+    starredQueries: Optional[list[Literal["create", "read", "update", "delete"]]] = (
+        field(default=None)
+    )
     # Ability to use virtual fields. Optional.
-    virtualFields: list[Literal["create", "read", "update", "delete"]] | None = None
+    virtualFields: Optional[list[Literal["create", "read", "update", "delete"]]] = (
+        field(default=None)
+    )
 
 
 @dataclass
 class TokenOrganizationCapabilities:
+    # pylint: disable=unsubscriptable-object
     """
     TokenOrganizationCapabilities describes the org-level permissions
     which a token can be assigned.
@@ -80,6 +86,7 @@ class TokenOrganizationCapabilities:
 
 @dataclass
 class TokenAttributes:
+    # pylint: disable=unsubscriptable-object
     """
     TokenAttributes describes the set of input parameters that the
     POST /tokens API accepts.
