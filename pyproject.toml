@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "axiom-py"
-version = "0.4.0"
+version = "0.5.0"
 description = "Axiom API Python bindings."
 authors = ["Axiom, Inc."]
 license = "MIT"
@@ -22,10 +22,10 @@ rfc3339 = "^6.2"
 iso8601 = ">=1.0.2,<3.0.0"
 
 [tool.poetry.dev-dependencies]
-black = "^23.3.0"
-pytest = "^7.3.2"
-pylint = "^2.7.2"
-responses = "^0.23.1"
+black = "^24.4.2"
+pytest = "^8.2.1"
+pylint = "^3.2.1"
+responses = "^0.25.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

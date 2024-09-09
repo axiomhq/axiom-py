@@ -23,7 +23,7 @@ from axiom import (
     WrongQueryKindException,
     DatasetCreateRequest,
     TokenAttributes,
-    TokenOrganizationCapabilities
+    TokenOrganizationCapabilities,
 )
 from axiom.query import (
     QueryLegacy,
@@ -171,8 +171,6 @@ class TestClient(unittest.TestCase):
         opts = AplOptions(
             start_time=startTime,
             end_time=endTime,
-            no_cache=True,
-            save=False,
             format=AplResultFormat.Legacy,
         )
         qr = self.client.query(apl, opts)
@@ -228,9 +226,7 @@ class TestClient(unittest.TestCase):
         """Test creating and deleting an API token"""
         token_attrs = TokenAttributes(
             name=f"PytestToken-{uuid.uuid4()}",
-            orgCapabilities=TokenOrganizationCapabilities(
-                apiTokens=["read"]
-            )
+            orgCapabilities=TokenOrganizationCapabilities(apiTokens=["read"]),
         )
         token_values = self.client.create_api_token(token_attrs)
 

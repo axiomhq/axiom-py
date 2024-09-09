@@ -3,7 +3,7 @@
 import os
 
 import unittest
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 from logging import getLogger
 from requests.exceptions import HTTPError
 from datetime import timedelta

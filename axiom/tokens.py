@@ -1,9 +1,10 @@
-from dataclasses import dataclass
-from typing import Literal
+from dataclasses import dataclass, field
+from typing import Literal, Optional
 
 
 @dataclass
 class TokenDatasetCapabilities:
+    # pylint: disable=unsubscriptable-object
     """
     TokenDatasetCapabilities describes the dataset-level permissions
     which a token can be assigned.
@@ -12,52 +13,80 @@ class TokenDatasetCapabilities:
     """
 
     # Ability to ingest data. Optional.
-    ingest: list[Literal["create"]] | None = None
+    ingest: Optional[list[Literal["create"]]] = field(default=None)
     # Ability to query data. Optional.
-    query: list[Literal["read"]] | None = None
+    query: Optional[list[Literal["read"]]] = field(default=None)
     # Ability to use starred queries. Optional.
-    starredQueries: list[Literal["create", "read", "update", "delete"]] | None = None
+    starredQueries: Optional[list[Literal["create", "read", "update", "delete"]]] = (
+        field(default=None)
+    )
     # Ability to use virtual fields. Optional.
-    virtualFields: list[Literal["create", "read", "update", "delete"]] | None = None
+    virtualFields: Optional[list[Literal["create", "read", "update", "delete"]]] = (
+        field(default=None)
+    )
 
 
 @dataclass
 class TokenOrganizationCapabilities:
+    # pylint: disable=unsubscriptable-object
     """
     TokenOrganizationCapabilities describes the org-level permissions
     which a token can be assigned.
     """
 
     # Ability to use annotations. Optional.
-    annotations: list[Literal["create", "read", "update", "delete"]] | None = None
+    annotations: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use api tokens. Optional.
-    apiTokens: list[Literal["create", "read", "update", "delete"]] | None = None
+    apiTokens: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to access billing. Optional.
-    billing: list[Literal["read", "update"]] | None = None
+    billing: Optional[list[Literal["read", "update"]]] = field(default=None)
     # Ability to use dashboards. Optional.
-    dashboards: list[Literal["create", "read", "update", "delete"]] | None = None
+    dashboards: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use datasets. Optional.
-    datasets: list[Literal["create", "read", "update", "delete"]] | None = None
+    datasets: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use endpoints. Optional.
-    endpoints: list[Literal["create", "read", "update", "delete"]] | None = None
+    endpoints: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use flows. Optional.
-    flows: list[Literal["create", "read", "update", "delete"]] | None = None
+    flows: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use integrations. Optional.
-    integrations: list[Literal["create", "read", "update", "delete"]] | None = None
+    integrations: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use monitors. Optional.
-    monitors: list[Literal["create", "read", "update", "delete"]] | None = None
+    monitors: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use notifiers. Optional.
-    notifiers: list[Literal["create", "read", "update", "delete"]] | None = None
+    notifiers: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use role-based access controls. Optional.
-    rbac: list[Literal["create", "read", "update", "delete"]] | None = None
+    rbac: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
     # Ability to use shared access keys. Optional.
-    sharedAccessKeys: list[Literal["read", "update"]] | None = None
+    sharedAccessKeys: Optional[list[Literal["read", "update"]]] = field(default=None)
     # Ability to use users. Optional.
-    users: list[Literal["create", "read", "update", "delete"]] | None = None
+    users: Optional[list[Literal["create", "read", "update", "delete"]]] = field(
+        default=None
+    )
 
 
 @dataclass
 class TokenAttributes:
+    # pylint: disable=unsubscriptable-object
     """
     TokenAttributes describes the set of input parameters that the
     POST /tokens API accepts.
@@ -66,13 +95,15 @@ class TokenAttributes:
     # Name for the token. Required.
     name: str
     # The token's dataset-level capabilities. Keyed on dataset name. Optional.
-    datasetCapabilities: dict[str, TokenDatasetCapabilities] | None = None
+    datasetCapabilities: Optional[dict[str, TokenDatasetCapabilities]] = field(
+        default=None
+    )
     # Description for the API token. Optional.
-    description: str | None = None
+    description: Optional[str] = field(default=None)
     # Expiration date for the API token. Optional.
-    expiresAt: str | None = None
+    expiresAt: Optional[str] = field(default=None)
     # The token's organization-level capabilities. Optional.
-    orgCapabilities: TokenOrganizationCapabilities | None = None
+    orgCapabilities: Optional[TokenOrganizationCapabilities] = field(default=None)
 
 
 @dataclass
@@ -81,5 +112,6 @@ class Token:
     Token contains the response from a call to POST /tokens.
     It includes the API token itself, and an ID which can be used to reference it later.
     """
+
     id: str
     token: str
