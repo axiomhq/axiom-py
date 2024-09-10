@@ -5,6 +5,7 @@ description = "Official bindings for the Axiom API"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
+    "iso8601>=1.0.2",
     "requests>=2.32.3",
     "requests-toolbelt>=1.0.0",
     "ujson>=5.10.0",
