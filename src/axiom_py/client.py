@@ -129,7 +129,7 @@ class Client:  # pylint: disable=R0903
     datasets: DatasetsClient
     users: UsersClient
     annotations: AnnotationsClient
-    is_closed: bool  # track if the client has been closed ( for tests )
+    is_closed: bool  # track if the client has been closed (for tests)
 
     def __init__(
         self,
