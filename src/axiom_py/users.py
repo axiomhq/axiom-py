@@ -1,4 +1,4 @@
-from .util import Util
+from .util import from_dict
 from dataclasses import dataclass
 from requests import Session
 
@@ -32,5 +32,5 @@ class UsersClient:
         See https://axiom.co/docs/restapi/endpoints/getCurrentUser
         """
         res = self.session.get("/v2/user")
-        user = Util.from_dict(User, res.json())
+        user = from_dict(User, res.json())
         return user

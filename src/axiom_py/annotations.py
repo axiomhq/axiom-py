@@ -7,7 +7,7 @@ from typing import List, Optional
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from urllib.parse import urlencode
-from .util import Util
+from .util import from_dict
 
 
 @dataclass
@@ -68,7 +68,7 @@ class AnnotationsClient:  # pylint: disable=R0903
         path = "/v2/annotations/%s" % id
         res = self.session.get(path)
         decoded_response = res.json()
-        return Util.from_dict(Annotation, decoded_response)
+        return from_dict(Annotation, decoded_response)
 
     def create(self, req: AnnotationCreateRequest) -> Annotation:
         """
@@ -78,7 +78,7 @@ class AnnotationsClient:  # pylint: disable=R0903
         """
         path = "/v2/annotations"
         res = self.session.post(path, data=ujson.dumps(asdict(req)))
-        annotation = Util.from_dict(Annotation, res.json())
+        annotation = from_dict(Annotation, res.json())
         self.logger.info(f"created new annotation: {annotation.id}")
         return annotation
 
@@ -106,7 +106,7 @@ class AnnotationsClient:  # pylint: disable=R0903
 
         annotations = []
         for record in res.json():
-            ds = Util.from_dict(Annotation, record)
+            ds = from_dict(Annotation, record)
             annotations.append(ds)
 
         return annotations
@@ -119,7 +119,7 @@ class AnnotationsClient:  # pylint: disable=R0903
         """
         path = "/v2/annotations/%s" % id
         res = self.session.put(path, data=ujson.dumps(asdict(req)))
-        annotation = Util.from_dict(Annotation, res.json())
+        annotation = from_dict(Annotation, res.json())
         self.logger.info(f"updated annotation({annotation.id})")
         return annotation
 

@@ -5,7 +5,7 @@ import atexit
 import gzip
 import ujson
 import os
-from .util import Util
+from .util import from_dict, handle_json_serialization
 from enum import Enum
 from humps import decamelize
 from typing import Optional, List, Dict
@@ -213,7 +213,7 @@ class Client:  # pylint: disable=R0903
             path, data=payload, headers=headers, params=params
         )
         status_snake = decamelize(res.json())
-        return Util.from_dict(IngestStatus, status_snake)
+        return from_dict(IngestStatus, status_snake)
 
     def ingest_events(
         self,
@@ -228,7 +228,7 @@ class Client:  # pylint: disable=R0903
         """
         # encode request payload to NDJSON
         content = ndjson.dumps(
-            events, default=Util.handle_json_serialization
+            events, default=handle_json_serialization
         ).encode("UTF-8")
         gzipped = gzip.compress(content)
 
@@ -251,13 +251,11 @@ class Client:  # pylint: disable=R0903
             )
 
         path = "/v1/datasets/%s/query" % id
-        payload = ujson.dumps(
-            asdict(query), default=Util.handle_json_serialization
-        )
+        payload = ujson.dumps(asdict(query), default=handle_json_serialization)
         self.logger.debug("sending query %s" % payload)
         params = self._prepare_query_options(opts)
         res = self.session.post(path, data=payload, params=params)
-        result = Util.from_dict(QueryLegacyResult, res.json())
+        result = from_dict(QueryLegacyResult, res.json())
         self.logger.debug(f"query result: {result}")
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         self.logger.info(f"received query result with query_id: {query_id}")
@@ -285,12 +283,12 @@ class Client:  # pylint: disable=R0903
         path = "/v1/datasets/_apl"
         payload = ujson.dumps(
             self._prepare_apl_payload(apl, opts),
-            default=Util.handle_json_serialization,
+            default=handle_json_serialization,
         )
         self.logger.debug("sending query %s" % payload)
         params = self._prepare_apl_options(opts)
         res = self.session.post(path, data=payload, params=params)
-        result = Util.from_dict(QueryResult, res.json())
+        result = from_dict(QueryResult, res.json())
         self.logger.debug(f"apl query result: {result}")
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         self.logger.info(f"received query result with query_id: {query_id}")

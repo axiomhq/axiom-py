@@ -8,7 +8,7 @@ from requests import Session
 from typing import List
 from dataclasses import dataclass, asdict, field
 from datetime import timedelta
-from .util import Util
+from .util import from_dict
 
 
 @dataclass
@@ -65,7 +65,7 @@ class DatasetsClient:  # pylint: disable=R0903
         path = "/v1/datasets/%s" % id
         res = self.session.get(path)
         decoded_response = res.json()
-        return Util.from_dict(Dataset, decoded_response)
+        return from_dict(Dataset, decoded_response)
 
     def create(self, name: str, description: str = "") -> Dataset:
         """
@@ -85,7 +85,7 @@ class DatasetsClient:  # pylint: disable=R0903
                 )
             ),
         )
-        ds = Util.from_dict(Dataset, res.json())
+        ds = from_dict(Dataset, res.json())
         self.logger.info(f"created new dataset: {ds.name}")
         return ds
 
@@ -100,7 +100,7 @@ class DatasetsClient:  # pylint: disable=R0903
 
         datasets = []
         for record in res.json():
-            ds = Util.from_dict(Dataset, record)
+            ds = from_dict(Dataset, record)
             datasets.append(ds)
 
         return datasets
@@ -122,7 +122,7 @@ class DatasetsClient:  # pylint: disable=R0903
                 )
             ),
         )
-        ds = Util.from_dict(Dataset, res.json())
+        ds = from_dict(Dataset, res.json())
         self.logger.info(
             f"updated dataset({ds.name}) with new desc: {ds.description}"
         )
