@@ -12,7 +12,7 @@ class AxiomHandler(Handler):
 
     client: Client
     dataset: str
-    logcache: list
+    buffer: list
     interval: int
     last_run: float
 
