@@ -63,14 +63,11 @@ from datetime import datetime,timedelta
 
 client = axiom_py.Client()
 
-time = datetime.utcnow() - timedelta(hours=1)
-time_formatted = rfc3339.format(time)
-
 client.ingest_events(
     dataset="my-dataset",
     events=[
-        {"foo": "bar", "_time": time_formatted},
-        {"bar": "baz", "_time": time_formatted},
+        {"foo": "bar"},
+        {"bar": "baz"},
     ])
 client.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
@@ -95,6 +92,30 @@ def setup_logger():
 ```
 
 For a full example, see [`examples/logger.py`](examples/logger.py).
+
+If you use [structlog](https://github.com/hynek/structlog), you can set up the
+`AxiomProcessor` like this:
+
+```python
+from axiom_py import Client
+from axiom_py.structlog import AxiomProcessor
+
+
+def setup_logger():
+    client = Client()
+
+    structlog.configure(
+        processors=[
+            # ...
+            structlog.processors.add_log_level,
+            structlog.processors.TimeStamper(fmt="iso", key="_time"),
+            AxiomProcessor(client, "my-dataset"),
+            # ...
+        ]
+    )
+```
+
+For a full example, see [`examples/structlog.py`](examples/structlog.py).
 
 ## Contributing
 
