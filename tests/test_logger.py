@@ -4,7 +4,7 @@ import os
 import logging
 import unittest
 from .helpers import get_random_name
-from axiom_py import Client, DatasetCreateRequest
+from axiom_py import Client
 from axiom_py.logging import AxiomHandler
 
 
@@ -18,11 +18,9 @@ class TestLogger(unittest.TestCase):
         )
         # create a dataset for that purpose
         dataset_name = get_random_name()
-        req = DatasetCreateRequest(
-            name=dataset_name,
-            description="a dataset to test axiom-py logger",
+        client.datasets.create(
+            dataset_name, "a dataset to test axiom-py logger"
         )
-        client.datasets.create(req)
 
         axiom_handler = AxiomHandler(client, dataset_name)
 

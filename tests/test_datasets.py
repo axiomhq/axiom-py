@@ -10,7 +10,6 @@ from datetime import timedelta
 from .helpers import get_random_name
 from axiom_py import (
     Client,
-    DatasetCreateRequest,
 )
 
 
@@ -37,11 +36,9 @@ class TestDatasets(unittest.TestCase):
 
     def test_step001_create(self):
         """Tests create dataset endpoint"""
-        req = DatasetCreateRequest(
-            name=self.dataset_name,
-            description="create a dataset to test the python client",
+        res = self.client.datasets.create(
+            self.dataset_name, "create a dataset to test the python client"
         )
-        res = self.client.datasets.create(req)
         self.logger.debug(res)
         assert res.name == self.dataset_name
 

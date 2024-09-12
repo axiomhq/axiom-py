@@ -16,8 +16,6 @@ from .client import (
 )
 from .datasets import (
     Dataset,
-    DatasetCreateRequest,
-    DatasetUpdateRequest,
     TrimRequest,
     DatasetsClient,
 )
@@ -40,8 +38,6 @@ _all_ = [
     AplOptions,
     Client,
     Dataset,
-    DatasetCreateRequest,
-    DatasetUpdateRequest,
     TrimRequest,
     DatasetsClient,
     Annotation,
