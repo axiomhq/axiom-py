@@ -63,14 +63,11 @@ from datetime import datetime,timedelta
 
 client = axiom_py.Client()
 
-time = datetime.utcnow() - timedelta(hours=1)
-time_formatted = rfc3339.format(time)
-
 client.ingest_events(
     dataset="my-dataset",
     events=[
-        {"foo": "bar", "_time": time_formatted},
-        {"bar": "baz", "_time": time_formatted},
+        {"foo": "bar"},
+        {"bar": "baz"},
     ])
 client.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
