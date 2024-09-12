@@ -11,7 +11,6 @@ from .helpers import get_random_name
 from axiom_py import (
     Client,
     DatasetCreateRequest,
-    DatasetUpdateRequest,
 )
 
 
@@ -62,10 +61,10 @@ class TestDatasets(unittest.TestCase):
 
     def test_step004_update(self):
         """Tests update dataset endpoint"""
-        updateReq = DatasetUpdateRequest("updated name through test")
-        ds = self.client.datasets.update(self.dataset_name, updateReq)
+        newDescription = "updated name through test"
+        ds = self.client.datasets.update(self.dataset_name, newDescription)
 
-        assert ds.description == updateReq.description
+        assert ds.description == newDescription
 
     def test_step005_trim(self):
         """Tests dataset trim endpoint"""
