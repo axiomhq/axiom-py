@@ -140,6 +140,3 @@ poetry.lock
 # Direnv
 /.envrc
 /.direnv
-
-# UV lockfiles
-uv.lock
