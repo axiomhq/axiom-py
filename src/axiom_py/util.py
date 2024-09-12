@@ -70,3 +70,7 @@ def handle_json_serialization(obj):
         return obj.value
     elif isinstance(obj, UUID):
         return str(obj)
+
+
+def is_personal_token(token: str):
+    return token.startswith("xapt-")

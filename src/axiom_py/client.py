@@ -5,7 +5,6 @@ import atexit
 import gzip
 import ujson
 import os
-from .util import from_dict, handle_json_serialization
 from enum import Enum
 from humps import decamelize
 from typing import Optional, List, Dict
@@ -25,6 +24,7 @@ from .query import (
 from .annotations import AnnotationsClient
 from .users import UsersClient
 from .version import __version__
+from .util import from_dict, handle_json_serialization, is_personal_token
 
 
 AXIOM_URL = "https://api.axiom.co"
@@ -174,7 +174,7 @@ class Client:  # pylint: disable=R0903
             self.session.headers.update({"X-Axiom-Org-Id": org_id})
 
         self.datasets = DatasetsClient(self.session, self.logger)
-        self.users = UsersClient(self.session)
+        self.users = UsersClient(self.session, is_personal_token(token))
         self.annotations = AnnotationsClient(self.session, self.logger)
 
         # wrap shutdown hook in a lambda passing in self as a ref
