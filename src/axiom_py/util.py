@@ -14,67 +14,63 @@ from .query.filter import FilterOperation
 T = TypeVar("T")
 
 
-class Util:
-    """A collection of helper methods."""
+def _convert_string_to_datetime(val: str) -> datetime:
+    d = iso8601.parse_date(val)
+    return d
 
-    @classmethod
-    def from_dict(cls, data_class: Type[T], data) -> T:
-        cfg = dacite.Config(
-            type_hooks={
-                QueryKind: QueryKind,
-                datetime: cls.convert_string_to_datetime,
-                AggregationOperation: AggregationOperation,
-                FilterOperation: FilterOperation,
-                MessageCode: MessageCode,
-                MessagePriority: MessagePriority,
-                timedelta: cls.convert_string_to_timedelta,
-            }
-        )
 
-        return dacite.from_dict(data_class=data_class, data=data, config=cfg)
+def _convert_string_to_timedelta(val: str) -> timedelta:
+    if val == "0":
+        return timedelta(seconds=0)
 
-    @classmethod
-    def convert_string_to_datetime(cls, val: str) -> datetime:
-        d = iso8601.parse_date(val)
-        return d
+    exp = "^([0-9]?)([a-z])$"
+    import re
 
-    @classmethod
-    def convert_string_to_timedelta(cls, val: str) -> timedelta:
-        if val == "0":
-            return timedelta(seconds=0)
+    found = re.search(exp, val)
+    if not found:
+        raise Exception(f"failed to parse timedelta field from value {val}")
 
-        exp = "^([0-9]?)([a-z])$"
-        import re
+    v = int(found.groups()[0])
+    unit = found.groups()[1]
 
-        found = re.search(exp, val)
-        if not found:
-            raise Exception(
-                f"failed to parse timedelta field from value {val}"
-            )
+    if unit == "s":
+        return timedelta(seconds=v)
+    elif unit == "m":
+        return timedelta(minutes=v)
+    elif unit == "h":
+        return timedelta(hours=v)
+    elif unit == "d":
+        return timedelta(days=v)
+    else:
+        raise Exception(f"failed to parse timedelta field from value {val}")
 
-        v = int(found.groups()[0])
-        unit = found.groups()[1]
 
-        if unit == "s":
-            return timedelta(seconds=v)
-        elif unit == "m":
-            return timedelta(minutes=v)
-        elif unit == "h":
-            return timedelta(hours=v)
-        elif unit == "d":
-            return timedelta(days=v)
-        else:
-            raise Exception(
-                f"failed to parse timedelta field from value {val}"
-            )
+def from_dict(data_class: Type[T], data) -> T:
+    cfg = dacite.Config(
+        type_hooks={
+            QueryKind: QueryKind,
+            datetime: _convert_string_to_datetime,
+            AggregationOperation: AggregationOperation,
+            FilterOperation: FilterOperation,
+            MessageCode: MessageCode,
+            MessagePriority: MessagePriority,
+            timedelta: _convert_string_to_timedelta,
+        }
+    )
 
-    @classmethod
-    def handle_json_serialization(cls, obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat("T") + "Z"
-        elif isinstance(obj, timedelta):
-            return str(obj.seconds) + "s"
-        elif isinstance(obj, Enum):
-            return obj.value
-        elif isinstance(obj, UUID):
-            return str(obj)
+    return dacite.from_dict(data_class=data_class, data=data, config=cfg)
+
+
+def handle_json_serialization(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat("T") + "Z"
+    elif isinstance(obj, timedelta):
+        return str(obj.seconds) + "s"
+    elif isinstance(obj, Enum):
+        return obj.value
+    elif isinstance(obj, UUID):
+        return str(obj)
+
+
+def is_personal_token(token: str):
+    return token.startswith("xapt-")
