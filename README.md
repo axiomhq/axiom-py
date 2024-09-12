@@ -42,16 +42,16 @@ Alternatively, if you have the [`pip`](https://pip.pypa.io/) package installed, 
 pip3 install axiom-py
 ```
 
-Create an API token with the permissions you need in the
-[Axiom settings](https://cloud.axiom.co/profile) and export it as 
-`AXIOM_TOKEN`.
+If you use the [Axiom CLI](https://github.com/axiomhq/cli), run `eval $(axiom config export -f)` to configure your environment variables.
+
+Otherwise create a personal token in [the Axiom settings](https://cloud.axiom.co/profile) and export it as `AXIOM_TOKEN`. Set `AXIOM_ORG_ID` to the organization ID from the settings page of the organization you want to access.
 
 You can also configure the client using options passed to the client constructor:
 
 ```py
 import axiom_py
 
-client = axiom_py.Client("<api token>")
+client = axiom_py.Client("<api token>", "<org id>")
 ```
 
 Create and use a client like this:
