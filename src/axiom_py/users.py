@@ -1,7 +1,12 @@
-from typing import List
 from .util import Util
 from dataclasses import dataclass
 from requests import Session
+
+
+@dataclass
+class Role:
+    id: str
+    name: str
 
 
 @dataclass
@@ -10,7 +15,8 @@ class User:
 
     id: str
     name: str
-    emails: List[str]
+    email: str
+    role: Role
 
 
 class UsersClient:
@@ -25,6 +31,6 @@ class UsersClient:
 
         See https://axiom.co/docs/restapi/endpoints/getCurrentUser
         """
-        res = self.session.get("/v1/user")
+        res = self.session.get("/v2/user")
         user = Util.from_dict(User, res.json())
         return user
