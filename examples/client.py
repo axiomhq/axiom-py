@@ -5,6 +5,9 @@ def main():
     client = Client()
     dataset_name = "my-dataset"
 
+    # Get current user
+    print(client.users.current())
+
     # List datasets
     res = client.datasets.get_list()
     for dataset in res:
