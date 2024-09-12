@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from .query import QueryKind
 from .query.aggregation import AggregationOperation
-from .query.result import MessageCode, MessagePriority
+from .query.result import MessagePriority
 from .query.filter import FilterOperation
 
 
@@ -52,7 +52,6 @@ def from_dict(data_class: Type[T], data) -> T:
             datetime: _convert_string_to_datetime,
             AggregationOperation: AggregationOperation,
             FilterOperation: FilterOperation,
-            MessageCode: MessageCode,
             MessagePriority: MessagePriority,
             timedelta: _convert_string_to_timedelta,
         }

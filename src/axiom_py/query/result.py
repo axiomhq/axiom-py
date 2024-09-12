@@ -1,19 +1,9 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 from enum import Enum
 
 from .query import QueryLegacy
-
-
-class MessageCode(Enum):
-    """Message codes represents the code associated with the query."""
-
-    UNKNOWN_MESSAGE_CODE = ""
-    VIRTUAL_FIELD_FINALIZE_ERROR = "virtual_field_finalize_error"
-    MISSING_COLUMN = "missing_column"
-    LICENSE_LIMIT_FOR_QUERY_WARNING = "license_limit_for_query_warning"
-    DEFAULT_LIMIT_WARNING = "default_limit_warning"
 
 
 class MessagePriority(Enum):
@@ -36,7 +26,7 @@ class Message:
     # describes how often a message of this type was raised by the query.
     count: int
     # code of the message.
-    code: MessageCode
+    code: str
     # a human readable text representation of the message.
     msg: str
 
@@ -152,16 +142,91 @@ class QueryLegacyResult:
 
 
 @dataclass
+class Source:
+    name: str
+
+
+@dataclass
+class Order:
+    desc: bool
+    field: str
+
+
+@dataclass
+class Group:
+    name: str
+
+
+@dataclass
+class Range:
+    # Start is the starting time the query is limited by.
+    start: datetime
+    # End is the ending time the query is limited by.
+    end: datetime
+    # Field specifies the field name on which the query range was restricted.
+    field: str
+
+
+@dataclass
+class Aggregation:
+    # Args specifies any non-field arguments for the aggregation.
+    args: Optional[List[object]]
+    # Fields specifies the names of the fields this aggregation is computed on.
+    fields: Optional[List[str]]
+    # Name is the system name of the aggregation.
+    name: str
+
+
+@dataclass
+class Field:
+    name: str
+    type: str
+    agg: Optional[Aggregation]
+
+
+@dataclass
+class Bucket:
+    # Field specifies the field used to create buckets on.
+    field: str
+    # An integer or float representing the fixed bucket size.
+    size: Union[int, float]
+
+
+@dataclass
+class Table:
+    # Name is the name assigned to this table.
+    name: str
+    # Sources contain the names of the datasets that contributed data to these
+    # results.
+    sources: List[Source]
+    # Order echoes the ordering clauses that was used to sort the results.
+    order: List[Order]
+    # Groups specifies which grouping operations has been performed on the
+    # results.
+    groups: List[Group]
+    range: Range
+    # Fields contain information about the fields included in these results.
+    # The order of the fields match up with the order of the data in Columns.
+    fields: List[Field]
+    buckets: Optional[Bucket]
+    # Columns contain a series of arrays with the raw result data.
+    # The columns here line up with the fields in the Fields array.
+    columns: List[List[object]]
+
+
+@dataclass
 class QueryResult:
     """Result is the result of apl query."""
 
-    request: QueryLegacy
+    request: Optional[QueryLegacy]
     # Status of the apl query result.
     status: QueryStatus
     # Matches are the events that matched the apl query.
-    matches: List[Entry]
+    matches: Optional[List[Entry]]
     # Buckets are the time series buckets.
-    buckets: Timeseries
+    buckets: Optional[Timeseries]
+    # Tables is populated in tabular queries.
+    tables: Optional[List[Table]]
     # Dataset names are the datasets that were used in the apl query.
     dataset_names: List[str] = field(default_factory=lambda: [])
     # savedQueryID is the ID of the apl query that generated this result when it
