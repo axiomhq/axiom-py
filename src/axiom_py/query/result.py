@@ -194,7 +194,8 @@ class Bucket:
 
 @dataclass
 class Table:
-    # Name is the name assigned to this table.
+    # Name is the name assigned to this table. Defaults to "0".
+    # The name "_totals" is reserved for system use.
     name: str
     # Sources contain the names of the datasets that contributed data to these
     # results.
@@ -212,6 +213,35 @@ class Table:
     # Columns contain a series of arrays with the raw result data.
     # The columns here line up with the fields in the Fields array.
     columns: List[List[object]]
+
+    def events(self):
+        return ColumnIterator(self)
+
+
+class ColumnIterator:
+    table: Table
+    i: int = 0
+
+    def __init__(self, table: Table):
+        self.table = table
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if (
+            self.table.columns is None
+            or len(self.table.columns) == 0
+            or self.i >= len(self.table.columns[0])
+        ):
+            raise StopIteration
+
+        event = {}
+        for j, f in enumerate(self.table.fields):
+            event[f.name] = self.table.columns[j][self.i]
+
+        self.i += 1
+        return event
 
 
 @dataclass
