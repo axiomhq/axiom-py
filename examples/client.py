@@ -1,4 +1,4 @@
-from axiom_py import Client, DatasetCreateRequest
+from axiom_py import Client
 
 
 def main():
@@ -14,9 +14,7 @@ def main():
         print(dataset.name)
 
     # Create a dataset
-    client.datasets.create(
-        DatasetCreateRequest(name=dataset_name, description="A description.")
-    )
+    client.datasets.create(dataset_name, "A description.")
 
     # Ingest events
     client.ingest_events(dataset_name, [{"foo": "bar"}])

@@ -67,14 +67,24 @@ class DatasetsClient:  # pylint: disable=R0903
         decoded_response = res.json()
         return Util.from_dict(Dataset, decoded_response)
 
-    def create(self, req: DatasetCreateRequest) -> Dataset:
+    def create(self, name: str, description: str = "") -> Dataset:
         """
         Create a dataset with the given properties.
 
         See https://axiom.co/docs/restapi/endpoints/createDataset
         """
         path = "/v1/datasets"
-        res = self.session.post(path, data=ujson.dumps(asdict(req)))
+        res = self.session.post(
+            path,
+            data=ujson.dumps(
+                asdict(
+                    DatasetCreateRequest(
+                        name=name,
+                        description=description,
+                    )
+                )
+            ),
+        )
         ds = Util.from_dict(Dataset, res.json())
         self.logger.info(f"created new dataset: {ds.name}")
         return ds
@@ -95,14 +105,23 @@ class DatasetsClient:  # pylint: disable=R0903
 
         return datasets
 
-    def update(self, id: str, req: DatasetUpdateRequest) -> Dataset:
+    def update(self, id: str, new_description: str) -> Dataset:
         """
         Update a dataset with the given properties.
 
         See https://axiom.co/docs/restapi/endpoints/updateDataset
         """
         path = "/v1/datasets/%s" % id
-        res = self.session.put(path, data=ujson.dumps(asdict(req)))
+        res = self.session.put(
+            path,
+            data=ujson.dumps(
+                asdict(
+                    DatasetUpdateRequest(
+                        description=new_description,
+                    )
+                )
+            ),
+        )
         ds = Util.from_dict(Dataset, res.json())
         self.logger.info(
             f"updated dataset({ds.name}) with new desc: {ds.description}"

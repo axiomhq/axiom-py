@@ -7,7 +7,6 @@ from logging import getLogger
 from .helpers import get_random_name
 from axiom_py import (
     Client,
-    DatasetCreateRequest,
     AnnotationCreateRequest,
     AnnotationUpdateRequest,
 )
@@ -29,11 +28,9 @@ class TestAnnotations(unittest.TestCase):
 
         # create dataset
         cls.dataset_name = get_random_name()
-        req = DatasetCreateRequest(
-            name=cls.dataset_name,
-            description="test_annotations.py (dataset_name)",
+        cls.client.datasets.create(
+            cls.dataset_name, "test_annotations.py (dataset_name)"
         )
-        cls.client.datasets.create(req)
 
     def test_happy_path_crud(self):
         """

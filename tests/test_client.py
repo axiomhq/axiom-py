@@ -20,7 +20,6 @@ from axiom_py import (
     ContentType,
     IngestOptions,
     WrongQueryKindException,
-    DatasetCreateRequest,
 )
 from axiom_py.query import (
     QueryLegacy,
@@ -79,11 +78,9 @@ class TestClient(unittest.TestCase):
             },
         ]
         # create dataset to test the client
-        req = DatasetCreateRequest(
-            name=cls.dataset_name,
-            description="create a dataset to test the python client",
+        cls.client.datasets.create(
+            cls.dataset_name, "create a dataset to test the python client"
         )
-        cls.client.datasets.create(req)
 
     @responses.activate
     def test_retries(self):
