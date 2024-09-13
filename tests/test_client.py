@@ -174,6 +174,23 @@ class TestClient(unittest.TestCase):
 
         self.assertEqual(len(qr.matches), len(self.events))
 
+    def test_step005_apl_query_tabular(self):
+        """Test apl query (tabular)"""
+        # query the events we ingested in step2
+        startTime = datetime.utcnow() - timedelta(minutes=2)
+        endTime = datetime.utcnow()
+
+        apl = "['%s']" % self.dataset_name
+        opts = AplOptions(
+            start_time=startTime,
+            end_time=endTime,
+            format=AplResultFormat.Tabular,
+        )
+        qr = self.client.query(apl, opts)
+
+        events = list(qr.tables[0].events())
+        self.assertEqual(len(events), len(self.events))
+
     def test_step005_wrong_query_kind(self):
         """Test wrong query kind"""
         startTime = datetime.utcnow() - timedelta(minutes=2)
