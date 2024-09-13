@@ -3,7 +3,6 @@ from .options import QueryOptions
 from .filter import FilterOperation, BaseFilter, Filter
 from .aggregation import AggregationOperation, Aggregation
 from .result import (
-    MessageCode,
     MessagePriority,
     Message,
     QueryStatus,
@@ -28,7 +27,6 @@ __all__ = (
     Filter,
     AggregationOperation,
     Aggregation,
-    MessageCode,
     MessagePriority,
     Message,
     QueryStatus,

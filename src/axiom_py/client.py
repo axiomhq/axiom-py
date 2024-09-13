@@ -78,6 +78,7 @@ class AplResultFormat(Enum):
     """The result format of an APL query."""
 
     Legacy = "legacy"
+    Tabular = "tabular"
 
 
 class ContentType(Enum):
