@@ -194,25 +194,25 @@ class Bucket:
 
 @dataclass
 class Table:
-    # Name is the name assigned to this table. Defaults to "0".
-    # The name "_totals" is reserved for system use.
-    name: str
-    # Sources contain the names of the datasets that contributed data to these
-    # results.
-    sources: List[Source]
-    # Order echoes the ordering clauses that was used to sort the results.
-    order: List[Order]
-    # Groups specifies which grouping operations has been performed on the
-    # results.
-    groups: List[Group]
-    range: Range
-    # Fields contain information about the fields included in these results.
-    # The order of the fields match up with the order of the data in Columns.
-    fields: List[Field]
     buckets: Optional[Bucket]
     # Columns contain a series of arrays with the raw result data.
     # The columns here line up with the fields in the Fields array.
-    columns: List[List[object]]
+    columns: Optional[List[List[object]]]
+    # Fields contain information about the fields included in these results.
+    # The order of the fields match up with the order of the data in Columns.
+    fields: List[Field]
+    # Groups specifies which grouping operations has been performed on the
+    # results.
+    groups: List[Group]
+    # Name is the name assigned to this table. Defaults to "0".
+    # The name "_totals" is reserved for system use.
+    name: str
+    # Order echoes the ordering clauses that was used to sort the results.
+    order: List[Order]
+    range: Optional[Range]
+    # Sources contain the names of the datasets that contributed data to these
+    # results.
+    sources: List[Source]
 
     def events(self):
         return ColumnIterator(self)
