@@ -37,7 +37,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v2
+        uses: astral-sh/setup-uv@v3
       - name: Test against development
         run: uv run pytest
         env:
@@ -60,7 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
-        uses: astral-sh/setup-uv@v2
+        uses: astral-sh/setup-uv@v3
       - uses: actions/setup-python@v5
         with:
           python-version-file: "pyproject.toml"
