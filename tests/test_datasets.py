@@ -5,12 +5,9 @@ import os
 import unittest
 from typing import List, Dict
 from logging import getLogger
-from requests.exceptions import HTTPError
 from datetime import timedelta
 from .helpers import get_random_name
-from axiom_py import (
-    Client,
-)
+from axiom_py import Client, AxiomError
 
 
 class TestDatasets(unittest.TestCase):
@@ -78,11 +75,11 @@ class TestDatasets(unittest.TestCase):
                 dataset,
                 f"expected test dataset (%{self.dataset_name}) to be deleted",
             )
-        except HTTPError as err:
+        except AxiomError as e:
             # the get method returns 404 error if dataset doesn't exist, so
             # that means that our tests passed, otherwise, it should fail.
-            if err.response.status_code != 404:
-                self.fail(err)
+            if e.status != 404:
+                self.fail(e)
 
     @classmethod
     def tearDownClass(cls):
@@ -97,7 +94,7 @@ class TestDatasets(unittest.TestCase):
                     "dataset (%s) was not deleted as part of the test, deleting it now."
                     % cls.dataset_name
                 )
-        except HTTPError as err:
+        except AxiomError as e:
             # nothing to do here, since the dataset doesn't exist
-            cls.logger.warning(err)
+            cls.logger.warning(e)
         cls.logger.info("finish cleaning up after TestDatasets")
