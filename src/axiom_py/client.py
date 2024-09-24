@@ -31,13 +31,6 @@ AXIOM_URL = "https://api.axiom.co"
 
 
 @dataclass
-class Error:
-    status: Optional[int] = field(default=None)
-    message: Optional[str] = field(default=None)
-    error: Optional[str] = field(default=None)
-
-
-@dataclass
 class IngestFailure:
     """The ingestion failure of a single event"""
 
@@ -118,10 +111,35 @@ class AplOptions:
     includeCursor: bool = field(default=False)
 
 
-def raise_response_error(r):
-    if r.status_code >= 400:
-        # TODO: Decode JSON https://github.com/axiomhq/axiom-go/blob/610cfbd235d3df17f96a4bb156c50385cfbd9edd/axiom/error.go#L35-L50
-        r.raise_for_status()
+class AxiomError(Exception):
+    """This exception is raised on request errors."""
+
+    status: int
+    message: str
+
+    @dataclass
+    class Response:
+        message: str
+        error: Optional[str]
+
+    def __init__(self, status: int, res: Response):
+        message = res.error if res.error is not None else res.message
+        super().__init__(f"API error {status}: {message}")
+
+        self.status = status
+        self.message = message
+
+
+def raise_response_error(res):
+    if res.status_code >= 400:
+        try:
+            error_res = from_dict(AxiomError.Response, res.json())
+        except Exception:
+            # Response is not in the Axiom JSON format, create generic error
+            # message
+            error_res = AxiomError.Response(message=res.reason, error=None)
+
+        raise AxiomError(res.status_code, error_res)
 
 
 class Client:  # pylint: disable=R0903

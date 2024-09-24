@@ -3,7 +3,7 @@ Axiom Python Client
 """
 
 from .client import (
-    Error,
+    AxiomError,
     IngestFailure,
     IngestStatus,
     IngestOptions,
@@ -27,7 +27,7 @@ from .annotations import (
 )
 
 _all_ = [
-    Error,
+    AxiomError,
     IngestFailure,
     IngestStatus,
     IngestOptions,

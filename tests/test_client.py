@@ -11,8 +11,8 @@ import responses
 from logging import getLogger
 from datetime import datetime, timedelta
 from .helpers import get_random_name
-from requests.exceptions import HTTPError
 from axiom_py import (
+    AxiomError,
     Client,
     AplOptions,
     AplResultFormat,
@@ -264,7 +264,7 @@ class TestClient(unittest.TestCase):
                     "dataset (%s) was not deleted as part of the test, deleting it now."
                     % cls.dataset_name
                 )
-        except HTTPError as err:
+        except AxiomError as e:
             # nothing to do here, since the dataset doesn't exist
-            cls.logger.warning(err)
+            cls.logger.warning(e)
         cls.logger.info("finish cleaning up after TestClient")
