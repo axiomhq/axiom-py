@@ -3,7 +3,7 @@ requires-python = ">=3.8"
 
 [[package]]
 name = "axiom-py"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "." }
 dependencies = [
     { name = "dacite" },
