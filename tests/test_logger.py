@@ -29,7 +29,7 @@ class TestLogger(unittest.TestCase):
         logger = logging.getLogger()
         logger.addHandler(axiom_handler)
 
-        logger.info("This is a log!")
+        logger.warning("This is a log!")
 
         # This log shouldn't be ingested yet
         res = client.apl_query(dataset_name)
@@ -40,12 +40,15 @@ class TestLogger(unittest.TestCase):
 
         # Now we should have a log
         res = client.apl_query(dataset_name)
+        print(res)
         self.assertEqual(1, res.status.rowsExamined)
 
-        logger.info("This log should be ingested without any subsequent call")
+        logger.warning(
+            "This log should be ingested without any subsequent call"
+        )
 
         # Sleep a bit to wait for the background flush.
-        time.sleep(0.5)
+        time.sleep(1)
 
         # Now we should have two logs
         res = client.apl_query(dataset_name)

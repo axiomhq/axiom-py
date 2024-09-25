@@ -1,7 +1,5 @@
 """Logging contains the AxiomHandler and related methods to do with logging."""
 
-import time
-import atexit
 from threading import Timer
 
 from logging import Handler, NOTSET, getLogger, WARNING
@@ -15,7 +13,6 @@ class AxiomHandler(Handler):
     dataset: str
     buffer: list
     interval: int
-    last_run: float
     timer: Timer
 
     def __init__(self, client: Client, dataset: str, level=NOTSET, interval=1):
@@ -28,34 +25,30 @@ class AxiomHandler(Handler):
         self.client = client
         self.dataset = dataset
         self.buffer = []
-        self.last_run = time.monotonic()
         self.interval = interval
 
         # We use a threading.Timer to make sure we flush every second, even
         # if no more logs are emitted.
         self.timer = Timer(self.interval, self.flush)
 
-        # Register flush on exit,
-        atexit.register(self.flush)
+        # Make sure we flush before the client shuts down
+        client.before_shutdown(lambda: self.flush(False))
 
     def emit(self, record):
         """Emit sends a log to Axiom."""
         self.buffer.append(record.__dict__)
-        if (
-            len(self.buffer) >= 1000
-            or time.monotonic() - self.last_run > self.interval
-        ):
+        if len(self.buffer) >= 1000:
             self.flush()
-        else:
-            self.timer.cancel()
+
+    def flush(self, restart_timer=True):
+        """Flush sends all logs in the buffer to Axiom."""
+        self.timer.cancel()
+        if restart_timer:
             self.timer = Timer(self.interval, self.flush)
             self.timer.start()
 
-    def flush(self):
-        """Flush sends all logs in the buffer to Axiom."""
-        self.timer.cancel()
-        self.last_run = time.monotonic()
         if len(self.buffer) == 0:
             return
-        self.client.ingest_events(self.dataset, self.buffer)
-        self.buffer = []
+
+        local_buffer, self.buffer = self.buffer, []
+        self.client.ingest_events(self.dataset, local_buffer)

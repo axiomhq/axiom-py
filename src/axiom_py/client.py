@@ -7,7 +7,7 @@ import ujson
 import os
 from enum import Enum
 from humps import decamelize
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Callable
 from logging import getLogger
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
@@ -130,7 +130,8 @@ class Client:  # pylint: disable=R0903
     datasets: DatasetsClient
     users: UsersClient
     annotations: AnnotationsClient
-    is_closed: bool  # track if the client has been closed (for tests)
+    is_closed: bool = False  # track if the client has been closed (for tests)
+    before_shutdown_funcs: List[Callable] = []
 
     def __init__(
         self,
@@ -179,10 +180,14 @@ class Client:  # pylint: disable=R0903
         self.annotations = AnnotationsClient(self.session, self.logger)
 
         # wrap shutdown hook in a lambda passing in self as a ref
-        atexit.register(lambda: self.shutdown_hook())
-        self.is_closed = False
+        atexit.register(self.shutdown_hook)
+
+    def before_shutdown(self, func: Callable):
+        self.before_shutdown_funcs.append(func)
 
     def shutdown_hook(self):
+        for func in self.before_shutdown_funcs:
+            func()
         self.session.close()
         self.is_closed = True
 
