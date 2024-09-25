@@ -24,7 +24,7 @@ class TestLogger(unittest.TestCase):
             dataset_name, "A dataset to test axiom-py logger"
         )
 
-        axiom_handler = AxiomHandler(client, dataset_name, interval=0.4)
+        axiom_handler = AxiomHandler(client, dataset_name, interval=0.5)
 
         logger = logging.getLogger()
         logger.addHandler(axiom_handler)
@@ -40,7 +40,6 @@ class TestLogger(unittest.TestCase):
 
         # Now we should have a log
         res = client.apl_query(dataset_name)
-        print(res)
         self.assertEqual(1, res.status.rowsExamined)
 
         logger.warning(
@@ -48,7 +47,7 @@ class TestLogger(unittest.TestCase):
         )
 
         # Sleep a bit to wait for the background flush.
-        time.sleep(1)
+        time.sleep(1.0)
 
         # Now we should have two logs
         res = client.apl_query(dataset_name)

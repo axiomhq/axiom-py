@@ -32,7 +32,7 @@ class AxiomHandler(Handler):
         self.timer = Timer(self.interval, self.flush)
 
         # Make sure we flush before the client shuts down
-        client.before_shutdown(lambda: self.flush(False))
+        client.before_shutdown(self.flush)
 
     def emit(self, record):
         """Emit sends a log to Axiom."""
@@ -40,12 +40,13 @@ class AxiomHandler(Handler):
         if len(self.buffer) >= 1000:
             self.flush()
 
-    def flush(self, restart_timer=True):
-        """Flush sends all logs in the buffer to Axiom."""
+        # Restart timer
         self.timer.cancel()
-        if restart_timer:
-            self.timer = Timer(self.interval, self.flush)
-            self.timer.start()
+        self.timer = Timer(self.interval, self.flush)
+        self.timer.start()
+
+    def flush(self):
+        """Flush sends all logs in the buffer to Axiom."""
 
         if len(self.buffer) == 0:
             return
