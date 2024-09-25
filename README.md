@@ -72,7 +72,7 @@ client.ingest_events(
 client.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
 
-For more examples, see [`examples/client.py`](examples/client.py).
+For more examples, see [`examples/client.py`](examples/client_example.py).
 
 ## Logger
 
@@ -91,7 +91,7 @@ def setup_logger():
     logging.getLogger().addHandler(handler)
 ```
 
-For a full example, see [`examples/logger.py`](examples/logger.py).
+For a full example, see [`examples/logger.py`](examples/logger_example.py).
 
 If you use [structlog](https://github.com/hynek/structlog), you can set up the
 `AxiomProcessor` like this:
@@ -115,7 +115,7 @@ def setup_logger():
     )
 ```
 
-For a full example, see [`examples/structlog.py`](examples/structlog.py).
+For a full example, see [`examples/structlog.py`](examples/structlog_example.py).
 
 ## Contributing
 
