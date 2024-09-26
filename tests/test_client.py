@@ -23,9 +23,6 @@ from axiom_py import (
     ContentType,
     IngestOptions,
     WrongQueryKindException,
-    DatasetCreateRequest,
-    TokenAttributes,
-    TokenOrganizationCapabilities,
 )
 from axiom_py.query import (
     QueryLegacy,
@@ -38,6 +35,10 @@ from axiom_py.query import (
     FilterOperation,
     Aggregation,
     AggregationOperation,
+)
+from axiom_py.tokens import (
+    TokenAttributes,
+    TokenOrganizationCapabilities,
 )
 
 

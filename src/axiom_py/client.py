@@ -6,9 +6,6 @@ import gzip
 import ujson
 import os
 
-from .tokens import TokenAttributes, Token
-from .util import Util
-
 from enum import Enum
 from humps import decamelize
 from typing import Optional, List, Dict
@@ -29,6 +26,7 @@ from .annotations import AnnotationsClient
 from .users import UsersClient
 from .version import __version__
 from .util import from_dict, handle_json_serialization, is_personal_token
+from .tokens import TokenAttributes, Token
 
 
 AXIOM_URL = "https://api.axiom.co"
@@ -323,7 +321,7 @@ class Client:  # pylint: disable=R0903
         """Creates a new API token with permissions specified in a TokenAttributes object."""
         res = self.session.post(
             "/v2/tokens",
-            data=ujson.dumps(asdict(opts), default=Util.handle_json_serialization),
+            data=ujson.dumps(asdict(opts), default=handle_json_serialization),
         )
 
         # Return the new token and ID.
