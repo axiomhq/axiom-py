@@ -3,14 +3,10 @@
 import os
 
 import unittest
-from typing import List, Dict, Optional
 from logging import getLogger
-from requests.exceptions import HTTPError
-from datetime import timedelta
 from .helpers import get_random_name
-from axiom import (
+from axiom_py import (
     Client,
-    DatasetCreateRequest,
     AnnotationCreateRequest,
     AnnotationUpdateRequest,
 )
@@ -32,14 +28,15 @@ class TestAnnotations(unittest.TestCase):
 
         # create dataset
         cls.dataset_name = get_random_name()
-        req = DatasetCreateRequest(
-            name=cls.dataset_name,
-            description="test_annotations.py (dataset_name)",
+        cls.client.datasets.create(
+            cls.dataset_name, "test_annotations.py (dataset_name)"
         )
-        res = cls.client.datasets.create(req)
 
     def test_happy_path_crud(self):
-        """Test the happy path of creating, reading, updating, and deleting an annotation."""
+        """
+        Test the happy path of creating, reading, updating, and deleting an
+        annotation.
+        """
         # Create annotation
         req = AnnotationCreateRequest(
             datasets=[self.dataset_name],
@@ -59,7 +56,9 @@ class TestAnnotations(unittest.TestCase):
         assert annotation.id == created_annotation.id
 
         # List annotations
-        annotations = self.client.annotations.list(datasets=[self.dataset_name])
+        annotations = self.client.annotations.list(
+            datasets=[self.dataset_name]
+        )
         self.logger.debug(annotations)
         assert len(annotations) == 1
 
@@ -74,7 +73,9 @@ class TestAnnotations(unittest.TestCase):
             description=None,
             url=None,
         )
-        updated_annotation = self.client.annotations.update(annotation.id, updateReq)
+        updated_annotation = self.client.annotations.update(
+            annotation.id, updateReq
+        )
         self.logger.debug(updated_annotation)
         assert updated_annotation.title == newTitle
 

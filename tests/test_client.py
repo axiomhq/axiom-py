@@ -1,7 +1,9 @@
 """This module contains the tests for the axiom client."""
 
+import sys
 import os
 import unittest
+from unittest.mock import patch
 import gzip
 import uuid
 
@@ -12,8 +14,8 @@ from logging import getLogger
 from datetime import datetime, timedelta
 
 from .helpers import get_random_name
-from requests.exceptions import HTTPError
-from axiom import (
+from axiom_py import (
+    AxiomError,
     Client,
     AplOptions,
     AplResultFormat,
@@ -25,7 +27,7 @@ from axiom import (
     TokenAttributes,
     TokenOrganizationCapabilities,
 )
-from axiom.query import (
+from axiom_py.query import (
     QueryLegacy,
     QueryOptions,
     QueryKind,
@@ -51,7 +53,9 @@ class TestClient(unittest.TestCase):
             os.getenv("AXIOM_URL"),
         )
         cls.dataset_name = get_random_name()
-        cls.logger.info(f"generated random dataset name is: {cls.dataset_name}")
+        cls.logger.info(
+            f"generated random dataset name is: {cls.dataset_name}"
+        )
         events_time_format = "%d/%b/%Y:%H:%M:%S +0000"
         # create events to ingest and query
         time = datetime.utcnow() - timedelta(minutes=1)
@@ -80,11 +84,9 @@ class TestClient(unittest.TestCase):
             },
         ]
         # create dataset to test the client
-        req = DatasetCreateRequest(
-            name=cls.dataset_name,
-            description="create a dataset to test the python client",
+        cls.client.datasets.create(
+            cls.dataset_name, "create a dataset to test the python client"
         )
-        cls.client.datasets.create(req)
 
     @responses.activate
     def test_retries(self):
@@ -109,7 +111,8 @@ class TestClient(unittest.TestCase):
         opts = IngestOptions(
             "_time",
             "2/Jan/2006:15:04:05 +0000",
-            # CSV_delimiter obviously not valid for JSON, but perfectly fine to test for its presence in this test.
+            # CSV_delimiter obviously not valid for JSON, but perfectly fine to
+            # test for its presence in this test.
             ";",
         )
         res = self.client.ingest(
@@ -177,6 +180,23 @@ class TestClient(unittest.TestCase):
 
         self.assertEqual(len(qr.matches), len(self.events))
 
+    def test_step005_apl_query_tabular(self):
+        """Test apl query (tabular)"""
+        # query the events we ingested in step2
+        startTime = datetime.utcnow() - timedelta(minutes=2)
+        endTime = datetime.utcnow()
+
+        apl = "['%s']" % self.dataset_name
+        opts = AplOptions(
+            start_time=startTime,
+            end_time=endTime,
+            format=AplResultFormat.Tabular,
+        )
+        qr = self.client.query(apl, opts)
+
+        events = list(qr.tables[0].events())
+        self.assertEqual(len(events), len(self.events))
+
     def test_step005_wrong_query_kind(self):
         """Test wrong query kind"""
         startTime = datetime.utcnow() - timedelta(minutes=2)
@@ -190,8 +210,10 @@ class TestClient(unittest.TestCase):
 
         try:
             self.client.query_legacy(self.dataset_name, q, opts)
-        except WrongQueryKindException as err:
-            self.logger.info("passing kind apl to query raised exception as expected")
+        except WrongQueryKindException:
+            self.logger.info(
+                "passing kind apl to query raised exception as expected"
+            )
             return
 
         self.fail("was excepting WrongQueryKindException")
@@ -201,7 +223,9 @@ class TestClient(unittest.TestCase):
         startTime = datetime.utcnow() - timedelta(minutes=2)
         endTime = datetime.utcnow()
         aggregations = [
-            Aggregation(alias="event_count", op=AggregationOperation.COUNT, field="*")
+            Aggregation(
+                alias="event_count", op=AggregationOperation.COUNT, field="*"
+            )
         ]
         q = QueryLegacy(startTime, endTime, aggregations=aggregations)
         q.groupBy = ["success", "remote_ip"]
@@ -236,6 +260,17 @@ class TestClient(unittest.TestCase):
         # (An exception will be raised if the delete call is not successful.)
         self.client.delete_api_token(token_values.id)
 
+    @patch("sys.exit")
+    def test_client_shutdown_atexit(self, mock_exit):
+        """Test client shutdown atexit"""
+        # Use the mock to test the firing mechanism
+        self.assertEqual(self.client.is_closed, False)
+        sys.exit()
+        mock_exit.assert_called_once()
+        # Use the hook implementation to assert the client is closed closed
+        self.client.shutdown_hook()
+        self.assertEqual(self.client.is_closed, True)
+
     @classmethod
     def tearDownClass(cls):
         """A teardown that checks if the dataset still exists and deletes it,
@@ -249,7 +284,7 @@ class TestClient(unittest.TestCase):
                     "dataset (%s) was not deleted as part of the test, deleting it now."
                     % cls.dataset_name
                 )
-        except HTTPError as err:
+        except AxiomError as e:
             # nothing to do here, since the dataset doesn't exist
-            cls.logger.warning(err)
+            cls.logger.warning(e)
         cls.logger.info("finish cleaning up after TestClient")

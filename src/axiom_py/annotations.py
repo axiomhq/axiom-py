@@ -3,11 +3,11 @@
 import ujson
 from logging import Logger
 from requests import Session
-from typing import List, Dict, Optional
+from typing import List, Optional
 from dataclasses import dataclass, asdict, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from urllib.parse import urlencode
-from .util import Util
+from .util import from_dict
 
 
 @dataclass
@@ -60,17 +60,25 @@ class AnnotationsClient:  # pylint: disable=R0903
         self.logger = logger
 
     def get(self, id: str) -> Annotation:
-        """Get a annotation by id."""
+        """
+        Get a annotation by id.
+
+        See https://axiom.co/docs/restapi/endpoints/getAnnotation
+        """
         path = "/v2/annotations/%s" % id
         res = self.session.get(path)
         decoded_response = res.json()
-        return Util.from_dict(Annotation, decoded_response)
+        return from_dict(Annotation, decoded_response)
 
     def create(self, req: AnnotationCreateRequest) -> Annotation:
-        """Create an annotation with the given properties."""
+        """
+        Create an annotation with the given properties.
+
+        See https://axiom.co/docs/restapi/endpoints/createAnnotation
+        """
         path = "/v2/annotations"
         res = self.session.post(path, data=ujson.dumps(asdict(req)))
-        annotation = Util.from_dict(Annotation, res.json())
+        annotation = from_dict(Annotation, res.json())
         self.logger.info(f"created new annotation: {annotation.id}")
         return annotation
 
@@ -80,13 +88,17 @@ class AnnotationsClient:  # pylint: disable=R0903
         start: Optional[datetime] = None,
         end: Optional[datetime] = None,
     ) -> List[Annotation]:
-        """List all annotations."""
+        """
+        List all annotations.
+
+        See https://axiom.co/docs/restapi/endpoints/getAnnotations
+        """
         query_params = {}
         if len(datasets) > 0:
             query_params["datasets"] = ",".join(datasets)
-        if start != None:
+        if start is not None:
             query_params["start"] = start.isoformat()
-        if end != None:
+        if end is not None:
             query_params["end"] = end.isoformat()
         path = f"/v2/annotations?{urlencode(query_params, doseq=True)}"
 
@@ -94,20 +106,28 @@ class AnnotationsClient:  # pylint: disable=R0903
 
         annotations = []
         for record in res.json():
-            ds = Util.from_dict(Annotation, record)
+            ds = from_dict(Annotation, record)
             annotations.append(ds)
 
         return annotations
 
     def update(self, id: str, req: AnnotationUpdateRequest) -> Annotation:
-        """Update an annotation with the given properties."""
+        """
+        Update an annotation with the given properties.
+
+        See https://axiom.co/docs/restapi/endpoints/updateAnnotation
+        """
         path = "/v2/annotations/%s" % id
         res = self.session.put(path, data=ujson.dumps(asdict(req)))
-        annotation = Util.from_dict(Annotation, res.json())
+        annotation = from_dict(Annotation, res.json())
         self.logger.info(f"updated annotation({annotation.id})")
         return annotation
 
     def delete(self, id: str):
-        """Deletes an annotation with the given id."""
+        """
+        Deletes an annotation with the given id.
+
+        See https://axiom.co/docs/restapi/endpoints/deleteAnnotation
+        """
         path = "/v2/annotations/%s" % id
         self.session.delete(path)
