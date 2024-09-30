@@ -28,6 +28,7 @@ class AxiomHandler(Handler):
         self.dataset = dataset
         self.buffer = []
         self.interval = interval
+        self.last_flush = time.monotonic()
 
         # We use a threading.Timer to make sure we flush every second, even
         # if no more logs are emitted.
