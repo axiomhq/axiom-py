@@ -23,7 +23,7 @@ class AxiomProcessor:
         self.last_run = time.monotonic()
         self.interval = interval
 
-        atexit.register(self._flush)
+        atexit.register(self.flush)
 
     def flush(self):
         self.last_run = time.monotonic()
