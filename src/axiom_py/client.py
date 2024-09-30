@@ -255,11 +255,9 @@ class Client:  # pylint: disable=R0903
 
         path = "/v1/datasets/%s/query" % id
         payload = ujson.dumps(asdict(query), default=handle_json_serialization)
-        self.logger.debug("sending query %s" % payload)
         params = self._prepare_query_options(opts)
         res = self.session.post(path, data=payload, params=params)
         result = from_dict(QueryLegacyResult, res.json())
-        self.logger.debug(f"query result: {result}")
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         result.savedQueryID = query_id
         return result
@@ -287,11 +285,9 @@ class Client:  # pylint: disable=R0903
             self._prepare_apl_payload(apl, opts),
             default=handle_json_serialization,
         )
-        self.logger.debug("sending query %s" % payload)
         params = self._prepare_apl_options(opts)
         res = self.session.post(path, data=payload, params=params)
         result = from_dict(QueryResult, res.json())
-        self.logger.debug(f"apl query result: {result}")
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         result.savedQueryID = query_id
         return result
