@@ -45,7 +45,7 @@ class AxiomHandler(Handler):
         self.buffer.append(record.__dict__)
         if (
             len(self.buffer) >= 1000
-            or time.monotonic() - self.last_run > self.interval
+            or time.monotonic() - self.last_flush > self.interval
         ):
             self.flush()
 
