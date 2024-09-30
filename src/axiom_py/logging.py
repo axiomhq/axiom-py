@@ -1,8 +1,9 @@
 """Logging contains the AxiomHandler and related methods to do with logging."""
 
 from threading import Timer
-
 from logging import Handler, NOTSET, getLogger, WARNING
+import time
+
 from .client import Client
 
 
@@ -13,6 +14,7 @@ class AxiomHandler(Handler):
     dataset: str
     buffer: list
     interval: int
+    last_flush: float
     timer: Timer
 
     def __init__(self, client: Client, dataset: str, level=NOTSET, interval=1):
@@ -37,7 +39,10 @@ class AxiomHandler(Handler):
     def emit(self, record):
         """Emit sends a log to Axiom."""
         self.buffer.append(record.__dict__)
-        if len(self.buffer) >= 1000:
+        if (
+            len(self.buffer) >= 1000
+            or time.monotonic() - self.last_run > self.interval
+        ):
             self.flush()
 
         # Restart timer
@@ -47,6 +52,8 @@ class AxiomHandler(Handler):
 
     def flush(self):
         """Flush sends all logs in the buffer to Axiom."""
+
+        self.last_flush = time.monotonic()
 
         if len(self.buffer) == 0:
             return
