@@ -1,7 +1,6 @@
 """This package provides annotation models and methods as well as an AnnotationsClient"""
 
 import ujson
-from logging import Logger
 from requests import Session
 from typing import List, Optional
 from dataclasses import dataclass, asdict, field
@@ -55,9 +54,8 @@ class AnnotationsClient:  # pylint: disable=R0903
 
     session: Session
 
-    def __init__(self, session: Session, logger: Logger):
+    def __init__(self, session: Session):
         self.session = session
-        self.logger = logger
 
     def get(self, id: str) -> Annotation:
         """
@@ -79,7 +77,6 @@ class AnnotationsClient:  # pylint: disable=R0903
         path = "/v2/annotations"
         res = self.session.post(path, data=ujson.dumps(asdict(req)))
         annotation = from_dict(Annotation, res.json())
-        self.logger.info(f"created new annotation: {annotation.id}")
         return annotation
 
     def list(
@@ -120,7 +117,6 @@ class AnnotationsClient:  # pylint: disable=R0903
         path = "/v2/annotations/%s" % id
         res = self.session.put(path, data=ujson.dumps(asdict(req)))
         annotation = from_dict(Annotation, res.json())
-        self.logger.info(f"updated annotation({annotation.id})")
         return annotation
 
     def delete(self, id: str):
