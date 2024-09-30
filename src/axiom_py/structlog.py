@@ -25,7 +25,7 @@ class AxiomProcessor:
 
         atexit.register(self._flush)
 
-    def _flush(self):
+    def flush(self):
         self.last_run = time.monotonic()
         if len(self.buffer) == 0:
             return
