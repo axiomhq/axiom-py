@@ -8,9 +8,8 @@ import os
 
 from enum import Enum
 from humps import decamelize
-from typing import Optional, List, Dict
-from logging import getLogger
-from dataclasses import asdict, dataclass, field
+from typing import Optional, List, Dict, Callable
+from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from requests_toolbelt.sessions import BaseUrlSession
 from requests.adapters import HTTPAdapter, Retry
@@ -150,7 +149,8 @@ class Client:  # pylint: disable=R0903
     datasets: DatasetsClient
     users: UsersClient
     annotations: AnnotationsClient
-    is_closed: bool  # track if the client has been closed (for tests)
+    is_closed: bool = False  # track if the client has been closed (for tests)
+    before_shutdown_funcs: List[Callable] = []
 
     def __init__(
         self,
@@ -166,7 +166,6 @@ class Client:  # pylint: disable=R0903
         if url_base is None:
             url_base = AXIOM_URL
 
-        self.logger = getLogger()
         # set exponential retries
         retries = Retry(
             total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504]
@@ -191,18 +190,21 @@ class Client:  # pylint: disable=R0903
         # if there is an organization id passed,
         # set it in the header
         if org_id:
-            self.logger.info("found organization id: %s" % org_id)
             self.session.headers.update({"X-Axiom-Org-Id": org_id})
 
-        self.datasets = DatasetsClient(self.session, self.logger)
+        self.datasets = DatasetsClient(self.session)
         self.users = UsersClient(self.session, is_personal_token(token))
-        self.annotations = AnnotationsClient(self.session, self.logger)
+        self.annotations = AnnotationsClient(self.session)
 
         # wrap shutdown hook in a lambda passing in self as a ref
-        atexit.register(lambda: self.shutdown_hook())
-        self.is_closed = False
+        atexit.register(self.shutdown_hook)
+
+    def before_shutdown(self, func: Callable):
+        self.before_shutdown_funcs.append(func)
 
     def shutdown_hook(self):
+        for func in self.before_shutdown_funcs:
+            func()
         self.session.close()
         self.is_closed = True
 
@@ -273,13 +275,10 @@ class Client:  # pylint: disable=R0903
 
         path = "/v1/datasets/%s/query" % id
         payload = ujson.dumps(asdict(query), default=handle_json_serialization)
-        self.logger.debug("sending query %s" % payload)
         params = self._prepare_query_options(opts)
         res = self.session.post(path, data=payload, params=params)
         result = from_dict(QueryLegacyResult, res.json())
-        self.logger.debug(f"query result: {result}")
         query_id = res.headers.get("X-Axiom-History-Query-Id")
-        self.logger.info(f"received query result with query_id: {query_id}")
         result.savedQueryID = query_id
         return result
 
@@ -306,13 +305,10 @@ class Client:  # pylint: disable=R0903
             self._prepare_apl_payload(apl, opts),
             default=handle_json_serialization,
         )
-        self.logger.debug("sending query %s" % payload)
         params = self._prepare_apl_options(opts)
         res = self.session.post(path, data=payload, params=params)
         result = from_dict(QueryResult, res.json())
-        self.logger.debug(f"apl query result: {result}")
         query_id = res.headers.get("X-Axiom-History-Query-Id")
-        self.logger.info(f"received query result with query_id: {query_id}")
         result.savedQueryID = query_id
 
         return result

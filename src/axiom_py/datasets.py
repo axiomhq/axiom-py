@@ -3,7 +3,6 @@ This package provides dataset models and methods as well as a DatasetClient
 """
 
 import ujson
-from logging import Logger
 from requests import Session
 from typing import List
 from dataclasses import dataclass, asdict, field
@@ -52,9 +51,8 @@ class DatasetsClient:  # pylint: disable=R0903
 
     session: Session
 
-    def __init__(self, session: Session, logger: Logger):
+    def __init__(self, session: Session):
         self.session = session
-        self.logger = logger
 
     def get(self, id: str) -> Dataset:
         """
@@ -86,7 +84,6 @@ class DatasetsClient:  # pylint: disable=R0903
             ),
         )
         ds = from_dict(Dataset, res.json())
-        self.logger.info(f"created new dataset: {ds.name}")
         return ds
 
     def get_list(self) -> List[Dataset]:
@@ -123,9 +120,6 @@ class DatasetsClient:  # pylint: disable=R0903
             ),
         )
         ds = from_dict(Dataset, res.json())
-        self.logger.info(
-            f"updated dataset({ds.name}) with new desc: {ds.description}"
-        )
         return ds
 
     def delete(self, id: str):
