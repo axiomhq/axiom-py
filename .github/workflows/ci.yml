@@ -10,23 +10,16 @@ on:
     tags:
       - "v*"
 
-env:
-  PYTHON_VERSION: "3.8"
-  POETRY_VERSION: "1.5"
-
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: chartboost/ruff-action@v1
+      - uses: chartboost/ruff-action@v1
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - run: pip install poetry==${{ env.POETRY_VERSION }}
-      - run: poetry install
-      - run: poetry run black --check axiom tests examples
-      - run: poetry run pylint -E axiom tests examples
+          args: 'format --check'
 
   test-integration:
     name: Test Integration
@@ -36,33 +29,27 @@ jobs:
     needs: lint
     strategy:
       fail-fast: true
-      max-parallel: 1
       matrix:
-        python: ["3.8", "3.9", "3.10", "3.11"]
-        environment:
-          - development
-          - staging
-        include:
-          - environment: development
-            url: TESTING_DEV_API_URL
-            token: TESTING_DEV_TOKEN
-            org_id: TESTING_DEV_ORG_ID
-          - environment: staging
-            url: TESTING_STAGING_API_URL
-            token: TESTING_STAGING_TOKEN
-            org_id: TESTING_STAGING_ORG_ID
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - run: pip install poetry==${{ env.POETRY_VERSION }}
-      - run: poetry install
-      - run: poetry run python -m pytest
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Test against development
+        run: uv run pytest
         env:
-          AXIOM_URL: ${{ secrets[matrix.url] }}
-          AXIOM_TOKEN: ${{ secrets[matrix.token] }}
-          AXIOM_ORG_ID: ${{ secrets[matrix.org_id] }}
+          AXIOM_URL: ${{ secrets.TESTING_DEV_API_URL }}
+          AXIOM_TOKEN: ${{ secrets.TESTING_DEV_TOKEN }}
+          AXIOM_ORG_ID: ${{ secrets.TESTING_DEV_ORG_ID }}
+      - name: Test against staging
+        run: uv run pytest
+        env:
+          AXIOM_URL: ${{ secrets.TESTING_STAGING_API_URL }}
+          AXIOM_TOKEN: ${{ secrets.TESTING_STAGING_TOKEN }}
+          AXIOM_ORG_ID: ${{ secrets.TESTING_STAGING_ORG_ID }}
 
   publish:
     name: Publish on PyPi
@@ -72,8 +59,13 @@ jobs:
       - test-integration
     steps:
       - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - run: pip install poetry==${{ env.POETRY_VERSION }}
-      - run: poetry publish --build -u __token__ -p "${{ secrets.PYPI_TOKEN }}"
+          python-version-file: "pyproject.toml"
+      - run: uv build
+      - run: uvx twine upload dist/*
+        env:
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: "${{ secrets.PYPI_TOKEN }}"

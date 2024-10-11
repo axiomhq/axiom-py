@@ -49,41 +49,80 @@ Otherwise create a personal token in [the Axiom settings](https://cloud.axiom.co
 You can also configure the client using options passed to the client constructor:
 
 ```py
-import axiom
+import axiom_py
 
-client = axiom.Client("<api token>", "<org id>")
+client = axiom_py.Client("<api token>", "<org id>")
 ```
 
 Create and use a client like this:
 
 ```py
-import axiom
+import axiom_py
 import rfc3339
 from datetime import datetime,timedelta
 
-client = axiom.Client()
-
-time = datetime.utcnow() - timedelta(hours=1)
-time_formatted = rfc3339.format(time)
+client = axiom_py.Client()
 
 client.ingest_events(
     dataset="my-dataset",
     events=[
-        {"foo": "bar", "_time": time_formatted},
-        {"bar": "baz", "_time": time_formatted},
+        {"foo": "bar"},
+        {"bar": "baz"},
     ])
 client.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
 ```
 
-for more examples, check out the [examples](examples) directory.
+For more examples, see [`examples/client.py`](examples/client.py).
+
+## Logger
+
+You can use the `AxiomHandler` to send logs from the `logging` module to Axiom
+like this:
+
+```python
+import axiom_py
+from axiom_py.logging import AxiomHandler
+import logging
+
+
+def setup_logger():
+    client = axiom_py.Client()
+    handler = AxiomHandler(client, "my-dataset")
+    logging.getLogger().addHandler(handler)
+```
+
+For a full example, see [`examples/logger.py`](examples/logger.py).
+
+If you use [structlog](https://github.com/hynek/structlog), you can set up the
+`AxiomProcessor` like this:
+
+```python
+from axiom_py import Client
+from axiom_py.structlog import AxiomProcessor
+
+
+def setup_logger():
+    client = Client()
+
+    structlog.configure(
+        processors=[
+            # ...
+            structlog.processors.add_log_level,
+            structlog.processors.TimeStamper(fmt="iso", key="_time"),
+            AxiomProcessor(client, "my-dataset"),
+            # ...
+        ]
+    )
+```
+
+For a full example, see [`examples/structlog.py`](examples/structlog.py).
 
 ## Contributing
 
-This project uses [Poetry](https://python-poetry.org) for dependecy management
-and packaging, so make sure that this is installed (see [Poetry Installation](https://python-poetry.org/docs/#installation)).
+This project uses [uv](https://docs.astral.sh/uv) for dependency management
+and packaging, so make sure that this is installed.
 
-Run `poetry install` to install dependencies and `poetry shell` to activate a
-virtual environment.
+To lint and format files before commit, run `uvx pre-commit install`.
 
 ## License
 

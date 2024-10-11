@@ -1,13 +1,11 @@
 """Client provides an easy-to use client library to connect to Axiom."""
 
 import ndjson
-import dacite
+import atexit
 import gzip
 import ujson
 import os
 
-from .tokens import TokenAttributes, Token
-from .util import Util
 from enum import Enum
 from humps import decamelize
 from typing import Optional, List, Dict
@@ -15,23 +13,23 @@ from logging import getLogger
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from requests_toolbelt.sessions import BaseUrlSession
-from requests_toolbelt.utils.dump import dump_response
 from requests.adapters import HTTPAdapter, Retry
 from .datasets import DatasetsClient
-from .query import QueryLegacy, QueryResult, QueryOptions, QueryLegacyResult, QueryKind
+from .query import (
+    QueryLegacy,
+    QueryResult,
+    QueryOptions,
+    QueryLegacyResult,
+    QueryKind,
+)
 from .annotations import AnnotationsClient
 from .users import UsersClient
-from .__init__ import __version__
+from .version import __version__
+from .util import from_dict, handle_json_serialization, is_personal_token
+from .tokens import TokenAttributes, Token
 
 
 AXIOM_URL = "https://api.axiom.co"
-
-
-@dataclass
-class Error:
-    status: Optional[int] = field(default=None)
-    message: Optional[str] = field(default=None)
-    error: Optional[str] = field(default=None)
 
 
 @dataclass
@@ -75,6 +73,7 @@ class AplResultFormat(Enum):
     """The result format of an APL query."""
 
     Legacy = "legacy"
+    Tabular = "tabular"
 
 
 class ContentType(Enum):
@@ -114,25 +113,35 @@ class AplOptions:
     includeCursor: bool = field(default=False)
 
 
-def raise_response_error(r):
-    if r.status_code >= 400:
-        print("==== Response Debugging ====")
-        print("##Request Headers", r.request.headers)
+class AxiomError(Exception):
+    """This exception is raised on request errors."""
 
-        # extract content type
-        ct = r.headers["content-type"].split(";")[0]
-        if ct == ContentType.JSON.value:
-            dump = dump_response(r)
-            print(dump)
-            print("##Response:", dump.decode("UTF-8"))
-            err = dacite.from_dict(data_class=Error, data=r.json())
-            print(err)
-        elif ct == ContentType.NDJSON.value:
-            decoded = ndjson.loads(r.text)
-            print("##Response:", decoded)
+    status: int
+    message: str
 
-        r.raise_for_status()
-        # TODO: Decode JSON https://github.com/axiomhq/axiom-go/blob/610cfbd235d3df17f96a4bb156c50385cfbd9edd/axiom/error.go#L35-L50
+    @dataclass
+    class Response:
+        message: str
+        error: Optional[str]
+
+    def __init__(self, status: int, res: Response):
+        message = res.error if res.error is not None else res.message
+        super().__init__(f"API error {status}: {message}")
+
+        self.status = status
+        self.message = message
+
+
+def raise_response_error(res):
+    if res.status_code >= 400:
+        try:
+            error_res = from_dict(AxiomError.Response, res.json())
+        except Exception:
+            # Response is not in the Axiom JSON format, create generic error
+            # message
+            error_res = AxiomError.Response(message=res.reason, error=None)
+
+        raise AxiomError(res.status_code, error_res)
 
 
 class Client:  # pylint: disable=R0903
@@ -141,6 +150,7 @@ class Client:  # pylint: disable=R0903
     datasets: DatasetsClient
     users: UsersClient
     annotations: AnnotationsClient
+    is_closed: bool  # track if the client has been closed (for tests)
 
     def __init__(
         self,
@@ -185,8 +195,16 @@ class Client:  # pylint: disable=R0903
             self.session.headers.update({"X-Axiom-Org-Id": org_id})
 
         self.datasets = DatasetsClient(self.session, self.logger)
-        self.users = UsersClient(self.session)
+        self.users = UsersClient(self.session, is_personal_token(token))
         self.annotations = AnnotationsClient(self.session, self.logger)
+
+        # wrap shutdown hook in a lambda passing in self as a ref
+        atexit.register(lambda: self.shutdown_hook())
+        self.is_closed = False
+
+    def shutdown_hook(self):
+        self.session.close()
+        self.is_closed = True
 
     def ingest(
         self,
@@ -196,25 +214,27 @@ class Client:  # pylint: disable=R0903
         enc: ContentEncoding,
         opts: Optional[IngestOptions] = None,
     ) -> IngestStatus:
-        """Ingest the events into the named dataset and returns the status."""
+        """
+        Ingest the payload into the named dataset and returns the status.
+
+        See https://axiom.co/docs/restapi/endpoints/ingestIntoDataset
+        """
         path = "/v1/datasets/%s/ingest" % dataset
 
-        # check if passed content type and encoding are correct
-        if not contentType:
-            raise ValueError("unknown content-type, choose one of json,x-ndjson or csv")
-
-        if not enc:
-            raise ValueError("unknown content-encoding")
-
         # set headers
-        headers = {"Content-Type": contentType.value, "Content-Encoding": enc.value}
+        headers = {
+            "Content-Type": contentType.value,
+            "Content-Encoding": enc.value,
+        }
         # prepare query params
         params = self._prepare_ingest_options(opts)
 
         # override the default header and set the value from the passed parameter
-        res = self.session.post(path, data=payload, headers=headers, params=params)
+        res = self.session.post(
+            path, data=payload, headers=headers, params=params
+        )
         status_snake = decamelize(res.json())
-        return Util.from_dict(IngestStatus, status_snake)
+        return from_dict(IngestStatus, status_snake)
 
     def ingest_events(
         self,
@@ -222,11 +242,15 @@ class Client:  # pylint: disable=R0903
         events: List[dict],
         opts: Optional[IngestOptions] = None,
     ) -> IngestStatus:
-        """Ingest the events into the named dataset and returns the status."""
+        """
+        Ingest the events into the named dataset and returns the status.
+
+        See https://axiom.co/docs/restapi/endpoints/ingestIntoDataset
+        """
         # encode request payload to NDJSON
-        content = ndjson.dumps(events, default=Util.handle_json_serialization).encode(
-            "UTF-8"
-        )
+        content = ndjson.dumps(
+            events, default=handle_json_serialization
+        ).encode("UTF-8")
         gzipped = gzip.compress(content)
 
         return self.ingest(
@@ -236,7 +260,11 @@ class Client:  # pylint: disable=R0903
     def query_legacy(
         self, id: str, query: QueryLegacy, opts: QueryOptions
     ) -> QueryLegacyResult:
-        """Executes the given query on the dataset identified by its id."""
+        """
+        Executes the given structured query on the dataset identified by its id.
+
+        See https://axiom.co/docs/restapi/endpoints/queryDataset
+        """
         if not opts.saveAsKind or (opts.saveAsKind == QueryKind.APL):
             raise WrongQueryKindException(
                 "invalid query kind %s: must be %s or %s"
@@ -244,32 +272,44 @@ class Client:  # pylint: disable=R0903
             )
 
         path = "/v1/datasets/%s/query" % id
-        payload = ujson.dumps(asdict(query), default=Util.handle_json_serialization)
+        payload = ujson.dumps(asdict(query), default=handle_json_serialization)
         self.logger.debug("sending query %s" % payload)
         params = self._prepare_query_options(opts)
         res = self.session.post(path, data=payload, params=params)
-        result = Util.from_dict(QueryLegacyResult, res.json())
+        result = from_dict(QueryLegacyResult, res.json())
         self.logger.debug(f"query result: {result}")
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         self.logger.info(f"received query result with query_id: {query_id}")
         result.savedQueryID = query_id
         return result
 
-    def apl_query(self, apl: str, opts: Optional[AplOptions] = None) -> QueryResult:
-        """Executes the given apl query on the dataset identified by its id."""
+    def apl_query(
+        self, apl: str, opts: Optional[AplOptions] = None
+    ) -> QueryResult:
+        """
+        Executes the given apl query on the dataset identified by its id.
+
+        See https://axiom.co/docs/restapi/endpoints/queryApl
+        """
         return self.query(apl, opts)
 
-    def query(self, apl: str, opts: Optional[AplOptions] = None) -> QueryResult:
-        """Executes the given apl query on the dataset identified by its id."""
+    def query(
+        self, apl: str, opts: Optional[AplOptions] = None
+    ) -> QueryResult:
+        """
+        Executes the given apl query on the dataset identified by its id.
+
+        See https://axiom.co/docs/restapi/endpoints/queryApl
+        """
         path = "/v1/datasets/_apl"
         payload = ujson.dumps(
             self._prepare_apl_payload(apl, opts),
-            default=Util.handle_json_serialization,
+            default=handle_json_serialization,
         )
         self.logger.debug("sending query %s" % payload)
         params = self._prepare_apl_options(opts)
         res = self.session.post(path, data=payload, params=params)
-        result = Util.from_dict(QueryResult, res.json())
+        result = from_dict(QueryResult, res.json())
         self.logger.debug(f"apl query result: {result}")
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         self.logger.info(f"received query result with query_id: {query_id}")
@@ -281,7 +321,7 @@ class Client:  # pylint: disable=R0903
         """Creates a new API token with permissions specified in a TokenAttributes object."""
         res = self.session.post(
             "/v2/tokens",
-            data=ujson.dumps(asdict(opts), default=Util.handle_json_serialization),
+            data=ujson.dumps(asdict(opts), default=handle_json_serialization),
         )
 
         # Return the new token and ID.
@@ -328,7 +368,9 @@ class Client:  # pylint: disable=R0903
 
         return params
 
-    def _prepare_apl_options(self, opts: Optional[AplOptions]) -> Dict[str, object]:
+    def _prepare_apl_options(
+        self, opts: Optional[AplOptions]
+    ) -> Dict[str, object]:
         """Prepare the apl query options for the request."""
         params = {"format": AplResultFormat.Legacy.value}
 

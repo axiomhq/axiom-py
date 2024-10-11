@@ -5,14 +5,9 @@ import os
 import unittest
 from typing import List, Dict
 from logging import getLogger
-from requests.exceptions import HTTPError
 from datetime import timedelta
 from .helpers import get_random_name
-from axiom import (
-    Client,
-    DatasetCreateRequest,
-    DatasetUpdateRequest,
-)
+from axiom_py import Client, AxiomError
 
 
 class TestDatasets(unittest.TestCase):
@@ -26,7 +21,9 @@ class TestDatasets(unittest.TestCase):
         cls.logger = getLogger()
 
         cls.dataset_name = get_random_name()
-        cls.logger.info(f"generated random dataset name is: {cls.dataset_name}")
+        cls.logger.info(
+            f"generated random dataset name is: {cls.dataset_name}"
+        )
 
         cls.client = Client(
             os.getenv("AXIOM_TOKEN"),
@@ -36,11 +33,9 @@ class TestDatasets(unittest.TestCase):
 
     def test_step001_create(self):
         """Tests create dataset endpoint"""
-        req = DatasetCreateRequest(
-            name=self.dataset_name,
-            description="create a dataset to test the python client",
+        res = self.client.datasets.create(
+            self.dataset_name, "create a dataset to test the python client"
         )
-        res = self.client.datasets.create(req)
         self.logger.debug(res)
         assert res.name == self.dataset_name
 
@@ -60,10 +55,10 @@ class TestDatasets(unittest.TestCase):
 
     def test_step004_update(self):
         """Tests update dataset endpoint"""
-        updateReq = DatasetUpdateRequest("updated name through test")
-        ds = self.client.datasets.update(self.dataset_name, updateReq)
+        newDescription = "updated name through test"
+        ds = self.client.datasets.update(self.dataset_name, newDescription)
 
-        assert ds.description == updateReq.description
+        assert ds.description == newDescription
 
     def test_step005_trim(self):
         """Tests dataset trim endpoint"""
@@ -77,13 +72,14 @@ class TestDatasets(unittest.TestCase):
             dataset = self.client.datasets.get(self.dataset_name)
 
             self.assertIsNone(
-                dataset, f"expected test dataset (%{self.dataset_name}) to be deleted"
+                dataset,
+                f"expected test dataset (%{self.dataset_name}) to be deleted",
             )
-        except HTTPError as err:
-            # the get method returns 404 error if dataset doesn't exist, so that means
-            # that our tests passed, otherwise, it should fail.
-            if err.response.status_code != 404:
-                self.fail(err)
+        except AxiomError as e:
+            # the get method returns 404 error if dataset doesn't exist, so
+            # that means that our tests passed, otherwise, it should fail.
+            if e.status != 404:
+                self.fail(e)
 
     @classmethod
     def tearDownClass(cls):
@@ -98,7 +94,7 @@ class TestDatasets(unittest.TestCase):
                     "dataset (%s) was not deleted as part of the test, deleting it now."
                     % cls.dataset_name
                 )
-        except HTTPError as err:
+        except AxiomError as e:
             # nothing to do here, since the dataset doesn't exist
-            cls.logger.warning(err)
+            cls.logger.warning(e)
         cls.logger.info("finish cleaning up after TestDatasets")

@@ -12,12 +12,12 @@ class AxiomHandler(Handler):
 
     client: Client
     dataset: str
-    logcache: list
+    buffer: list
     interval: int
     last_run: float
 
     def __init__(self, client: Client, dataset: str, level=NOTSET, interval=1):
-        Handler.__init__(self, level)
+        super().__init__()
         # set urllib3 logging level to warning, check:
         # https://github.com/axiomhq/axiom-py/issues/23
         # This is a temp solution that would stop requests
@@ -35,7 +35,10 @@ class AxiomHandler(Handler):
     def emit(self, record):
         """emit sends a log to Axiom."""
         self.buffer.append(record.__dict__)
-        if len(self.buffer) >= 1000 or time.monotonic() - self.last_run > self.interval:
+        if (
+            len(self.buffer) >= 1000
+            or time.monotonic() - self.last_run > self.interval
+        ):
             self.flush()
 
     def flush(self):
