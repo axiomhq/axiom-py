@@ -5,11 +5,14 @@ import os
 import unittest
 from unittest.mock import patch
 import gzip
+import uuid
+
 import ujson
 import rfc3339
 import responses
 from logging import getLogger
 from datetime import datetime, timedelta
+
 from .helpers import get_random_name
 from axiom_py import (
     AxiomError,
@@ -32,6 +35,10 @@ from axiom_py.query import (
     FilterOperation,
     Aggregation,
     AggregationOperation,
+)
+from axiom_py.tokens import (
+    TokenAttributes,
+    TokenOrganizationCapabilities,
 )
 
 
@@ -239,6 +246,20 @@ class TestClient(unittest.TestCase):
         if res.buckets.totals and len(res.buckets.totals):
             agg = res.buckets.totals[0].aggregations[0]
             self.assertEqual("event_count", agg.op)
+
+    def test_api_tokens(self):
+        """Test creating and deleting an API token"""
+        token_attrs = TokenAttributes(
+            name=f"PytestToken-{uuid.uuid4()}",
+            orgCapabilities=TokenOrganizationCapabilities(apiTokens=["read"]),
+        )
+        token_values = self.client.create_api_token(token_attrs)
+
+        assert token_values.id
+        assert token_values.token
+
+        # (An exception will be raised if the delete call is not successful.)
+        self.client.delete_api_token(token_values.id)
 
     @patch("sys.exit")
     def test_client_shutdown_atexit(self, mock_exit):
