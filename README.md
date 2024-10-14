@@ -16,8 +16,6 @@
 
 The Axiom Python SDK allows you to send data from a Python app to Axiom.
 
-## Documentation
-
 For more information about how to set up and use the Axiom Python SDK, see the [Axiom documentation](https://axiom.co/docs/guides/python).
 
 <!-- Badges -->
