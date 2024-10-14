@@ -1,4 +1,4 @@
-# Axiom Python SDK
+# axiom-py
 
 <a href="https://axiom.co">
 <picture>
