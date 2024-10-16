@@ -44,15 +44,21 @@ For more information check out the
 
 ## Install SDK
 
-```shell Linux / MacOS
+Linux / MacOS
+
+```shell
 python3 -m pip install axiom-py
 ```
 
-```shell Windows
+Windows
+
+```shell
 py -m pip install axiom-py
 ```
 
-```shell pip
+pip
+
+```shell
 pip3 install axiom-py
 ```
 
