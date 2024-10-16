@@ -1,3 +1,7 @@
+<!---
+Keep this page in sync with https://github.com/axiomhq/docs/blob/main/guides/python.mdx
+-->
+
 # axiom-py
 
 <a href="https://axiom.co">
@@ -16,45 +20,59 @@
 
 [Axiom](https://axiom.co) unlocks observability at any scale.
 
-- **Ingest with ease, store without limits:** Axiom’s next-generation datastore enables ingesting petabytes of data with ultimate efficiency. Ship logs from Kubernetes, AWS, Azure, Google Cloud, DigitalOcean, Nomad, and others.
-- **Query everything, all the time:** Whether DevOps, SecOps, or EverythingOps, query all your data no matter its age. No provisioning, no moving data from cold/archive to “hot”, and no worrying about slow queries. All your data, all. the. time.
-- **Powerful dashboards, for continuous observability:** Build dashboards to collect related queries and present information that’s quick and easy to digest for you and your team. Dashboards can be kept private or shared with others, and are the perfect way to bring together data from different sources
+- **Ingest with ease, store without limits:** Axiom's next-generation datastore
+  enables ingesting petabytes of data with ultimate efficiency. Ship logs from
+  Kubernetes, AWS, Azure, Google Cloud, DigitalOcean, Nomad, and others.
+- **Query everything, all the time:** Whether DevOps, SecOps, or EverythingOps,
+  query all your data no matter its age. No provisioning, no moving data from
+  cold/archive to "hot", and no worrying about slow queries. All your data, all.
+  the. time.
+- **Powerful dashboards, for continuous observability:** Build dashboards to
+  collect related queries and present information that's quick and easy to
+  digest for you and your team. Dashboards can be kept private or shared with
+  others, and are the perfect way to bring together data from different sources.
 
-For more information check out the [official documentation](https://axiom.co/docs)
-and our
+For more information check out the
+[official documentation](https://axiom.co/docs) and our
 [community Discord](https://axiom.co/discord).
 
-## Quickstart
+## Prerequisites
 
-Install using `pip`:
+- [Create an Axiom account](https://app.axiom.co/register).
+- [Create a dataset in Axiom](https://axiom.co/docs/reference/datasets) where you send your data.
+- [Create an API token in Axiom](https://axiom.co/docs/reference/tokens) with permissions to update the dataset you have created.
 
-```bash
-# Linux / MacOS
+## Install SDK
+
+Linux / MacOS
+
+```shell
 python3 -m pip install axiom-py
+```
 
-# Windows
+Windows
+
+```shell
 py -m pip install axiom-py
 ```
 
-Alternatively, if you have the [`pip`](https://pip.pypa.io/) package installed, you can install `axiom-py` with the following command:
+pip
 
-```bash
+```shell
 pip3 install axiom-py
 ```
 
-If you use the [Axiom CLI](https://github.com/axiomhq/cli), run `eval $(axiom config export -f)` to configure your environment variables.
-
-Otherwise create a personal token in [the Axiom settings](https://cloud.axiom.co/profile) and export it as `AXIOM_TOKEN`. Set `AXIOM_ORG_ID` to the organization ID from the settings page of the organization you want to access.
+If you use the [Axiom CLI](https://axiom.co/docs/reference/cli), run `eval $(axiom config export -f)` to configure your environment variables. Otherwise, [create an API token](https://axiom.co/docs/reference/tokens) and export it as `AXIOM_TOKEN`.
 
 You can also configure the client using options passed to the client constructor:
 
 ```py
 import axiom_py
 
-client = axiom_py.Client("<api token>", "<org id>")
+client = axiom_py.Client("API_TOKEN")
 ```
 
-Create and use a client like this:
+## Use client
 
 ```py
 import axiom_py
@@ -64,42 +82,40 @@ from datetime import datetime,timedelta
 client = axiom_py.Client()
 
 client.ingest_events(
-    dataset="my-dataset",
+    dataset="DATASET_NAME",
     events=[
         {"foo": "bar"},
         {"bar": "baz"},
     ])
-client.query(r"['my-dataset'] | where foo == 'bar' | limit 100")
+client.query(r"['DATASET_NAME'] | where foo == 'bar' | limit 100")
 ```
 
-For more examples, see [`examples/client.py`](examples/client_example.py).
+See a [full example](https://github.com/axiomhq/axiom-py/tree/main/examples/client_example.py).
 
-## Logger
+## Example with `AxiomHandler`
 
-You can use the `AxiomHandler` to send logs from the `logging` module to Axiom
-like this:
+The example below uses `AxiomHandler` to send logs from the `logging` module to Axiom:
 
 ```python
 import axiom_py
 from axiom_py.logging import AxiomHandler
 import logging
 
-
 def setup_logger():
     client = axiom_py.Client()
-    handler = AxiomHandler(client, "my-dataset")
+    handler = AxiomHandler(client, "DATASET_NAME")
     logging.getLogger().addHandler(handler)
 ```
 
-For a full example, see [`examples/logger.py`](examples/logger_example.py).
+See a [full example](https://github.com/axiomhq/axiom-py/tree/main/examples/logger_example.py).
 
-If you use [structlog](https://github.com/hynek/structlog), you can set up the
-`AxiomProcessor` like this:
+## Example with `structlog`
+
+The example below uses [structlog](https://github.com/hynek/structlog) to send logs to Axiom:
 
 ```python
 from axiom_py import Client
 from axiom_py.structlog import AxiomProcessor
-
 
 def setup_logger():
     client = Client()
@@ -109,24 +125,13 @@ def setup_logger():
             # ...
             structlog.processors.add_log_level,
             structlog.processors.TimeStamper(fmt="iso", key="_time"),
-            AxiomProcessor(client, "my-dataset"),
+            AxiomProcessor(client, "DATASET_NAME"),
             # ...
         ]
     )
 ```
 
-For a full example, see [`examples/structlog.py`](examples/structlog_example.py).
-
-## Contributing
-
-This project uses [uv](https://docs.astral.sh/uv) for dependency management
-and packaging, so make sure that this is installed.
-
-To lint and format files before commit, run `uvx pre-commit install`.
-
-## License
-
-Distributed under MIT License (`The MIT License`).
+See a [full example](https://github.com/axiomhq/axiom-py/tree/main/examples/structlog_example.py).
 
 <!-- Badges -->
 
