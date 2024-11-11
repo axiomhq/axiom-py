@@ -174,6 +174,29 @@ class TestClient(unittest.TestCase):
 
         self.assertEqual(len(qr.matches), len(self.events))
 
+    def test_step005_apl_query_messages(self):
+        """Test an APL query with messages"""
+        startTime = datetime.utcnow() - timedelta(minutes=2)
+        endTime = datetime.utcnow()
+
+        apl = "['%s'] | where true" % self.dataset_name
+        opts = AplOptions(
+            start_time=startTime,
+            end_time=endTime,
+            format=AplResultFormat.Legacy,
+        )
+        qr = self.client.query(apl, opts)
+        # "where clause always evaluates to TRUE, which will include all data"
+        self.assertEqual(len(qr.status.messages), 1)
+        self.assertEqual(
+            qr.status.messages[0].msg,
+            "line: 1, col: 24: where clause always evaluates to TRUE, which will include all data",
+        )
+        self.assertEqual(
+            qr.status.messages[0].code,
+            "apl_whereclausealwaysevaluatestoTRUEwhichwillincludealldata_1",
+        )
+
     def test_step005_apl_query_tabular(self):
         """Test apl query (tabular)"""
         # query the events we ingested in step2
