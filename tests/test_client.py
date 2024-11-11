@@ -192,6 +192,10 @@ class TestClient(unittest.TestCase):
             qr.status.messages[0].msg,
             "line: 1, col: 24: where clause always evaluates to TRUE, which will include all data",
         )
+        self.assertEqual(
+            qr.status.messages[0].code,
+            "apl_whereclausealwaysevaluatestoTRUEwhichwillincludealldata_1",
+        )
 
     def test_step005_apl_query_tabular(self):
         """Test apl query (tabular)"""
