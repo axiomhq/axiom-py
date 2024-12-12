@@ -5,6 +5,7 @@ import atexit
 import gzip
 import ujson
 import os
+
 from enum import Enum
 from humps import decamelize
 from typing import Optional, List, Dict, Callable
@@ -24,6 +25,7 @@ from .annotations import AnnotationsClient
 from .users import UsersClient
 from .version import __version__
 from .util import from_dict, handle_json_serialization, is_personal_token
+from .tokens import TokenAttributes, Token
 
 
 AXIOM_URL = "https://api.axiom.co"
@@ -108,6 +110,8 @@ class AplOptions:
     # IncludeCursor will return the Cursor as part of the query result, if set
     # to true.
     includeCursor: bool = field(default=False)
+    # The query limit.
+    limit: Optional[int] = field(default=None)
 
 
 class AxiomError(Exception):
@@ -308,7 +312,23 @@ class Client:  # pylint: disable=R0903
         result = from_dict(QueryResult, res.json())
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         result.savedQueryID = query_id
+
         return result
+
+    def create_api_token(self, opts: TokenAttributes) -> Token:
+        """Creates a new API token with permissions specified in a TokenAttributes object."""
+        res = self.session.post(
+            "/v2/tokens",
+            data=ujson.dumps(asdict(opts), default=handle_json_serialization),
+        )
+
+        # Return the new token and ID.
+        response = res.json()
+        return Token(id=response["id"], token=response["token"])
+
+    def delete_api_token(self, token_id: str) -> None:
+        """Delete an API token using its ID string."""
+        self.session.delete(f"/v2/tokens/{token_id}")
 
     def _prepare_query_options(self, opts: QueryOptions) -> Dict[str, object]:
         """returns the query options as a Dict, handles any renaming for key fields."""
@@ -350,11 +370,13 @@ class Client:  # pylint: disable=R0903
         self, opts: Optional[AplOptions]
     ) -> Dict[str, object]:
         """Prepare the apl query options for the request."""
-        params = {"format": AplResultFormat.Legacy.value}
+        params: Dict[str, object] = {"format": AplResultFormat.Legacy.value}
 
         if opts is not None:
             if opts.format:
                 params["format"] = opts.format.value
+            if opts.limit is not None:
+                params["request"] = {"limit": opts.limit}
 
         return params
 
