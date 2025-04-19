@@ -3,6 +3,7 @@ import ujson
 from dataclasses import dataclass, field, asdict
 from requests import Session
 from typing import Literal, Optional
+from datetime import datetime
 from .util import from_dict
 
 
@@ -113,8 +114,8 @@ class RegenerateTokenRequest:
     POST /tokens/{id}/regenerate API accepts.
     """
 
-    existingTokenExpiresAt: Optional[str] = field(default=None)
-    newTokenExpiresAt: Optional[str] = field(default=None)
+    existingTokenExpiresAt: datetime
+    newTokenExpiresAt: datetime
 
 
 @dataclass
@@ -128,7 +129,7 @@ class ApiToken:
     token: str
     name: str
     description: str
-    expiresAt: Optional[str]
+    expiresAt: Optional[datetime]
     datasetCapabilities: Optional[dict[str, TokenDatasetCapabilities]]
     orgCapabilities: Optional[TokenOrganizationCapabilities]
     samlAuthenticated: bool
