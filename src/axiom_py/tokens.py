@@ -30,7 +30,7 @@ class TokenDatasetCapabilities:
     # Ability to use starred queries. Optional.
     starredQueries: Optional[list[Action]] = field(default=None)
     # Ability to use virtual fields. Optional.
-    virtualFields: Optional[Action] = field(default=None)
+    virtualFields: Optional[list[Action]] = field(default=None)
     # Trim capability. Optional
     trim: Optional[list[Action]] = field(default=None)
     # Vacuum capability. Optional
@@ -54,7 +54,7 @@ class TokenOrganizationCapabilities:
     # Ability to use api tokens. Optional.
     apiTokens: Optional[list[Action]] = field(default=None)
     # Audit log capability. Optional.
-    auditLog: Optional[list[Literal["read"]]] = field(default=None)
+    auditLog: Optional[list[Action]] = field(default=None)
     # Ability to access billing. Optional.
     billing: Optional[list[Action]] = field(default=None)
     # Ability to use dashboards. Optional.
