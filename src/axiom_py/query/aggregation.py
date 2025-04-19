@@ -10,7 +10,6 @@ class AggregationOperation(Enum):
     COUNTDISTINCTIF = "distinctif"
     MAKE_SET = "makeset"
     MAKE_SET_IF = "makesetif"
-    COMPUTED = "computed"
 
     # Only works for numbers.
     SUM = "sum"
