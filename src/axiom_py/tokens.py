@@ -106,10 +106,10 @@ class TokenOrganizationCapabilities:
 
 
 @dataclass
-class TokenAttributes:
+class CreateTokenRequest:
     # pylint: disable=unsubscriptable-object
     """
-    TokenAttributes describes the set of input parameters that the
+    CraeteTokenRequest describes the set of input parameters that the
     POST /tokens API accepts.
     """
 
@@ -127,6 +127,17 @@ class TokenAttributes:
     orgCapabilities: Optional[TokenOrganizationCapabilities] = field(
         default=None
     )
+
+@dataclass
+class RegenerateTokenRequest:
+    # pylint: disable=unsubscriptable-object
+    """
+    RegenerateTokenRequest describes the set of input parameters that the
+    POST /tokens/{id}/regenerate API accepts.
+    """
+
+    existingTokenExpiresAt: Optional[str] = field(default=None)
+    newTokenExpiresAt: Optional[str] = field(default=None)
 
 
 @dataclass
@@ -154,17 +165,35 @@ class TokensClient:  # pylint: disable=R0903
     def __init__(self, session: Session):
         self.session = session
 
-    def create_api_token(self, opts: TokenAttributes) -> ApiToken:
+    def list(self):
+        """List all API tokens."""
+        res = self.session.get("/v2/tokens")
+        tokens = from_dict(list[ApiToken], res.json())
+        return tokens
+
+    def create(self, req: CreateTokenRequest) -> ApiToken:
         """Creates a new API token with permissions specified in a TokenAttributes object."""
         res = self.session.post(
             "/v2/tokens",
-            data=ujson.dumps(asdict(opts)),
+            data=ujson.dumps(asdict(req)),
         )
 
         # Return the new token and ID.
         token = from_dict(ApiToken, res.json())
         return token
 
-    def delete_api_token(self, token_id: str) -> None:
+    def get(self, token_id: str) -> ApiToken:
+        """Get an API token using its ID string."""
+        res = self.session.get(f"/v2/tokens/{token_id}")
+        token = from_dict(ApiToken, res.json())
+        return token
+
+    def regenerate(self, token_id: str, req: RegenerateTokenRequest) -> ApiToken:
+        """Regenerate an API token using its ID string."""
+        res = self.session.post(f"/v2/tokens/{token_id}/regenerate", data=ujson.dumps(asdict(req)))
+        token = from_dict(ApiToken, res.json())
+        return token
+
+    def delete(self, token_id: str) -> None:
         """Delete an API token using its ID string."""
         self.session.delete(f"/v2/tokens/{token_id}")

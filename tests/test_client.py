@@ -37,8 +37,9 @@ from axiom_py.query import (
     AggregationOperation,
 )
 from axiom_py.tokens import (
-    TokenAttributes,
+    CreateTokenRequest,
     TokenOrganizationCapabilities,
+    Action,
 )
 
 
@@ -272,17 +273,17 @@ class TestClient(unittest.TestCase):
 
     def test_api_tokens(self):
         """Test creating and deleting an API token"""
-        token_attrs = TokenAttributes(
+        token_attrs = CreateTokenRequest(
             name=f"PytestToken-{uuid.uuid4()}",
-            orgCapabilities=TokenOrganizationCapabilities(apiTokens=["read"]),
+            orgCapabilities=TokenOrganizationCapabilities(apiTokens=[Action.READ]),
         )
-        token_values = self.client.tokens.create_api_token(token_attrs)
+        token_values = self.client.tokens.create(token_attrs)
 
         assert token_values.id
         assert token_values.token
 
         # (An exception will be raised if the delete call is not successful.)
-        self.client.tokens.delete_api_token(token_values.id)
+        self.client.tokens.delete(token_values.id)
 
     @patch("sys.exit")
     def test_client_shutdown_atexit(self, mock_exit):
