@@ -40,6 +40,7 @@ from axiom_py.tokens import (
     CreateTokenRequest,
     TokenOrganizationCapabilities,
     Action,
+    RegenerateTokenRequest,
 )
 
 
@@ -273,19 +274,29 @@ class TestClient(unittest.TestCase):
 
     def test_api_tokens(self):
         """Test creating and deleting an API token"""
-        token_attrs = CreateTokenRequest(
-            name=f"PytestToken-{uuid.uuid4()}",
+        token_name = f"PytestToken-{uuid.uuid4()}"
+        create_req = CreateTokenRequest(
+            name=token_name,
             orgCapabilities=TokenOrganizationCapabilities(
                 apiTokens=[Action.READ]
             ),
         )
-        token_values = self.client.tokens.create(token_attrs)
+        token = self.client.tokens.create(create_req)
 
-        assert token_values.id
-        assert token_values.token
+        self.assertEqual(token_name, token.name)
+        assert token.id
+        assert token.token
+
+        tokens = self.client.tokens.list()
+        self.assertEqual(1, len(tokens))
+
+        token = self.client.tokens.get(token.id)
+        self.assertEqual(token_name, token.name)
+
+        # TODO: Test regenerate
 
         # (An exception will be raised if the delete call is not successful.)
-        self.client.tokens.delete(token_values.id)
+        self.client.tokens.delete(token.id)
 
     @patch("sys.exit")
     def test_client_shutdown_atexit(self, mock_exit):
