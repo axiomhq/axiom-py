@@ -3,6 +3,7 @@ import ujson
 from dataclasses import dataclass, field, asdict
 from requests import Session
 from typing import Literal, Optional
+from .util import from_dict
 
 class Action(Enum):
     CREATE = "create"
@@ -129,7 +130,7 @@ class TokenAttributes:
 
 
 @dataclass
-class Token:
+class ApiToken:
     """
     Token contains the response from a call to POST /tokens.
     It includes the API token itself, and an ID which can be used to reference it later.
@@ -137,6 +138,12 @@ class Token:
 
     id: str
     token: str
+    name: str
+    description: str
+    expiresAt: Optional[str]
+    datasetCapabilities: Optional[dict[str, TokenDatasetCapabilities]]
+    orgCapabilities: Optional[TokenOrganizationCapabilities]
+    samlAuthenticated: bool
 
 
 class TokensClient:  # pylint: disable=R0903
@@ -147,7 +154,7 @@ class TokensClient:  # pylint: disable=R0903
     def __init__(self, session: Session):
         self.session = session
 
-    def create_api_token(self, opts: TokenAttributes) -> Token:
+    def create_api_token(self, opts: TokenAttributes) -> ApiToken:
         """Creates a new API token with permissions specified in a TokenAttributes object."""
         res = self.session.post(
             "/v2/tokens",
@@ -155,8 +162,8 @@ class TokensClient:  # pylint: disable=R0903
         )
 
         # Return the new token and ID.
-        response = res.json()
-        return Token(id=response["id"], token=response["token"])
+        token = from_dict(ApiToken, res.json())
+        return token
 
     def delete_api_token(self, token_id: str) -> None:
         """Delete an API token using its ID string."""
