@@ -5,11 +5,13 @@ from requests import Session
 from typing import Literal, Optional
 from .util import from_dict
 
+
 class Action(Enum):
     CREATE = "create"
     READ = "read"
     UPDATE = "update"
     DELETE = "delete"
+
 
 @dataclass
 class TokenDatasetCapabilities:
@@ -50,59 +52,33 @@ class TokenOrganizationCapabilities:
     # Ability to use annotations. Optional.
     annotations: Optional[list[Action]] = field(default=None)
     # Ability to use api tokens. Optional.
-    apiTokens: Optional[
-        list[Action]
-    ] = field(default=None)
+    apiTokens: Optional[list[Action]] = field(default=None)
     # Audit log capability. Optional.
-    auditLog: Optional[
-        list[Literal["read"]]
-    ] = field(default=None)
+    auditLog: Optional[list[Literal["read"]]] = field(default=None)
     # Ability to access billing. Optional.
     billing: Optional[list[Action]] = field(default=None)
     # Ability to use dashboards. Optional.
-    dashboards: Optional[
-        list[Action]
-    ] = field(default=None)
+    dashboards: Optional[list[Action]] = field(default=None)
     # Ability to use datasets. Optional.
-    datasets: Optional[list[Action]] = (
-        field(default=None)
-    )
+    datasets: Optional[list[Action]] = field(default=None)
     # Ability to use endpoints. Optional.
-    endpoints: Optional[
-        list[Action]
-    ] = field(default=None)
+    endpoints: Optional[list[Action]] = field(default=None)
     # Ability to use flows. Optional.
-    flows: Optional[list[Action]] = (
-        field(default=None)
-    )
+    flows: Optional[list[Action]] = field(default=None)
     # Ability to use integrations. Optional.
-    integrations: Optional[
-        list[Action]
-    ] = field(default=None)
+    integrations: Optional[list[Action]] = field(default=None)
     # Ability to use monitors. Optional.
-    monitors: Optional[list[Action]] = (
-        field(default=None)
-    )
+    monitors: Optional[list[Action]] = field(default=None)
     # Ability to use notifiers. Optional.
-    notifiers: Optional[
-        list[Action]
-    ] = field(default=None)
+    notifiers: Optional[list[Action]] = field(default=None)
     # Ability to use role-based access controls. Optional.
-    rbac: Optional[list[Action]] = (
-        field(default=None)
-    )
+    rbac: Optional[list[Action]] = field(default=None)
     # Ability to use shared access keys. Optional.
-    sharedAccessKeys: Optional[list[Action]] = field(
-        default=None
-    )
+    sharedAccessKeys: Optional[list[Action]] = field(default=None)
     # Ability to use users. Optional.
-    users: Optional[list[Action]] = (
-        field(default=None)
-    )
+    users: Optional[list[Action]] = field(default=None)
     # Ability to use views. Optional.
-    views: Optional[list[Action]] = (
-        field(default=None)
-    )
+    views: Optional[list[Action]] = field(default=None)
 
 
 @dataclass
@@ -127,6 +103,7 @@ class CreateTokenRequest:
     orgCapabilities: Optional[TokenOrganizationCapabilities] = field(
         default=None
     )
+
 
 @dataclass
 class RegenerateTokenRequest:
@@ -188,9 +165,13 @@ class TokensClient:  # pylint: disable=R0903
         token = from_dict(ApiToken, res.json())
         return token
 
-    def regenerate(self, token_id: str, req: RegenerateTokenRequest) -> ApiToken:
+    def regenerate(
+        self, token_id: str, req: RegenerateTokenRequest
+    ) -> ApiToken:
         """Regenerate an API token using its ID string."""
-        res = self.session.post(f"/v2/tokens/{token_id}/regenerate", data=ujson.dumps(asdict(req)))
+        res = self.session.post(
+            f"/v2/tokens/{token_id}/regenerate", data=ujson.dumps(asdict(req))
+        )
         token = from_dict(ApiToken, res.json())
         return token
 
