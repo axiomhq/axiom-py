@@ -13,6 +13,8 @@ class TokenDatasetCapabilities:
     one per dataset.
     """
 
+    # Data management capability. Optional.
+    data: Optional[list[Literal["delete"]]] = field(default=None)
     # Ability to ingest data. Optional.
     ingest: Optional[list[Literal["create"]]] = field(default=None)
     # Ability to query data. Optional.
@@ -21,6 +23,10 @@ class TokenDatasetCapabilities:
     starredQueries: Optional[
         list[Literal["create", "read", "update", "delete"]]
     ] = field(default=None)
+    # Trim capability. Optional
+    trim: Optional[list[Literal["update"]]] = field(default=None)
+    # Vacuum capability. Optional
+    vacuum: Optional[list[Literal["update"]]] = field(default=None)
     # Ability to use virtual fields. Optional.
     virtualFields: Optional[
         list[Literal["create", "read", "update", "delete"]]
@@ -42,6 +48,10 @@ class TokenOrganizationCapabilities:
     # Ability to use api tokens. Optional.
     apiTokens: Optional[
         list[Literal["create", "read", "update", "delete"]]
+    ] = field(default=None)
+    # Audit log capability. Optional.
+    auditLog: Optional[
+        list[Literal["read"]]
     ] = field(default=None)
     # Ability to access billing. Optional.
     billing: Optional[list[Literal["read", "update"]]] = field(default=None)
