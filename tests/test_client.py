@@ -276,13 +276,13 @@ class TestClient(unittest.TestCase):
             name=f"PytestToken-{uuid.uuid4()}",
             orgCapabilities=TokenOrganizationCapabilities(apiTokens=["read"]),
         )
-        token_values = self.client.create_api_token(token_attrs)
+        token_values = self.client.tokens.create_api_token(token_attrs)
 
         assert token_values.id
         assert token_values.token
 
         # (An exception will be raised if the delete call is not successful.)
-        self.client.delete_api_token(token_values.id)
+        self.client.tokens.delete_api_token(token_values.id)
 
     @patch("sys.exit")
     def test_client_shutdown_atexit(self, mock_exit):

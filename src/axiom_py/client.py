@@ -25,7 +25,7 @@ from .annotations import AnnotationsClient
 from .users import UsersClient
 from .version import __version__
 from .util import from_dict, handle_json_serialization, is_personal_token
-from .tokens import TokenAttributes, Token
+from .tokens import TokensClient
 
 
 AXIOM_URL = "https://api.axiom.co"
@@ -151,6 +151,7 @@ class Client:  # pylint: disable=R0903
     datasets: DatasetsClient
     users: UsersClient
     annotations: AnnotationsClient
+    tokens: TokensClient
     is_closed: bool = False  # track if the client has been closed (for tests)
     before_shutdown_funcs: List[Callable] = []
 
@@ -197,6 +198,7 @@ class Client:  # pylint: disable=R0903
         self.datasets = DatasetsClient(self.session)
         self.users = UsersClient(self.session, is_personal_token(token))
         self.annotations = AnnotationsClient(self.session)
+        self.tokens = TokensClient(self.session)
 
         # wrap shutdown hook in a lambda passing in self as a ref
         atexit.register(self.shutdown_hook)
@@ -314,21 +316,6 @@ class Client:  # pylint: disable=R0903
         result.savedQueryID = query_id
 
         return result
-
-    def create_api_token(self, opts: TokenAttributes) -> Token:
-        """Creates a new API token with permissions specified in a TokenAttributes object."""
-        res = self.session.post(
-            "/v2/tokens",
-            data=ujson.dumps(asdict(opts), default=handle_json_serialization),
-        )
-
-        # Return the new token and ID.
-        response = res.json()
-        return Token(id=response["id"], token=response["token"])
-
-    def delete_api_token(self, token_id: str) -> None:
-        """Delete an API token using its ID string."""
-        self.session.delete(f"/v2/tokens/{token_id}")
 
     def _prepare_query_options(self, opts: QueryOptions) -> Dict[str, object]:
         """returns the query options as a Dict, handles any renaming for key fields."""

@@ -1,6 +1,7 @@
-from dataclasses import dataclass, field
+import ujson
+from dataclasses import dataclass, field, asdict
+from requests import Session
 from typing import Literal, Optional
-
 
 @dataclass
 class TokenDatasetCapabilities:
@@ -119,3 +120,27 @@ class Token:
 
     id: str
     token: str
+
+
+class TokensClient:  # pylint: disable=R0903
+    """TokensClient has methods to manipulate tokens."""
+
+    session: Session
+
+    def __init__(self, session: Session):
+        self.session = session
+
+    def create_api_token(self, opts: TokenAttributes) -> Token:
+        """Creates a new API token with permissions specified in a TokenAttributes object."""
+        res = self.session.post(
+            "/v2/tokens",
+            data=ujson.dumps(asdict(opts)),
+        )
+
+        # Return the new token and ID.
+        response = res.json()
+        return Token(id=response["id"], token=response["token"])
+
+    def delete_api_token(self, token_id: str) -> None:
+        """Delete an API token using its ID string."""
+        self.session.delete(f"/v2/tokens/{token_id}")
