@@ -110,8 +110,6 @@ class AplOptions:
     # IncludeCursor will return the Cursor as part of the query result, if set
     # to true.
     includeCursor: bool = field(default=False)
-    # The query limit.
-    limit: Optional[int] = field(default=None)
 
 
 class AxiomError(Exception):
