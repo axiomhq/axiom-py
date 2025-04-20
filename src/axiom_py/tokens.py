@@ -1,7 +1,7 @@
 import ujson
 from dataclasses import dataclass, field, asdict
 from requests import Session
-from typing import Literal, Optional, List
+from typing import Literal, Optional, List, Dict
 from datetime import datetime
 from .util import from_dict, handle_json_serialization
 
@@ -87,7 +87,7 @@ class ApiToken:
     name: str
     description: Optional[str]
     expiresAt: Optional[datetime]
-    datasetCapabilities: Optional[dict[str, TokenDatasetCapabilities]]
+    datasetCapabilities: Optional[Dict[str, TokenDatasetCapabilities]]
     orgCapabilities: Optional[TokenOrganizationCapabilities]
     samlAuthenticated: bool = field(default=False)
 
@@ -107,7 +107,7 @@ class CreateTokenRequest:
     # Expiration date for the API token. Optional.
     expiresAt: Optional[str] = field(default=None)
     # The token's dataset-level capabilities. Keyed on dataset name. Optional.
-    datasetCapabilities: Optional[dict[str, TokenDatasetCapabilities]] = field(
+    datasetCapabilities: Optional[Dict[str, TokenDatasetCapabilities]] = field(
         default=None
     )
     # The token's organization-level capabilities. Optional.
