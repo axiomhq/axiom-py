@@ -1,7 +1,7 @@
 import ujson
 from dataclasses import dataclass, field, asdict
 from requests import Session
-from typing import Literal, Optional
+from typing import Literal, Optional, List
 from datetime import datetime
 from .util import from_dict, handle_json_serialization
 
@@ -19,21 +19,21 @@ class TokenDatasetCapabilities:
     """
 
     # Ability to ingest data. Optional.
-    ingest: Optional[list[Action]] = field(default=None)
+    ingest: Optional[List[Action]] = field(default=None)
     # Ability to query data. Optional.
-    query: Optional[list[Action]] = field(default=None)
+    query: Optional[List[Action]] = field(default=None)
     # Ability to use starred queries. Optional.
-    starredQueries: Optional[list[Action]] = field(default=None)
+    starredQueries: Optional[List[Action]] = field(default=None)
     # Ability to use virtual fields. Optional.
-    virtualFields: Optional[list[Action]] = field(default=None)
+    virtualFields: Optional[List[Action]] = field(default=None)
     # Trim capability. Optional
-    trim: Optional[list[Action]] = field(default=None)
+    trim: Optional[List[Action]] = field(default=None)
     # Vacuum capability. Optional
-    vacuum: Optional[list[Action]] = field(default=None)
+    vacuum: Optional[List[Action]] = field(default=None)
     # Data management capability. Optional.
-    data: Optional[list[Action]] = field(default=None)
+    data: Optional[List[Action]] = field(default=None)
     # Share capability. Optional.
-    share: Optional[list[Action]] = field(default=None)
+    share: Optional[List[Action]] = field(default=None)
 
 
 @dataclass
@@ -45,35 +45,35 @@ class TokenOrganizationCapabilities:
     """
 
     # Ability to use annotations. Optional.
-    annotations: Optional[list[Action]] = field(default=None)
+    annotations: Optional[List[Action]] = field(default=None)
     # Ability to use api tokens. Optional.
-    apiTokens: Optional[list[Action]] = field(default=None)
+    apiTokens: Optional[List[Action]] = field(default=None)
     # Audit log capability. Optional.
-    auditLog: Optional[list[Action]] = field(default=None)
+    auditLog: Optional[List[Action]] = field(default=None)
     # Ability to access billing. Optional.
-    billing: Optional[list[Action]] = field(default=None)
+    billing: Optional[List[Action]] = field(default=None)
     # Ability to use dashboards. Optional.
-    dashboards: Optional[list[Action]] = field(default=None)
+    dashboards: Optional[List[Action]] = field(default=None)
     # Ability to use datasets. Optional.
-    datasets: Optional[list[Action]] = field(default=None)
+    datasets: Optional[List[Action]] = field(default=None)
     # Ability to use endpoints. Optional.
-    endpoints: Optional[list[Action]] = field(default=None)
+    endpoints: Optional[List[Action]] = field(default=None)
     # Ability to use flows. Optional.
-    flows: Optional[list[Action]] = field(default=None)
+    flows: Optional[List[Action]] = field(default=None)
     # Ability to use integrations. Optional.
-    integrations: Optional[list[Action]] = field(default=None)
+    integrations: Optional[List[Action]] = field(default=None)
     # Ability to use monitors. Optional.
-    monitors: Optional[list[Action]] = field(default=None)
+    monitors: Optional[List[Action]] = field(default=None)
     # Ability to use notifiers. Optional.
-    notifiers: Optional[list[Action]] = field(default=None)
+    notifiers: Optional[List[Action]] = field(default=None)
     # Ability to use role-based access controls. Optional.
-    rbac: Optional[list[Action]] = field(default=None)
+    rbac: Optional[List[Action]] = field(default=None)
     # Ability to use shared access keys. Optional.
-    sharedAccessKeys: Optional[list[Action]] = field(default=None)
+    sharedAccessKeys: Optional[List[Action]] = field(default=None)
     # Ability to use users. Optional.
-    users: Optional[list[Action]] = field(default=None)
+    users: Optional[List[Action]] = field(default=None)
     # Ability to use views. Optional.
-    views: Optional[list[Action]] = field(default=None)
+    views: Optional[List[Action]] = field(default=None)
 
 
 @dataclass
@@ -146,7 +146,7 @@ class TokensClient:  # pylint: disable=R0903
     def __init__(self, session: Session):
         self.session = session
 
-    def list(self) -> list[ApiToken]:
+    def list(self) -> List[ApiToken]:
         """List all API tokens."""
         res = self.session.get("/v2/tokens")
         tokens = []
