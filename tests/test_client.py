@@ -31,7 +31,6 @@ from axiom_py.query import (
     Projection,
     FilterOperation,
     Aggregation,
-    AggregationOperation,
 )
 
 
@@ -241,7 +240,7 @@ class TestClient(unittest.TestCase):
         endTime = datetime.utcnow()
         aggregations = [
             Aggregation(
-                alias="event_count", op=AggregationOperation.COUNT, field="*"
+                alias="event_count", op="count", field="*"
             )
         ]
         q = QueryLegacy(startTime, endTime, aggregations=aggregations)

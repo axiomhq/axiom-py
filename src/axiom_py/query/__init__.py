@@ -1,7 +1,7 @@
 from .query import QueryKind, Order, VirtualField, Projection, QueryLegacy
 from .options import QueryOptions
 from .filter import FilterOperation, BaseFilter, Filter
-from .aggregation import AggregationOperation, Aggregation
+from .aggregation import Aggregation
 from .result import (
     MessagePriority,
     Message,
@@ -25,7 +25,6 @@ __all__ = (
     FilterOperation,
     BaseFilter,
     Filter,
-    AggregationOperation,
     Aggregation,
     MessagePriority,
     Message,
