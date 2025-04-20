@@ -247,9 +247,7 @@ class TestClient(unittest.TestCase):
         startTime = datetime.utcnow() - timedelta(minutes=2)
         endTime = datetime.utcnow()
         aggregations = [
-            Aggregation(
-                alias="event_count", op="count", field="*"
-            )
+            Aggregation(alias="event_count", op="count", field="*")
         ]
         q = QueryLegacy(startTime, endTime, aggregations=aggregations)
         q.groupBy = ["success", "remote_ip"]
