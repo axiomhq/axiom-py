@@ -1,17 +1,11 @@
-from enum import Enum
 import ujson
 from dataclasses import dataclass, field, asdict
 from requests import Session
 from typing import Literal, Optional
 from datetime import datetime
-from .util import from_dict
+from .util import from_dict, handle_json_serialization
 
-
-class Action(Enum):
-    CREATE = "create"
-    READ = "read"
-    UPDATE = "update"
-    DELETE = "delete"
+Action = Literal["create", "read", "update", "delete"]
 
 
 @dataclass
@@ -83,6 +77,22 @@ class TokenOrganizationCapabilities:
 
 
 @dataclass
+class ApiToken:
+    """
+    Token contains the response from a call to POST /tokens.
+    It includes the API token itself, and an ID which can be used to reference it later.
+    """
+
+    id: str
+    name: str
+    description: Optional[str]
+    expiresAt: Optional[datetime]
+    datasetCapabilities: Optional[dict[str, TokenDatasetCapabilities]]
+    orgCapabilities: Optional[TokenOrganizationCapabilities]
+    samlAuthenticated: bool = field(default=False)
+
+
+@dataclass
 class CreateTokenRequest:
     # pylint: disable=unsubscriptable-object
     """
@@ -107,6 +117,16 @@ class CreateTokenRequest:
 
 
 @dataclass
+class CreateTokenResponse(ApiToken):
+    """
+    CreateTokenResponse describes the set of output parameters that the
+    POST /tokens API returns.
+    """
+
+    token: str = ""
+
+
+@dataclass
 class RegenerateTokenRequest:
     # pylint: disable=unsubscriptable-object
     """
@@ -118,23 +138,6 @@ class RegenerateTokenRequest:
     newTokenExpiresAt: datetime
 
 
-@dataclass
-class ApiToken:
-    """
-    Token contains the response from a call to POST /tokens.
-    It includes the API token itself, and an ID which can be used to reference it later.
-    """
-
-    id: str
-    token: str
-    name: str
-    description: str
-    expiresAt: Optional[datetime]
-    datasetCapabilities: Optional[dict[str, TokenDatasetCapabilities]]
-    orgCapabilities: Optional[TokenOrganizationCapabilities]
-    samlAuthenticated: bool
-
-
 class TokensClient:  # pylint: disable=R0903
     """TokensClient has methods to manipulate tokens."""
 
@@ -143,21 +146,24 @@ class TokensClient:  # pylint: disable=R0903
     def __init__(self, session: Session):
         self.session = session
 
-    def list(self):
+    def list(self) -> list[ApiToken]:
         """List all API tokens."""
         res = self.session.get("/v2/tokens")
-        tokens = from_dict(list[ApiToken], res.json())
+        tokens = []
+        for record in res.json():
+            ds = from_dict(ApiToken, record)
+            tokens.append(ds)
         return tokens
 
-    def create(self, req: CreateTokenRequest) -> ApiToken:
+    def create(self, req: CreateTokenRequest) -> CreateTokenResponse:
         """Creates a new API token with permissions specified in a TokenAttributes object."""
         res = self.session.post(
             "/v2/tokens",
-            data=ujson.dumps(asdict(req)),
+            data=ujson.dumps(asdict(req), default=handle_json_serialization),
         )
 
         # Return the new token and ID.
-        token = from_dict(ApiToken, res.json())
+        token = from_dict(CreateTokenResponse, res.json())
         return token
 
     def get(self, token_id: str) -> ApiToken:
@@ -171,7 +177,8 @@ class TokensClient:  # pylint: disable=R0903
     ) -> ApiToken:
         """Regenerate an API token using its ID string."""
         res = self.session.post(
-            f"/v2/tokens/{token_id}/regenerate", data=ujson.dumps(asdict(req))
+            f"/v2/tokens/{token_id}/regenerate",
+            data=ujson.dumps(asdict(req), default=handle_json_serialization),
         )
         token = from_dict(ApiToken, res.json())
         return token

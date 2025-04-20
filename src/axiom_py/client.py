@@ -360,8 +360,6 @@ class Client:  # pylint: disable=R0903
         if opts is not None:
             if opts.format:
                 params["format"] = opts.format.value
-            if opts.limit is not None:
-                params["request"] = {"limit": opts.limit}
 
         return params
 

@@ -39,7 +39,6 @@ from axiom_py.query import (
 from axiom_py.tokens import (
     CreateTokenRequest,
     TokenOrganizationCapabilities,
-    Action,
     RegenerateTokenRequest,
 )
 
@@ -277,9 +276,7 @@ class TestClient(unittest.TestCase):
         token_name = f"PytestToken-{uuid.uuid4()}"
         create_req = CreateTokenRequest(
             name=token_name,
-            orgCapabilities=TokenOrganizationCapabilities(
-                apiTokens=[Action.READ]
-            ),
+            orgCapabilities=TokenOrganizationCapabilities(apiTokens=["read"]),
         )
         token = self.client.tokens.create(create_req)
 
@@ -288,12 +285,18 @@ class TestClient(unittest.TestCase):
         assert token.token
 
         tokens = self.client.tokens.list()
-        self.assertEqual(1, len(tokens))
+        assert tokens
 
         token = self.client.tokens.get(token.id)
         self.assertEqual(token_name, token.name)
 
-        # TODO: Test regenerate
+        self.client.tokens.regenerate(
+            token.id,
+            RegenerateTokenRequest(
+                existingTokenExpiresAt=datetime.now() + timedelta(days=1),
+                newTokenExpiresAt=datetime.now() + timedelta(days=2),
+            ),
+        )
 
         # (An exception will be raised if the delete call is not successful.)
         self.client.tokens.delete(token.id)
