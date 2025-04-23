@@ -5,11 +5,14 @@ import os
 import unittest
 from unittest.mock import patch
 import gzip
+import uuid
+
 import ujson
 import rfc3339
 import responses
 from logging import getLogger
 from datetime import datetime, timedelta
+
 from .helpers import get_random_name
 from axiom_py import (
     AxiomError,
@@ -32,6 +35,11 @@ from axiom_py.query import (
     FilterOperation,
     Aggregation,
     AggregationOperation,
+)
+from axiom_py.tokens import (
+    CreateTokenRequest,
+    TokenOrganizationCapabilities,
+    RegenerateTokenRequest,
 )
 
 
@@ -262,6 +270,36 @@ class TestClient(unittest.TestCase):
         if res.buckets.totals and len(res.buckets.totals):
             agg = res.buckets.totals[0].aggregations[0]
             self.assertEqual("event_count", agg.op)
+
+    def test_api_tokens(self):
+        """Test creating and deleting an API token"""
+        token_name = f"PytestToken-{uuid.uuid4()}"
+        create_req = CreateTokenRequest(
+            name=token_name,
+            orgCapabilities=TokenOrganizationCapabilities(apiTokens=["read"]),
+        )
+        token = self.client.tokens.create(create_req)
+
+        self.assertEqual(token_name, token.name)
+        assert token.id
+        assert token.token
+
+        tokens = self.client.tokens.list()
+        assert tokens
+
+        token = self.client.tokens.get(token.id)
+        self.assertEqual(token_name, token.name)
+
+        self.client.tokens.regenerate(
+            token.id,
+            RegenerateTokenRequest(
+                existingTokenExpiresAt=datetime.now() + timedelta(days=1),
+                newTokenExpiresAt=datetime.now() + timedelta(days=2),
+            ),
+        )
+
+        # (An exception will be raised if the delete call is not successful.)
+        self.client.tokens.delete(token.id)
 
     @patch("sys.exit")
     def test_client_shutdown_atexit(self, mock_exit):

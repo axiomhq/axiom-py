@@ -5,6 +5,7 @@ import atexit
 import gzip
 import ujson
 import os
+
 from enum import Enum
 from humps import decamelize
 from typing import Optional, List, Dict, Callable
@@ -24,6 +25,7 @@ from .annotations import AnnotationsClient
 from .users import UsersClient
 from .version import __version__
 from .util import from_dict, handle_json_serialization, is_personal_token
+from .tokens import TokensClient
 
 
 AXIOM_URL = "https://api.axiom.co"
@@ -149,6 +151,7 @@ class Client:  # pylint: disable=R0903
     datasets: DatasetsClient
     users: UsersClient
     annotations: AnnotationsClient
+    tokens: TokensClient
     is_closed: bool = False  # track if the client has been closed (for tests)
     before_shutdown_funcs: List[Callable] = []
 
@@ -195,6 +198,7 @@ class Client:  # pylint: disable=R0903
         self.datasets = DatasetsClient(self.session)
         self.users = UsersClient(self.session, is_personal_token(token))
         self.annotations = AnnotationsClient(self.session)
+        self.tokens = TokensClient(self.session)
 
         # wrap shutdown hook in a lambda passing in self as a ref
         atexit.register(self.shutdown_hook)
@@ -310,6 +314,7 @@ class Client:  # pylint: disable=R0903
         result = from_dict(QueryResult, res.json())
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         result.savedQueryID = query_id
+
         return result
 
     def _prepare_query_options(self, opts: QueryOptions) -> Dict[str, object]:
