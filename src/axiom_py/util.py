@@ -6,7 +6,6 @@ from typing import Type, TypeVar
 from datetime import datetime, timedelta
 
 from .query import QueryKind
-from .query.aggregation import AggregationOperation
 from .query.result import MessagePriority
 from .query.filter import FilterOperation
 
@@ -50,7 +49,6 @@ def from_dict(data_class: Type[T], data) -> T:
         type_hooks={
             QueryKind: QueryKind,
             datetime: _convert_string_to_datetime,
-            AggregationOperation: AggregationOperation,
             FilterOperation: FilterOperation,
             MessagePriority: MessagePriority,
             timedelta: _convert_string_to_timedelta,
