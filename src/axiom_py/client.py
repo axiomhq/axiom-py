@@ -110,6 +110,8 @@ class AplOptions:
     # IncludeCursor will return the Cursor as part of the query result, if set
     # to true.
     includeCursor: bool = field(default=False)
+    # The query limit.
+    limit: Optional[int] = field(default=None)
 
 
 class AxiomError(Exception):
@@ -360,6 +362,8 @@ class Client:  # pylint: disable=R0903
         if opts is not None:
             if opts.format:
                 params["format"] = opts.format.value
+            if opts.limit is not None:
+                params["request"] = {"limit": opts.limit}
 
         return params
 
