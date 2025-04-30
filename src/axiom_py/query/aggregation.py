@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field as dataclass_field
+from typing import Any
 
 
 @dataclass
@@ -8,4 +9,4 @@ class Aggregation:
     op: str
     field: str = dataclass_field(default="")
     alias: str = dataclass_field(default="")
-    argument: any = dataclass_field(default="")
+    argument: Any = dataclass_field(default="")
