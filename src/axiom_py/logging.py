@@ -64,4 +64,8 @@ class AxiomHandler(Handler):
             return
 
         local_buffer, self.buffer = self.buffer, []
-        self.client.ingest_events(self.dataset, local_buffer)
+        try:
+            self.client.ingest_events(self.dataset, local_buffer)
+        except Exception as e:
+            print(f"Error ingesting logs: {e}")
+            self.buffer = local_buffer
