@@ -58,3 +58,26 @@ class TestLogger(unittest.TestCase):
 
         # Cleanup created dataset
         client.datasets.delete(dataset_name)
+
+    def test_handling_network_errors(self):
+        client = Client(
+            "xapt-",
+            "NO_ORG_ID",
+            "https://WRONG_URL.com",
+        )
+        # Create a dataset for that purpose
+        dataset_name = get_random_name()
+
+        axiom_handler = AxiomHandler(client, dataset_name, interval=1.0)
+
+        logger = logging.getLogger()
+        logger.addHandler(axiom_handler)
+
+        logger.warning("This is a log!")
+        axiom_handler.flush()
+
+        # wait for the flush to finish
+        time.sleep(1.5)
+
+        # ensure no exceptions were raised
+        self.assertEqual(1, len(axiom_handler.buffer))
