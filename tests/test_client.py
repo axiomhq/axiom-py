@@ -105,6 +105,22 @@ class TestClient(unittest.TestCase):
         self.client.datasets.get("test")
         assert len(responses.calls) == 3
 
+    @responses.activate
+    def test_backend_failures(self):
+        axiomUrl = os.getenv("AXIOM_URL") or ""
+        url = f"{axiomUrl}/v1/datasets/{self.dataset_name}/ingest"
+        responses.add(responses.POST, url, status=503)
+        responses.add(responses.POST, url, status=503)
+        responses.add(responses.POST, url, status=503)
+        responses.add(responses.POST, url, status=503)
+
+        try:
+            self.client.ingest_events(self.dataset_name, self.events)
+        except:  # noqa: E722
+            # fail the test if we crash during ingestion
+            assert False
+        assert True
+
     def test_step001_ingest(self):
         """Tests the ingest endpoint"""
         data: bytes = ujson.dumps(self.events).encode()
