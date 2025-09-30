@@ -11,7 +11,6 @@ dependencies = [
     "ujson>=5.10.0",
     "dacite>=1.8.1",
     "pyhumps>=3.8.0",
-    "ndjson>=0.3.1",
 ]
 license = { file = "LICENSE" }
 classifiers = [

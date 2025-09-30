@@ -1,6 +1,5 @@
 """Client provides an easy-to use client library to connect to Axiom."""
 
-import ndjson
 import atexit
 import gzip
 import ujson
@@ -254,8 +253,9 @@ class Client:  # pylint: disable=R0903
         See https://axiom.co/docs/restapi/endpoints/ingestIntoDataset
         """
         # encode request payload to NDJSON
-        content = ndjson.dumps(
-            events, default=handle_json_serialization
+        content = "\n".join(
+            ujson.dumps(event, default=handle_json_serialization)
+            for event in events
         ).encode("UTF-8")
         gzipped = gzip.compress(content)
 
