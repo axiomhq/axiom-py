@@ -197,7 +197,7 @@ class TestClient(unittest.TestCase):
         self.assertEqual(len(qr.status.messages), 1)
         self.assertEqual(
             qr.status.messages[0].msg,
-            "line: 1, col: 24: where clause always evaluates to TRUE, which will include all data",
+            "where clause always evaluates to TRUE, which will include all data",
         )
         self.assertEqual(
             qr.status.messages[0].code,
