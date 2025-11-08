@@ -29,8 +29,9 @@ class AxiomProcessor:
         self.last_run = time.monotonic()
         if len(self.buffer) == 0:
             return
-        self.client.ingest_events(self.dataset, self.buffer)
-        self.buffer = []
+        buffer = self.buffer.copy()
+        self.buffer = self.buffer[len(self.buffer):]
+        self.client.ingest_events(self.dataset, buffer)
 
     def __call__(self, logger: object, method_name: str, event_dict: object):
         self.buffer.append(event_dict.copy())
