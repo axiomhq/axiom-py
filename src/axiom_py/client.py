@@ -273,8 +273,10 @@ class Client:  # pylint: disable=R0903
             parsed = urlparse(url)
             return f"{parsed.scheme}://{parsed.netloc}"
 
-        # Default: use the default edge URL
-        return AXIOM_EDGE_URL
+        # Default: use api.axiom.co for backwards compatibility
+        # Edge URLs require different path format, so we only use them
+        # when explicitly configured via `region`
+        return AXIOM_URL
 
     def _build_ingest_path(self, dataset: str) -> str:
         """
