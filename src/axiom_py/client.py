@@ -185,10 +185,7 @@ class Client:  # pylint: disable=R0903
                 "eu-central-1.aws.edge.axiom.co"). When set, data is sent to
                 `https://{region}/v1/ingest/{dataset}`.
                 Falls back to AXIOM_EDGE_REGION env var.
-                Cannot be used together with `url`.
-
-        Raises:
-            EdgeConfigError: If both `url` and `region` are specified.
+                If both `url` and `region` are set, `url` takes precedence.
         """
         # fallback to env variables if token, org_id or url are not provided
         if token is None:
@@ -200,12 +197,10 @@ class Client:  # pylint: disable=R0903
         if region is None:
             region = os.getenv("AXIOM_EDGE_REGION")
 
-        # Validate that url and region are not both set
+        # If both url and region are set, url takes precedence
+        # (but both should not be set - this is for backwards compatibility)
         if url is not None and region is not None:
-            raise EdgeConfigError(
-                "Cannot specify both 'url' and 'region'. "
-                "Use 'url' for custom endpoints or 'region' for edge deployments."
-            )
+            region = None
 
         # Store for building ingest/query endpoints
         self._url = url

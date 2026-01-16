@@ -16,7 +16,6 @@ from datetime import datetime, timedelta
 from .helpers import get_random_name
 from axiom_py import (
     AxiomError,
-    EdgeConfigError,
     Client,
     AplOptions,
     AplResultFormat,
@@ -405,19 +404,23 @@ class TestEdgeConfiguration(unittest.TestCase):
             path = client._build_ingest_path("my-dataset")
             self.assertEqual(path, "/v1/datasets/my-dataset/ingest")
 
-    def test_both_url_and_region_raises_error(self):
-        """Test that setting both url and region raises EdgeConfigError."""
+    def test_both_url_and_region_url_takes_precedence(self):
+        """Test that when both url and region are set, url takes precedence."""
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
             os.environ.pop("AXIOM_EDGE_REGION", None)
-            with self.assertRaises(EdgeConfigError) as ctx:
-                Client(
-                    token="test-token",
-                    org_id="test-org",
-                    url="https://api.axiom.co",
-                    region="eu-central-1.aws.edge.axiom.co",
-                )
-            self.assertIn("Cannot specify both", str(ctx.exception))
+            client = Client(
+                token="test-token",
+                org_id="test-org",
+                url="https://api.eu.axiom.co",
+                region="eu-central-1.aws.edge.axiom.co",
+            )
+            # url takes precedence, so region should be None
+            self.assertIsNone(client._region)
+            self.assertEqual(client._url, "https://api.eu.axiom.co")
+            # Should use legacy path format since url is used
+            path = client._build_ingest_path("my-dataset")
+            self.assertEqual(path, "/v1/datasets/my-dataset/ingest")
 
     def test_production_aws_edge(self):
         """Test production AWS edge endpoint."""
