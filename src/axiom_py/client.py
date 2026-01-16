@@ -29,13 +29,6 @@ from .tokens import TokensClient
 
 
 AXIOM_URL = "https://api.axiom.co"
-AXIOM_EDGE_REGION = "https://us-east-1.aws.edge.axiom.co"
-
-
-class EdgeConfigError(Exception):
-    """Raised when both url and region are specified for edge configuration."""
-
-    pass
 
 
 @dataclass
