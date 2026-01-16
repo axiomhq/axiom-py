@@ -4,6 +4,7 @@ Axiom Python Client
 
 from .client import (
     AxiomError,
+    EdgeConfigError,
     IngestFailure,
     IngestStatus,
     IngestOptions,
@@ -13,6 +14,8 @@ from .client import (
     WrongQueryKindException,
     AplOptions,
     Client,
+    AXIOM_URL,
+    AXIOM_EDGE_URL,
 )
 from .datasets import (
     Dataset,
@@ -28,6 +31,7 @@ from .annotations import (
 
 _all_ = [
     AxiomError,
+    EdgeConfigError,
     IngestFailure,
     IngestStatus,
     IngestOptions,
@@ -37,6 +41,8 @@ _all_ = [
     WrongQueryKindException,
     AplOptions,
     Client,
+    AXIOM_URL,
+    AXIOM_EDGE_URL,
     Dataset,
     TrimRequest,
     DatasetsClient,

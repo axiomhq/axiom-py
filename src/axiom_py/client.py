@@ -4,6 +4,7 @@ import atexit
 import gzip
 import ujson
 import os
+from urllib.parse import urlparse
 
 from enum import Enum
 from humps import decamelize
@@ -28,6 +29,13 @@ from .tokens import TokensClient
 
 
 AXIOM_URL = "https://api.axiom.co"
+AXIOM_EDGE_URL = "https://us-east-1.aws.edge.axiom.co"
+
+
+class EdgeConfigError(Exception):
+    """Raised when both url and region are specified for edge configuration."""
+
+    pass
 
 
 @dataclass
@@ -158,41 +166,91 @@ class Client:  # pylint: disable=R0903
         self,
         token: Optional[str] = None,
         org_id: Optional[str] = None,
-        url_base: Optional[str] = None,
+        url: Optional[str] = None,
+        region: Optional[str] = None,
     ):
+        """
+        Initialize the Axiom client.
+
+        Args:
+            token: Axiom API token. Falls back to AXIOM_TOKEN env var.
+            org_id: Organization ID (required for personal tokens).
+                Falls back to AXIOM_ORG_ID env var.
+            url: Base URL for Axiom API. For ingest/query operations:
+                - If URL has a custom path, it's used as-is
+                - If URL has no path (or only "/"), the legacy path format
+                  `/v1/datasets/{dataset}/ingest` is appended
+                Falls back to AXIOM_URL env var.
+            region: Regional edge domain for ingestion (e.g.,
+                "eu-central-1.aws.edge.axiom.co"). When set, data is sent to
+                `https://{region}/v1/ingest/{dataset}`.
+                Falls back to AXIOM_REGION env var.
+                Cannot be used together with `url`.
+
+        Raises:
+            EdgeConfigError: If both `url` and `region` are specified.
+        """
         # fallback to env variables if token, org_id or url are not provided
         if token is None:
             token = os.getenv("AXIOM_TOKEN")
         if org_id is None:
             org_id = os.getenv("AXIOM_ORG_ID")
-        if url_base is None:
-            url_base = AXIOM_URL
+        if url is None:
+            url = os.getenv("AXIOM_URL")
+        if region is None:
+            region = os.getenv("AXIOM_REGION")
+
+        # Validate that url and region are not both set
+        if url is not None and region is not None:
+            raise EdgeConfigError(
+                "Cannot specify both 'url' and 'region'. "
+                "Use 'url' for custom endpoints or 'region' for edge deployments."
+            )
+
+        # Store for building ingest/query endpoints
+        self._url = url
+        self._region = region
+
+        # Determine API base URL (for non-ingest/query operations)
+        # This always uses AXIOM_URL (api.axiom.co) unless a custom url is set
+        api_base = AXIOM_URL
+        if url is not None:
+            # For custom URLs, use the base (without path) for API operations
+            parsed = urlparse(url.rstrip("/"))
+            api_base = f"{parsed.scheme}://{parsed.netloc}"
 
         # set exponential retries
         retries = Retry(
             total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504]
         )
 
-        self.session = BaseUrlSession(url_base.rstrip("/"))
+        # API session for datasets, annotations, users, tokens
+        self.session = BaseUrlSession(api_base.rstrip("/"))
         self.session.mount("http://", HTTPAdapter(max_retries=retries))
         self.session.mount("https://", HTTPAdapter(max_retries=retries))
-        # hook on responses, raise error when response is not successfull
         self.session.hooks = {
             "response": lambda r, *args, **kwargs: raise_response_error(r)
         }
-        self.session.headers.update(
-            {
-                "Authorization": "Bearer %s" % token,
-                # set a default Content-Type header, can be overriden by requests.
-                "Content-Type": "application/json",
-                "User-Agent": f"axiom-py/{__version__}",
-            }
-        )
 
-        # if there is an organization id passed,
-        # set it in the header
+        headers = {
+            "Authorization": "Bearer %s" % token,
+            "Content-Type": "application/json",
+            "User-Agent": f"axiom-py/{__version__}",
+        }
         if org_id:
-            self.session.headers.update({"X-Axiom-Org-Id": org_id})
+            headers["X-Axiom-Org-Id"] = org_id
+
+        self.session.headers.update(headers)
+
+        # Edge session for ingest/query operations
+        edge_base = self._get_edge_base_url()
+        self.edge_session = BaseUrlSession(edge_base.rstrip("/"))
+        self.edge_session.mount("http://", HTTPAdapter(max_retries=retries))
+        self.edge_session.mount("https://", HTTPAdapter(max_retries=retries))
+        self.edge_session.hooks = {
+            "response": lambda r, *args, **kwargs: raise_response_error(r)
+        }
+        self.edge_session.headers.update(headers)
 
         self.datasets = DatasetsClient(self.session)
         self.users = UsersClient(self.session, is_personal_token(token))
@@ -202,6 +260,52 @@ class Client:  # pylint: disable=R0903
         # wrap shutdown hook in a lambda passing in self as a ref
         atexit.register(self.shutdown_hook)
 
+    def _get_edge_base_url(self) -> str:
+        """Get the base URL for edge operations (ingest/query)."""
+        if self._region is not None:
+            # Region is set: use https://{region}
+            region = self._region.rstrip("/")
+            return f"https://{region}"
+
+        if self._url is not None:
+            # URL is set: extract base URL
+            url = self._url.rstrip("/")
+            parsed = urlparse(url)
+            return f"{parsed.scheme}://{parsed.netloc}"
+
+        # Default: use the default edge URL
+        return AXIOM_EDGE_URL
+
+    def _build_ingest_path(self, dataset: str) -> str:
+        """
+        Build the ingest path based on configuration.
+
+        Priority: url (with path detection) > region > default
+        """
+        if self._url is not None:
+            url = self._url.rstrip("/")
+            parsed = urlparse(url)
+            path = parsed.path
+
+            # If path is empty or just "/", use legacy format for backwards compat
+            if path == "" or path == "/":
+                return f"/v1/datasets/{dataset}/ingest"
+
+            # URL has a custom path, return just the path portion
+            return path
+
+        if self._region is not None:
+            # Region uses the new edge ingest path format
+            return f"/v1/ingest/{dataset}"
+
+        # Default: use legacy path format for backwards compatibility
+        return f"/v1/datasets/{dataset}/ingest"
+
+    def _build_query_path(self) -> str:
+        """Build the query path for APL queries."""
+        # Query path is always the same regardless of edge vs legacy
+        return "/v1/datasets/_apl"
+
     def before_shutdown(self, func: Callable):
         self.before_shutdown_funcs.append(func)
 
@@ -209,6 +313,7 @@ class Client:  # pylint: disable=R0903
         for func in self.before_shutdown_funcs:
             func()
         self.session.close()
+        self.edge_session.close()
         self.is_closed = True
 
     def ingest(
@@ -222,9 +327,12 @@ class Client:  # pylint: disable=R0903
         """
         Ingest the payload into the named dataset and returns the status.
 
+        Uses the edge session for ingestion, which respects the configured
+        region or URL settings.
+
         See https://axiom.co/docs/restapi/endpoints/ingestIntoDataset
         """
-        path = "/v1/datasets/%s/ingest" % dataset
+        path = self._build_ingest_path(dataset)
 
         # set headers
         headers = {
@@ -234,8 +342,8 @@ class Client:  # pylint: disable=R0903
         # prepare query params
         params = self._prepare_ingest_options(opts)
 
-        # override the default header and set the value from the passed parameter
-        res = self.session.post(
+        # Use edge session for ingest operations
+        res = self.edge_session.post(
             path, data=payload, headers=headers, params=params
         )
         status_snake = decamelize(res.json())
@@ -280,7 +388,8 @@ class Client:  # pylint: disable=R0903
         path = "/v1/datasets/%s/query" % id
         payload = ujson.dumps(asdict(query), default=handle_json_serialization)
         params = self._prepare_query_options(opts)
-        res = self.session.post(path, data=payload, params=params)
+        # Use edge session for query operations
+        res = self.edge_session.post(path, data=payload, params=params)
         result = from_dict(QueryLegacyResult, res.json())
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         result.savedQueryID = query_id
@@ -302,15 +411,19 @@ class Client:  # pylint: disable=R0903
         """
         Executes the given apl query on the dataset identified by its id.
 
+        Uses the edge session for queries, which respects the configured
+        region or URL settings.
+
         See https://axiom.co/docs/restapi/endpoints/queryApl
         """
-        path = "/v1/datasets/_apl"
+        path = self._build_query_path()
         payload = ujson.dumps(
             self._prepare_apl_payload(apl, opts),
             default=handle_json_serialization,
         )
         params = self._prepare_apl_options(opts)
-        res = self.session.post(path, data=payload, params=params)
+        # Use edge session for query operations
+        res = self.edge_session.post(path, data=payload, params=params)
         result = from_dict(QueryResult, res.json())
         query_id = res.headers.get("X-Axiom-History-Query-Id")
         result.savedQueryID = query_id
