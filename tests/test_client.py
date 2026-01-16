@@ -333,7 +333,7 @@ class TestEdgeConfiguration(unittest.TestCase):
     """Tests for edge-based ingestion configuration."""
 
     def _clear_env(self):
-        """Helper to clear AXIOM_URL and AXIOM_EDGE_URL from environment."""
+        """Helper to clear AXIOM_URL and AXIOM_EDGE_REGION from environment."""
         return patch.dict(
             os.environ,
             {},
@@ -344,7 +344,7 @@ class TestEdgeConfiguration(unittest.TestCase):
         """Test that region config builds correct edge ingest path."""
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
-            os.environ.pop("AXIOM_EDGE_URL", None)
+            os.environ.pop("AXIOM_EDGE_REGION", None)
             client = Client(
                 token="test-token",
                 org_id="test-org",
@@ -361,7 +361,7 @@ class TestEdgeConfiguration(unittest.TestCase):
         """Test that URL without path uses legacy ingest format."""
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
-            os.environ.pop("AXIOM_EDGE_URL", None)
+            os.environ.pop("AXIOM_EDGE_REGION", None)
             client = Client(
                 token="test-token",
                 org_id="test-org",
@@ -374,7 +374,7 @@ class TestEdgeConfiguration(unittest.TestCase):
         """Test that URL with only trailing slash uses legacy format."""
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
-            os.environ.pop("AXIOM_EDGE_URL", None)
+            os.environ.pop("AXIOM_EDGE_REGION", None)
             client = Client(
                 token="test-token",
                 org_id="test-org",
@@ -387,7 +387,7 @@ class TestEdgeConfiguration(unittest.TestCase):
         """Test that URL with custom path is used as-is."""
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
-            os.environ.pop("AXIOM_EDGE_URL", None)
+            os.environ.pop("AXIOM_EDGE_REGION", None)
             client = Client(
                 token="test-token",
                 org_id="test-org",
@@ -400,7 +400,7 @@ class TestEdgeConfiguration(unittest.TestCase):
         """Test that default config uses legacy ingest format."""
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
-            os.environ.pop("AXIOM_EDGE_URL", None)
+            os.environ.pop("AXIOM_EDGE_REGION", None)
             client = Client(token="test-token", org_id="test-org")
             path = client._build_ingest_path("my-dataset")
             self.assertEqual(path, "/v1/datasets/my-dataset/ingest")
@@ -409,7 +409,7 @@ class TestEdgeConfiguration(unittest.TestCase):
         """Test that setting both url and region raises EdgeConfigError."""
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
-            os.environ.pop("AXIOM_EDGE_URL", None)
+            os.environ.pop("AXIOM_EDGE_REGION", None)
             with self.assertRaises(EdgeConfigError) as ctx:
                 Client(
                     token="test-token",
@@ -423,7 +423,7 @@ class TestEdgeConfiguration(unittest.TestCase):
         """Test production AWS edge endpoint."""
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
-            os.environ.pop("AXIOM_EDGE_URL", None)
+            os.environ.pop("AXIOM_EDGE_REGION", None)
             client = Client(
                 token="test-token",
                 org_id="test-org",
@@ -440,7 +440,7 @@ class TestEdgeConfiguration(unittest.TestCase):
         """Test staging environment edge endpoint."""
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
-            os.environ.pop("AXIOM_EDGE_URL", None)
+            os.environ.pop("AXIOM_EDGE_REGION", None)
             client = Client(
                 token="test-token",
                 org_id="test-org",
@@ -454,12 +454,12 @@ class TestEdgeConfiguration(unittest.TestCase):
             )
 
     def test_region_from_env_var(self):
-        """Test that AXIOM_EDGE_URL env var is respected."""
+        """Test that AXIOM_EDGE_REGION env var is respected."""
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
-            os.environ["AXIOM_EDGE_URL"] = "eu-central-1.aws.edge.axiom.co"
+            os.environ["AXIOM_EDGE_REGION"] = "eu-central-1.aws.edge.axiom.co"
             client = Client(token="test-token", org_id="test-org")
             self.assertEqual(client._region, "eu-central-1.aws.edge.axiom.co")
             path = client._build_ingest_path("dataset")
             self.assertEqual(path, "/v1/ingest/dataset")
-            os.environ.pop("AXIOM_EDGE_URL", None)
+            os.environ.pop("AXIOM_EDGE_REGION", None)
