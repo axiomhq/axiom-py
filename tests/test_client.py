@@ -126,9 +126,9 @@ class TestClient(unittest.TestCase):
         )
         self.logger.debug(res)
 
-        assert (
-            res.ingested == 2
-        ), f"expected ingested count to equal 2, found {res.ingested}"
+        assert res.ingested == 2, (
+            f"expected ingested count to equal 2, found {res.ingested}"
+        )
         self.logger.info("ingested 2 events successfully.")
 
     def test_step002_ingest_events(self):
@@ -145,9 +145,9 @@ class TestClient(unittest.TestCase):
         )
         self.logger.debug(res)
 
-        assert (
-            res.ingested == 2
-        ), f"expected ingested count to equal 2, found {res.ingested}"
+        assert res.ingested == 2, (
+            f"expected ingested count to equal 2, found {res.ingested}"
+        )
 
     def test_step004_query(self):
         """Test querying a dataset"""
@@ -332,114 +332,134 @@ class TestClient(unittest.TestCase):
 class TestEdgeConfiguration(unittest.TestCase):
     """Tests for edge-based ingestion configuration."""
 
+    def _clear_env(self):
+        """Helper to clear AXIOM_URL and AXIOM_REGION from environment."""
+        return patch.dict(
+            os.environ,
+            {},
+            clear=False,
+        )
+
     def test_region_builds_correct_ingest_path(self):
         """Test that region config builds correct edge ingest path."""
-        client = Client(
-            token="test-token",
-            org_id="test-org",
-            region="eu-central-1.aws.edge.axiom.co",
-        )
-        path = client._build_ingest_path("my-dataset")
-        self.assertEqual(path, "/v1/ingest/my-dataset")
-        # Verify edge base URL
-        self.assertEqual(
-            client._get_edge_base_url(),
-            "https://eu-central-1.aws.edge.axiom.co",
-        )
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AXIOM_URL", None)
+            os.environ.pop("AXIOM_REGION", None)
+            client = Client(
+                token="test-token",
+                org_id="test-org",
+                region="eu-central-1.aws.edge.axiom.co",
+            )
+            path = client._build_ingest_path("my-dataset")
+            self.assertEqual(path, "/v1/ingest/my-dataset")
+            self.assertEqual(
+                client._get_edge_base_url(),
+                "https://eu-central-1.aws.edge.axiom.co",
+            )
 
     def test_url_without_path_uses_legacy_format(self):
         """Test that URL without path uses legacy ingest format."""
-        client = Client(
-            token="test-token",
-            org_id="test-org",
-            url="https://api.eu.axiom.co",
-        )
-        path = client._build_ingest_path("my-dataset")
-        self.assertEqual(path, "/v1/datasets/my-dataset/ingest")
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AXIOM_URL", None)
+            os.environ.pop("AXIOM_REGION", None)
+            client = Client(
+                token="test-token",
+                org_id="test-org",
+                url="https://api.eu.axiom.co",
+            )
+            path = client._build_ingest_path("my-dataset")
+            self.assertEqual(path, "/v1/datasets/my-dataset/ingest")
 
     def test_url_with_trailing_slash_uses_legacy_format(self):
         """Test that URL with only trailing slash uses legacy format."""
-        client = Client(
-            token="test-token",
-            org_id="test-org",
-            url="https://api.eu.axiom.co/",
-        )
-        path = client._build_ingest_path("my-dataset")
-        self.assertEqual(path, "/v1/datasets/my-dataset/ingest")
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AXIOM_URL", None)
+            os.environ.pop("AXIOM_REGION", None)
+            client = Client(
+                token="test-token",
+                org_id="test-org",
+                url="https://api.eu.axiom.co/",
+            )
+            path = client._build_ingest_path("my-dataset")
+            self.assertEqual(path, "/v1/datasets/my-dataset/ingest")
 
     def test_url_with_custom_path_used_as_is(self):
         """Test that URL with custom path is used as-is."""
-        client = Client(
-            token="test-token",
-            org_id="test-org",
-            url="http://localhost:3400/ingest",
-        )
-        path = client._build_ingest_path("ignored")
-        self.assertEqual(path, "/ingest")
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AXIOM_URL", None)
+            os.environ.pop("AXIOM_REGION", None)
+            client = Client(
+                token="test-token",
+                org_id="test-org",
+                url="http://localhost:3400/ingest",
+            )
+            path = client._build_ingest_path("ignored")
+            self.assertEqual(path, "/ingest")
 
     def test_default_uses_legacy_format(self):
         """Test that default config uses legacy ingest format."""
-        with patch.dict(
-            os.environ,
-            {"AXIOM_TOKEN": "test", "AXIOM_ORG_ID": "org"},
-            clear=False,
-        ):
-            # Clear any existing URL/region env vars
-            env = os.environ.copy()
-            env.pop("AXIOM_URL", None)
-            env.pop("AXIOM_REGION", None)
-            with patch.dict(os.environ, env, clear=True):
-                client = Client(token="test-token", org_id="test-org")
-                path = client._build_ingest_path("my-dataset")
-                self.assertEqual(path, "/v1/datasets/my-dataset/ingest")
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AXIOM_URL", None)
+            os.environ.pop("AXIOM_REGION", None)
+            client = Client(token="test-token", org_id="test-org")
+            path = client._build_ingest_path("my-dataset")
+            self.assertEqual(path, "/v1/datasets/my-dataset/ingest")
 
     def test_both_url_and_region_raises_error(self):
         """Test that setting both url and region raises EdgeConfigError."""
-        with self.assertRaises(EdgeConfigError) as ctx:
-            Client(
-                token="test-token",
-                org_id="test-org",
-                url="https://api.axiom.co",
-                region="eu-central-1.aws.edge.axiom.co",
-            )
-        self.assertIn("Cannot specify both", str(ctx.exception))
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AXIOM_URL", None)
+            os.environ.pop("AXIOM_REGION", None)
+            with self.assertRaises(EdgeConfigError) as ctx:
+                Client(
+                    token="test-token",
+                    org_id="test-org",
+                    url="https://api.axiom.co",
+                    region="eu-central-1.aws.edge.axiom.co",
+                )
+            self.assertIn("Cannot specify both", str(ctx.exception))
 
     def test_production_aws_edge(self):
         """Test production AWS edge endpoint."""
-        client = Client(
-            token="test-token",
-            org_id="test-org",
-            region="us-east-1.aws.edge.axiom.co",
-        )
-        path = client._build_ingest_path("logs")
-        self.assertEqual(path, "/v1/ingest/logs")
-        self.assertEqual(
-            client._get_edge_base_url(),
-            "https://us-east-1.aws.edge.axiom.co",
-        )
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AXIOM_URL", None)
+            os.environ.pop("AXIOM_REGION", None)
+            client = Client(
+                token="test-token",
+                org_id="test-org",
+                region="us-east-1.aws.edge.axiom.co",
+            )
+            path = client._build_ingest_path("logs")
+            self.assertEqual(path, "/v1/ingest/logs")
+            self.assertEqual(
+                client._get_edge_base_url(),
+                "https://us-east-1.aws.edge.axiom.co",
+            )
 
     def test_staging_environment_edge(self):
         """Test staging environment edge endpoint."""
-        client = Client(
-            token="test-token",
-            org_id="test-org",
-            region="us-east-1.edge.staging.axiomdomain.co",
-        )
-        path = client._build_ingest_path("test-dataset")
-        self.assertEqual(path, "/v1/ingest/test-dataset")
-        self.assertEqual(
-            client._get_edge_base_url(),
-            "https://us-east-1.edge.staging.axiomdomain.co",
-        )
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AXIOM_URL", None)
+            os.environ.pop("AXIOM_REGION", None)
+            client = Client(
+                token="test-token",
+                org_id="test-org",
+                region="us-east-1.edge.staging.axiomdomain.co",
+            )
+            path = client._build_ingest_path("test-dataset")
+            self.assertEqual(path, "/v1/ingest/test-dataset")
+            self.assertEqual(
+                client._get_edge_base_url(),
+                "https://us-east-1.edge.staging.axiomdomain.co",
+            )
 
     def test_region_from_env_var(self):
         """Test that AXIOM_REGION env var is respected."""
-        with patch.dict(
-            os.environ,
-            {"AXIOM_REGION": "eu-central-1.aws.edge.axiom.co"},
-            clear=False,
-        ):
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AXIOM_URL", None)
+            os.environ["AXIOM_REGION"] = "eu-central-1.aws.edge.axiom.co"
             client = Client(token="test-token", org_id="test-org")
             self.assertEqual(client._region, "eu-central-1.aws.edge.axiom.co")
             path = client._build_ingest_path("dataset")
             self.assertEqual(path, "/v1/ingest/dataset")
+            os.environ.pop("AXIOM_REGION", None)
