@@ -184,7 +184,7 @@ class Client:  # pylint: disable=R0903
             region: Regional edge domain for ingestion (e.g.,
                 "eu-central-1.aws.edge.axiom.co"). When set, data is sent to
                 `https://{region}/v1/ingest/{dataset}`.
-                Falls back to AXIOM_REGION env var.
+                Falls back to AXIOM_EDGE_URL env var.
                 Cannot be used together with `url`.
 
         Raises:
@@ -198,7 +198,7 @@ class Client:  # pylint: disable=R0903
         if url is None:
             url = os.getenv("AXIOM_URL")
         if region is None:
-            region = os.getenv("AXIOM_REGION")
+            region = os.getenv("AXIOM_EDGE_URL")
 
         # Validate that url and region are not both set
         if url is not None and region is not None:
