@@ -46,18 +46,16 @@ class TestEdgeIntegration(unittest.TestCase):
             )
 
         edge_url, edge_region, edge_token, dataset_region = get_edge_config()
-
-        # Use edge token if provided, otherwise fall back to main token
-        token = edge_token or os.getenv("AXIOM_TOKEN")
         org_id = os.getenv("AXIOM_ORG_ID")
 
         # Create edge client for ingest/query
-        # edge_url takes precedence over edge_region (handled by Client)
+        # Client handles edge_token, edge_url, region from env vars or params
         cls.edge_client = Client(
-            token=token,
+            token=os.getenv("AXIOM_TOKEN"),
             org_id=org_id,
             edge_url=edge_url,
             region=edge_region,
+            edge_token=edge_token,
         )
 
         # Create main API client for dataset management

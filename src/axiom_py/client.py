@@ -162,6 +162,7 @@ class Client:  # pylint: disable=R0903
         url: Optional[str] = None,
         region: Optional[str] = None,
         edge_url: Optional[str] = None,
+        edge_token: Optional[str] = None,
     ):
         """
         Initialize the Axiom client.
@@ -183,6 +184,9 @@ class Client:  # pylint: disable=R0903
                 "https://eu-central-1.aws.edge.axiom.co"). Uses edge path
                 format `/v1/ingest/{dataset}`. Falls back to AXIOM_EDGE_URL
                 env var. Takes precedence over `region`.
+            edge_token: API token for edge operations (ingest/query). Edge
+                endpoints require an API token, not a personal token. Falls
+                back to AXIOM_EDGE_TOKEN env var. If not set, uses `token`.
         """
         # fallback to env variables if token, org_id or url are not provided
         if token is None:
@@ -195,6 +199,8 @@ class Client:  # pylint: disable=R0903
             region = os.getenv("AXIOM_EDGE_REGION")
         if edge_url is None:
             edge_url = os.getenv("AXIOM_EDGE_URL")
+        if edge_token is None:
+            edge_token = os.getenv("AXIOM_EDGE_TOKEN")
 
         # Priority: edge_url > region > url (for edge operations)
         # If edge_url is set, it takes precedence over region
@@ -205,6 +211,7 @@ class Client:  # pylint: disable=R0903
         self._url = url
         self._region = region
         self._edge_url = edge_url
+        self._edge_token = edge_token
 
         # Determine API base URL (for non-ingest/query operations)
         # This always uses AXIOM_URL (api.axiom.co) unless a custom url is set
@@ -238,6 +245,16 @@ class Client:  # pylint: disable=R0903
         self.session.headers.update(headers)
 
         # Edge session for ingest/query operations
+        # Use edge_token if provided, otherwise fall back to main token
+        edge_token_to_use = edge_token if edge_token else token
+        edge_headers = {
+            "Authorization": "Bearer %s" % edge_token_to_use,
+            "Content-Type": "application/json",
+            "User-Agent": f"axiom-py/{__version__}",
+        }
+        if org_id:
+            edge_headers["X-Axiom-Org-Id"] = org_id
+
         edge_base = self._get_edge_base_url()
         self.edge_session = BaseUrlSession(edge_base.rstrip("/"))
         self.edge_session.mount("http://", HTTPAdapter(max_retries=retries))
@@ -245,7 +262,7 @@ class Client:  # pylint: disable=R0903
         self.edge_session.hooks = {
             "response": lambda r, *args, **kwargs: raise_response_error(r)
         }
-        self.edge_session.headers.update(headers)
+        self.edge_session.headers.update(edge_headers)
 
         self.datasets = DatasetsClient(self.session)
         self.users = UsersClient(self.session, is_personal_token(token))
