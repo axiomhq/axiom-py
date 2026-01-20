@@ -161,6 +161,7 @@ class Client:  # pylint: disable=R0903
         org_id: Optional[str] = None,
         url: Optional[str] = None,
         region: Optional[str] = None,
+        edge_url: Optional[str] = None,
     ):
         """
         Initialize the Axiom client.
@@ -178,7 +179,10 @@ class Client:  # pylint: disable=R0903
                 "eu-central-1.aws.edge.axiom.co"). When set, data is sent to
                 `https://{region}/v1/ingest/{dataset}`.
                 Falls back to AXIOM_EDGE_REGION env var.
-                If both `url` and `region` are set, `url` takes precedence.
+            edge_url: Explicit edge URL for ingest/query operations (e.g.,
+                "https://eu-central-1.aws.edge.axiom.co"). Uses edge path
+                format `/v1/ingest/{dataset}`. Falls back to AXIOM_EDGE_URL
+                env var. Takes precedence over `region`.
         """
         # fallback to env variables if token, org_id or url are not provided
         if token is None:
@@ -189,15 +193,18 @@ class Client:  # pylint: disable=R0903
             url = os.getenv("AXIOM_URL")
         if region is None:
             region = os.getenv("AXIOM_EDGE_REGION")
+        if edge_url is None:
+            edge_url = os.getenv("AXIOM_EDGE_URL")
 
-        # If both url and region are set, url takes precedence
-        # (but both should not be set - this is for backwards compatibility)
-        if url is not None and region is not None:
+        # Priority: edge_url > region > url (for edge operations)
+        # If edge_url is set, it takes precedence over region
+        if edge_url is not None:
             region = None
 
         # Store for building ingest/query endpoints
         self._url = url
         self._region = region
+        self._edge_url = edge_url
 
         # Determine API base URL (for non-ingest/query operations)
         # This always uses AXIOM_URL (api.axiom.co) unless a custom url is set
@@ -250,6 +257,12 @@ class Client:  # pylint: disable=R0903
 
     def _get_edge_base_url(self) -> str:
         """Get the base URL for edge operations (ingest/query)."""
+        if self._edge_url is not None:
+            # Explicit edge URL: extract base URL
+            url = self._edge_url.rstrip("/")
+            parsed = urlparse(url)
+            return f"{parsed.scheme}://{parsed.netloc}"
+
         if self._region is not None:
             # Region is set: use https://{region}
             region = self._region.rstrip("/")
@@ -263,15 +276,31 @@ class Client:  # pylint: disable=R0903
 
         # Default: use api.axiom.co for backwards compatibility
         # Edge URLs require different path format, so we only use them
-        # when explicitly configured via `region`
+        # when explicitly configured via `region` or `edge_url`
         return AXIOM_URL
 
     def _build_ingest_path(self, dataset: str) -> str:
         """
         Build the ingest path based on configuration.
 
-        Priority: url (with path detection) > region > default
+        Priority: edge_url > region > url > default
         """
+        if self._edge_url is not None:
+            url = self._edge_url.rstrip("/")
+            parsed = urlparse(url)
+            path = parsed.path
+
+            # If path is empty or just "/", use edge format
+            if path == "" or path == "/":
+                return f"/v1/ingest/{dataset}"
+
+            # edge_url has a custom path, return just the path portion
+            return path
+
+        if self._region is not None:
+            # Region uses the new edge ingest path format
+            return f"/v1/ingest/{dataset}"
+
         if self._url is not None:
             url = self._url.rstrip("/")
             parsed = urlparse(url)
@@ -283,10 +312,6 @@ class Client:  # pylint: disable=R0903
 
             # URL has a custom path, return just the path portion
             return path
-
-        if self._region is not None:
-            # Region uses the new edge ingest path format
-            return f"/v1/ingest/{dataset}"
 
         # Default: use legacy path format for backwards compatibility
         return f"/v1/datasets/{dataset}/ingest"

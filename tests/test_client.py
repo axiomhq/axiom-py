@@ -344,6 +344,7 @@ class TestEdgeConfiguration(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
             os.environ.pop("AXIOM_EDGE_REGION", None)
+            os.environ.pop("AXIOM_EDGE_URL", None)
             client = Client(
                 token="test-token",
                 org_id="test-org",
@@ -361,6 +362,7 @@ class TestEdgeConfiguration(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
             os.environ.pop("AXIOM_EDGE_REGION", None)
+            os.environ.pop("AXIOM_EDGE_URL", None)
             client = Client(
                 token="test-token",
                 org_id="test-org",
@@ -374,6 +376,7 @@ class TestEdgeConfiguration(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
             os.environ.pop("AXIOM_EDGE_REGION", None)
+            os.environ.pop("AXIOM_EDGE_URL", None)
             client = Client(
                 token="test-token",
                 org_id="test-org",
@@ -387,6 +390,7 @@ class TestEdgeConfiguration(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
             os.environ.pop("AXIOM_EDGE_REGION", None)
+            os.environ.pop("AXIOM_EDGE_URL", None)
             client = Client(
                 token="test-token",
                 org_id="test-org",
@@ -400,33 +404,36 @@ class TestEdgeConfiguration(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
             os.environ.pop("AXIOM_EDGE_REGION", None)
+            os.environ.pop("AXIOM_EDGE_URL", None)
             client = Client(token="test-token", org_id="test-org")
             path = client._build_ingest_path("my-dataset")
             self.assertEqual(path, "/v1/datasets/my-dataset/ingest")
 
-    def test_both_url_and_region_url_takes_precedence(self):
-        """Test that when both url and region are set, url takes precedence."""
+    def test_both_url_and_region_region_used_for_edge(self):
+        """Test that when url and region are set, region is used for edge."""
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
             os.environ.pop("AXIOM_EDGE_REGION", None)
+            os.environ.pop("AXIOM_EDGE_URL", None)
             client = Client(
                 token="test-token",
                 org_id="test-org",
                 url="https://api.eu.axiom.co",
                 region="eu-central-1.aws.edge.axiom.co",
             )
-            # url takes precedence, so region should be None
-            self.assertIsNone(client._region)
+            # Both are kept - url for API, region for edge
+            self.assertEqual(client._region, "eu-central-1.aws.edge.axiom.co")
             self.assertEqual(client._url, "https://api.eu.axiom.co")
-            # Should use legacy path format since url is used
+            # Should use edge path format since region is set
             path = client._build_ingest_path("my-dataset")
-            self.assertEqual(path, "/v1/datasets/my-dataset/ingest")
+            self.assertEqual(path, "/v1/ingest/my-dataset")
 
     def test_production_aws_edge(self):
         """Test production AWS edge endpoint."""
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
             os.environ.pop("AXIOM_EDGE_REGION", None)
+            os.environ.pop("AXIOM_EDGE_URL", None)
             client = Client(
                 token="test-token",
                 org_id="test-org",
@@ -444,6 +451,7 @@ class TestEdgeConfiguration(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
             os.environ.pop("AXIOM_EDGE_REGION", None)
+            os.environ.pop("AXIOM_EDGE_URL", None)
             client = Client(
                 token="test-token",
                 org_id="test-org",
@@ -460,9 +468,44 @@ class TestEdgeConfiguration(unittest.TestCase):
         """Test that AXIOM_EDGE_REGION env var is respected."""
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
+            os.environ.pop("AXIOM_EDGE_URL", None)
             os.environ["AXIOM_EDGE_REGION"] = "eu-central-1.aws.edge.axiom.co"
             client = Client(token="test-token", org_id="test-org")
             self.assertEqual(client._region, "eu-central-1.aws.edge.axiom.co")
             path = client._build_ingest_path("dataset")
             self.assertEqual(path, "/v1/ingest/dataset")
             os.environ.pop("AXIOM_EDGE_REGION", None)
+
+    def test_edge_url_from_env_var(self):
+        """Test that AXIOM_EDGE_URL env var is respected."""
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AXIOM_URL", None)
+            os.environ.pop("AXIOM_EDGE_REGION", None)
+            os.environ["AXIOM_EDGE_URL"] = (
+                "https://eu-central-1.aws.edge.axiom.co"
+            )
+            client = Client(token="test-token", org_id="test-org")
+            self.assertEqual(
+                client._edge_url, "https://eu-central-1.aws.edge.axiom.co"
+            )
+            path = client._build_ingest_path("dataset")
+            self.assertEqual(path, "/v1/ingest/dataset")
+            os.environ.pop("AXIOM_EDGE_URL", None)
+
+    def test_edge_url_takes_precedence_over_region(self):
+        """Test that edge_url takes precedence over region."""
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AXIOM_URL", None)
+            os.environ.pop("AXIOM_EDGE_REGION", None)
+            os.environ.pop("AXIOM_EDGE_URL", None)
+            client = Client(
+                token="test-token",
+                org_id="test-org",
+                edge_url="https://custom-edge.axiom.co",
+                region="ignored-region.axiom.co",
+            )
+            # edge_url takes precedence, region should be None
+            self.assertIsNone(client._region)
+            self.assertEqual(client._edge_url, "https://custom-edge.axiom.co")
+            path = client._build_ingest_path("dataset")
+            self.assertEqual(path, "/v1/ingest/dataset")

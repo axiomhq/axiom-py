@@ -52,19 +52,13 @@ class TestEdgeIntegration(unittest.TestCase):
         org_id = os.getenv("AXIOM_ORG_ID")
 
         # Create edge client for ingest/query
-        # If edge_url is set, it takes precedence over edge_region
-        if edge_url:
-            cls.edge_client = Client(
-                token=token,
-                org_id=org_id,
-                url=edge_url,
-            )
-        else:
-            cls.edge_client = Client(
-                token=token,
-                org_id=org_id,
-                region=edge_region,
-            )
+        # edge_url takes precedence over edge_region (handled by Client)
+        cls.edge_client = Client(
+            token=token,
+            org_id=org_id,
+            edge_url=edge_url,
+            region=edge_region,
+        )
 
         # Create main API client for dataset management
         # Dataset operations always go through main API
@@ -209,14 +203,42 @@ class TestEdgeURLConfiguration(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
             os.environ.pop("AXIOM_EDGE_REGION", None)
+            os.environ.pop("AXIOM_EDGE_URL", None)
 
             client = Client(
                 token="test-token",
                 org_id="test-org",
-                url="https://custom-edge.example.com",
+                edge_url="https://custom-edge.example.com",
                 region="ignored-region.axiom.co",
             )
 
-            # url takes precedence, region should be None
+            # edge_url takes precedence, region should be None
             self.assertIsNone(client._region)
-            self.assertEqual(client._url, "https://custom-edge.example.com")
+            self.assertEqual(
+                client._edge_url, "https://custom-edge.example.com"
+            )
+            # Should use edge path format
+            path = client._build_ingest_path("my-dataset")
+            self.assertEqual(path, "/v1/ingest/my-dataset")
+
+    def test_edge_url_uses_edge_path_format(self):
+        """Test that edge_url uses edge path format, not legacy."""
+        from unittest.mock import patch
+
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("AXIOM_URL", None)
+            os.environ.pop("AXIOM_EDGE_REGION", None)
+            os.environ.pop("AXIOM_EDGE_URL", None)
+
+            client = Client(
+                token="test-token",
+                org_id="test-org",
+                edge_url="https://eu-central-1.aws.edge.axiom.co",
+            )
+
+            path = client._build_ingest_path("logs")
+            self.assertEqual(path, "/v1/ingest/logs")
+            self.assertEqual(
+                client._get_edge_base_url(),
+                "https://eu-central-1.aws.edge.axiom.co",
+            )
