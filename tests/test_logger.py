@@ -31,8 +31,11 @@ class TestLogger(unittest.TestCase):
 
         logger.warning("This is a log!")
 
+        # APL query requires dataset name in brackets
+        apl = f"['{dataset_name}']"
+
         # This log shouldn't be ingested yet
-        res = client.apl_query(dataset_name)
+        res = client.apl_query(apl)
         self.assertEqual(0, res.status.rowsExamined)
 
         # Flush events
@@ -42,7 +45,7 @@ class TestLogger(unittest.TestCase):
         time.sleep(0.5)
 
         # Now we should have a log
-        res = client.apl_query(dataset_name)
+        res = client.apl_query(apl)
         self.assertEqual(1, res.status.rowsExamined)
 
         logger.warning(
@@ -53,7 +56,7 @@ class TestLogger(unittest.TestCase):
         time.sleep(1.5)
 
         # Now we should have two logs
-        res = client.apl_query(dataset_name)
+        res = client.apl_query(apl)
         self.assertEqual(2, res.status.rowsExamined)
 
         # Cleanup created dataset

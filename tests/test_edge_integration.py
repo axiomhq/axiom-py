@@ -75,6 +75,13 @@ class TestEdgeIntegration(unittest.TestCase):
         cls.dataset_name = get_random_name()
         cls.dataset_region = dataset_region
 
+        # Log configuration for debugging
+        print(f"Edge URL: {edge_url}")
+        print(f"Edge: {edge}")
+        print(f"Edge Token set: {bool(edge_token)}")
+        print(f"Dataset Region: {dataset_region}")
+        print(f"Dataset Name: {cls.dataset_name}")
+
         # Create the test dataset via main API
         # Set dataset region if configured (required for edge routing)
         cls.api_client.datasets.create(
