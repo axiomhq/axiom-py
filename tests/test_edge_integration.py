@@ -13,19 +13,20 @@ from axiom_py import Client, AplOptions, AplResultFormat, AxiomError
 def get_edge_config():
     """Get edge configuration from environment variables.
 
-    Returns tuple of (edge_url, edge, dataset_region).
-    Returns (None, None, None) if edge testing is not configured.
+    Returns tuple of (edge_url, edge, edge_token, dataset_region).
+    Returns (None, None, None, None) if edge testing is not configured.
     """
     edge_url = os.getenv("AXIOM_EDGE_URL")
     edge = os.getenv("AXIOM_EDGE")
+    edge_token = os.getenv("AXIOM_EDGE_TOKEN")
     dataset_region = os.getenv("AXIOM_EDGE_DATASET_REGION")
 
-    return edge_url, edge, dataset_region
+    return edge_url, edge, edge_token, dataset_region
 
 
 def is_edge_configured():
     """Check if edge testing is configured."""
-    edge_url, edge, _ = get_edge_config()
+    edge_url, edge, _, _ = get_edge_config()
     return edge_url is not None or edge is not None
 
 
@@ -44,23 +45,26 @@ class TestEdgeIntegration(unittest.TestCase):
                 "set AXIOM_EDGE_URL or AXIOM_EDGE to run"
             )
 
-        edge_url, edge, dataset_region = get_edge_config()
-        token = os.getenv("AXIOM_TOKEN")
+        edge_url, edge, edge_token, dataset_region = get_edge_config()
         org_id = os.getenv("AXIOM_ORG_ID")
 
+        # Use dedicated edge token if provided (edge requires API token)
+        # Otherwise fall back to main token
+        token_for_edge = edge_token if edge_token else os.getenv("AXIOM_TOKEN")
+
         # Create edge client for ingest/query
-        # Client handles edge_url and edge from env vars or params
+        # Edge client uses edge configuration and edge token
         cls.edge_client = Client(
-            token=token,
+            token=token_for_edge,
             org_id=org_id,
             edge_url=edge_url,
             edge=edge,
         )
 
         # Create main API client for dataset management
-        # Dataset operations always go through main API
+        # Dataset operations always go through main API with main token
         cls.api_client = Client(
-            token=token,
+            token=os.getenv("AXIOM_TOKEN"),
             org_id=org_id,
             url=os.getenv("AXIOM_URL"),
         )
@@ -69,6 +73,7 @@ class TestEdgeIntegration(unittest.TestCase):
         cls.dataset_region = dataset_region
 
         # Create the test dataset via main API
+        # Set dataset region if configured (required for edge routing)
         cls.api_client.datasets.create(
             cls.dataset_name,
             "edge integration test dataset",
