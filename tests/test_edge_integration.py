@@ -54,9 +54,12 @@ class TestEdgeIntegration(unittest.TestCase):
 
         # Create edge client for ingest/query
         # Edge client uses edge configuration and edge token
+        # Note: edge_url and edge must be passed explicitly as Client does not
+        # auto-read from environment (to avoid affecting non-edge tests)
         cls.edge_client = Client(
             token=token_for_edge,
             org_id=org_id,
+            url=os.getenv("AXIOM_URL"),
             edge_url=edge_url,
             edge=edge,
         )

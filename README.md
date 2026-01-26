@@ -22,18 +22,20 @@ use the main Axiom API endpoint.
 import axiom_py
 
 # Using a regional edge domain
-client = axiom_py.Client(edge="eu-central-1.aws.edge.axiom.co")
+edge_client = axiom_py.Client(
+    token="xaat-your-api-token",
+    edge="eu-central-1.aws.edge.axiom.co"
+)
 
 # Or using an explicit edge URL
-client = axiom_py.Client(edge_url="https://custom-edge.example.com")
+edge_client = axiom_py.Client(
+    token="xaat-your-api-token",
+    edge_url="https://custom-edge.example.com"
+)
 ```
 
-You can also configure via environment variables:
-
-- `AXIOM_EDGE` - Regional edge domain (e.g., `eu-central-1.aws.edge.axiom.co`)
-- `AXIOM_EDGE_URL` - Explicit edge URL (takes precedence over `AXIOM_EDGE`)
-
 **Note:** Edge endpoints require API tokens (`xaat-`), not personal tokens.
+Edge configuration must be passed explicitly when creating the client.
 
 ## Install
 

@@ -186,13 +186,13 @@ class Client:  # pylint: disable=R0903
             edge_url: Explicit edge URL for ingest/query operations (e.g.,
                 "https://eu-central-1.aws.edge.axiom.co"). When set, ingest
                 requests use `/v1/ingest/{dataset}` and query requests use
-                `/v1/query/_apl`. Falls back to AXIOM_EDGE_URL env var.
-                Takes precedence over `edge`.
+                `/v1/query/_apl`. Takes precedence over `edge`.
+                Must be passed explicitly (not read from environment).
             edge: Regional edge domain for ingest/query operations (e.g.,
                 "eu-central-1.aws.edge.axiom.co"). When set, requests are
                 sent to `https://{edge}/v1/ingest/{dataset}` and
-                `https://{edge}/v1/query/_apl`. Falls back to AXIOM_EDGE
-                env var.
+                `https://{edge}/v1/query/_apl`.
+                Must be passed explicitly (not read from environment).
         """
         # fallback to env variables if not provided
         if token is None:
@@ -201,10 +201,11 @@ class Client:  # pylint: disable=R0903
             org_id = os.getenv("AXIOM_ORG_ID")
         if url is None:
             url = os.getenv("AXIOM_URL")
-        if edge_url is None:
-            edge_url = os.getenv("AXIOM_EDGE_URL")
-        if edge is None:
-            edge = os.getenv("AXIOM_EDGE")
+        # Note: edge_url and edge are NOT auto-read from environment.
+        # Edge configuration must be explicit to avoid accidentally routing
+        # all requests through edge when AXIOM_EDGE_URL/AXIOM_EDGE are set
+        # for edge-specific tests. Create a separate Client with edge params
+        # for edge operations.
 
         # Priority: edge_url > edge (for edge operations)
         # If edge_url is set, it takes precedence over edge

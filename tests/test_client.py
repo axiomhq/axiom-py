@@ -459,36 +459,21 @@ class TestEdgeConfiguration(unittest.TestCase):
                 "/v1/ingest/test-dataset",
             )
 
-    def test_edge_from_env_var(self):
-        """Test that AXIOM_EDGE env var is respected."""
+    def test_edge_not_read_from_env(self):
+        """Test that edge config is NOT auto-read from environment."""
         with patch.dict(os.environ, {}, clear=False):
             self._clear_env()
+            # Set env vars that should be ignored
             os.environ["AXIOM_EDGE"] = "eu-central-1.aws.edge.axiom.co"
-            client = Client(token="xaat-test-token", org_id="test-org")
-            self.assertEqual(client._edge, "eu-central-1.aws.edge.axiom.co")
-            url = client._get_edge_ingest_url("dataset")
-            self.assertEqual(
-                url,
-                "https://eu-central-1.aws.edge.axiom.co/v1/ingest/dataset",
-            )
-            os.environ.pop("AXIOM_EDGE", None)
+            os.environ["AXIOM_EDGE_URL"] = "https://edge.example.com"
 
-    def test_edge_url_from_env_var(self):
-        """Test that AXIOM_EDGE_URL env var is respected."""
-        with patch.dict(os.environ, {}, clear=False):
-            self._clear_env()
-            os.environ["AXIOM_EDGE_URL"] = (
-                "https://eu-central-1.aws.edge.axiom.co"
-            )
+            # Client should NOT pick up edge config from env
             client = Client(token="xaat-test-token", org_id="test-org")
-            self.assertEqual(
-                client._edge_url, "https://eu-central-1.aws.edge.axiom.co"
-            )
-            url = client._get_edge_ingest_url("dataset")
-            self.assertEqual(
-                url,
-                "https://eu-central-1.aws.edge.axiom.co/v1/ingest/dataset",
-            )
+            self.assertIsNone(client._edge)
+            self.assertIsNone(client._edge_url)
+            self.assertFalse(client.is_edge_configured())
+
+            os.environ.pop("AXIOM_EDGE", None)
             os.environ.pop("AXIOM_EDGE_URL", None)
 
     def test_edge_url_takes_precedence_over_edge(self):
