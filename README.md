@@ -12,6 +12,29 @@ client.ingest_events(dataset="DATASET_NAME", events=[{"foo": "bar"}, {"bar": "ba
 client.query(r"['DATASET_NAME'] | where foo == 'bar' | limit 100")
 ```
 
+## Edge Ingestion
+
+For improved data locality, you can configure the client to use regional edge
+endpoints for ingest and query operations. All other API operations continue to
+use the main Axiom API endpoint.
+
+```python
+import axiom_py
+
+# Using a regional edge domain
+client = axiom_py.Client(edge="eu-central-1.aws.edge.axiom.co")
+
+# Or using an explicit edge URL
+client = axiom_py.Client(edge_url="https://custom-edge.example.com")
+```
+
+You can also configure via environment variables:
+
+- `AXIOM_EDGE` - Regional edge domain (e.g., `eu-central-1.aws.edge.axiom.co`)
+- `AXIOM_EDGE_URL` - Explicit edge URL (takes precedence over `AXIOM_EDGE`)
+
+**Note:** Edge endpoints require API tokens (`xaat-`), not personal tokens.
+
 ## Install
 
 ```sh
