@@ -8,7 +8,12 @@ from typing import List
 from dataclasses import asdict
 from datetime import timedelta
 
-from .datasets import Dataset, DatasetCreateRequest, DatasetUpdateRequest, TrimRequest
+from .datasets import (
+    Dataset,
+    DatasetCreateRequest,
+    DatasetUpdateRequest,
+    TrimRequest,
+)
 from .util import from_dict
 from ._error_handling import check_response_error
 

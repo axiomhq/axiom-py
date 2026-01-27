@@ -9,7 +9,11 @@ from dataclasses import asdict
 from datetime import datetime
 from urllib.parse import urlencode
 
-from .annotations import Annotation, AnnotationCreateRequest, AnnotationUpdateRequest
+from .annotations import (
+    Annotation,
+    AnnotationCreateRequest,
+    AnnotationUpdateRequest,
+)
 from .util import from_dict
 from ._error_handling import check_response_error
 
@@ -28,7 +32,6 @@ class AsyncAnnotationsClient:
         """
         self.client = client
 
-    
     async def get(self, id: str) -> Annotation:
         """
         Asynchronously get an annotation by id.
@@ -46,7 +49,6 @@ class AsyncAnnotationsClient:
         check_response_error(response.status_code, response.json())
         return from_dict(Annotation, response.json())
 
-    
     async def create(self, req: AnnotationCreateRequest) -> Annotation:
         """
         Asynchronously create an annotation with the given properties.
@@ -65,7 +67,6 @@ class AsyncAnnotationsClient:
         check_response_error(response.status_code, response.json())
         return from_dict(Annotation, response.json())
 
-    
     async def list(
         self,
         datasets: List[str] = [],
@@ -104,8 +105,9 @@ class AsyncAnnotationsClient:
 
         return annotations
 
-    
-    async def update(self, id: str, req: AnnotationUpdateRequest) -> Annotation:
+    async def update(
+        self, id: str, req: AnnotationUpdateRequest
+    ) -> Annotation:
         """
         Asynchronously update an annotation with the given properties.
 
@@ -124,7 +126,6 @@ class AsyncAnnotationsClient:
         check_response_error(response.status_code, response.json())
         return from_dict(Annotation, response.json())
 
-    
     async def delete(self, id: str):
         """
         Asynchronously delete an annotation with the given id.

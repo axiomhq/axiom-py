@@ -205,6 +205,7 @@ class TestAsyncClient:
         async with AsyncClient(url_base="http://localhost") as client:
             # Check that headers were set correctly
             assert (
-                client.client.headers.get("Authorization") == "Bearer env-token"
+                client.client.headers.get("Authorization")
+                == "Bearer env-token"
             )
             assert client.client.headers.get("X-Axiom-Org-Id") == "env-org"

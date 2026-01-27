@@ -27,7 +27,6 @@ class AsyncUsersClient:
         self.client = client
         self.has_personal_token = has_personal_token
 
-    
     async def current(self) -> Optional[User]:
         """
         Asynchronously get the current authenticated user.

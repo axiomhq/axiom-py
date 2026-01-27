@@ -34,10 +34,7 @@ async def main():
         # Ingest to multiple datasets concurrently
         datasets = ["dataset1", "dataset2", "dataset3"]
         await asyncio.gather(
-            *[
-                ingest_to_dataset(client, dataset, 100)
-                for dataset in datasets
-            ]
+            *[ingest_to_dataset(client, dataset, 100) for dataset in datasets]
         )
 
         elapsed = time.time() - start_time

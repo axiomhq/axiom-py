@@ -31,7 +31,6 @@ class AsyncTokensClient:
         """
         self.client = client
 
-    
     async def list(self) -> List[ApiToken]:
         """
         Asynchronously list all API tokens.
@@ -48,7 +47,6 @@ class AsyncTokensClient:
             tokens.append(token)
         return tokens
 
-    
     async def create(self, req: CreateTokenRequest) -> CreateTokenResponse:
         """
         Asynchronously create a new API token with permissions specified
@@ -67,7 +65,6 @@ class AsyncTokensClient:
         token = from_dict(CreateTokenResponse, response.json())
         return token
 
-    
     async def get(self, token_id: str) -> ApiToken:
         """
         Asynchronously get an API token using its ID string.
@@ -84,7 +81,6 @@ class AsyncTokensClient:
         token = from_dict(ApiToken, response.json())
         return token
 
-    
     async def regenerate(
         self, token_id: str, req: RegenerateTokenRequest
     ) -> ApiToken:
@@ -107,7 +103,6 @@ class AsyncTokensClient:
         token = from_dict(ApiToken, response.json())
         return token
 
-    
     async def delete(self, token_id: str) -> None:
         """
         Asynchronously delete an API token using its ID string.

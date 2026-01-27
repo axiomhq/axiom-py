@@ -16,7 +16,9 @@ async def main():
     async with AsyncClient() as client:
         # Create and configure the async handler
         handler = AsyncAxiomHandler(
-            client=client, dataset="logs", interval=1  # Flush every second
+            client=client,
+            dataset="logs",
+            interval=1,  # Flush every second
         )
 
         # Configure the root logger

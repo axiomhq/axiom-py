@@ -21,7 +21,13 @@ from .datasets_async import AsyncDatasetsClient
 from .annotations_async import AsyncAnnotationsClient
 from .tokens_async import AsyncTokensClient
 from .users_async import AsyncUsersClient
-from .query import QueryLegacy, QueryResult, QueryOptions, QueryLegacyResult, QueryKind
+from .query import (
+    QueryLegacy,
+    QueryResult,
+    QueryOptions,
+    QueryLegacyResult,
+    QueryKind,
+)
 from .util import from_dict, handle_json_serialization, is_personal_token
 from ._http_client import get_common_headers, async_retry, DEFAULT_TIMEOUT
 from ._error_handling import check_response_error
@@ -176,7 +182,8 @@ class AsyncClient:
         """
         # encode request payload to NDJSON
         content = "\n".join(
-            ujson.dumps(event, default=handle_json_serialization) for event in events
+            ujson.dumps(event, default=handle_json_serialization)
+            for event in events
         ).encode("UTF-8")
         gzipped = gzip.compress(content)
 
@@ -336,7 +343,9 @@ class AsyncClient:
 
         return params
 
-    def _prepare_apl_options(self, opts: Optional[AplOptions]) -> Dict[str, object]:
+    def _prepare_apl_options(
+        self, opts: Optional[AplOptions]
+    ) -> Dict[str, object]:
         """
         Prepare the APL query options for the request.
 

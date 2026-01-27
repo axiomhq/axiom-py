@@ -125,9 +125,9 @@ class TestClient(unittest.TestCase):
         )
         self.logger.debug(res)
 
-        assert (
-            res.ingested == 2
-        ), f"expected ingested count to equal 2, found {res.ingested}"
+        assert res.ingested == 2, (
+            f"expected ingested count to equal 2, found {res.ingested}"
+        )
         self.logger.info("ingested 2 events successfully.")
 
     def test_step002_ingest_events(self):
@@ -144,9 +144,9 @@ class TestClient(unittest.TestCase):
         )
         self.logger.debug(res)
 
-        assert (
-            res.ingested == 2
-        ), f"expected ingested count to equal 2, found {res.ingested}"
+        assert res.ingested == 2, (
+            f"expected ingested count to equal 2, found {res.ingested}"
+        )
 
     def test_step004_query(self):
         """Test querying a dataset"""
