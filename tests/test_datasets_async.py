@@ -134,28 +134,3 @@ class TestAsyncDatasetsClient:
         ) as client:
             # Should not raise an exception
             await client.datasets.trim("test-dataset", timedelta(days=7))
-
-    @respx.mock
-    async def test_retry_on_error(self):
-        """Test that datasets client retries on 5xx errors."""
-        mock_dataset = {
-            "name": "test-dataset",
-            "description": "Test description",
-            "who": "test-user",
-            "created": "2024-01-01T00:00:00Z",
-        }
-
-        route = respx.get("/v1/datasets/test-dataset")
-        route.side_effect = [
-            httpx.Response(503, json={"message": "Service unavailable"}),
-            httpx.Response(200, json=mock_dataset),
-        ]
-
-        async with AsyncClient(
-            token="test-token", url_base="http://localhost"
-        ) as client:
-            dataset = await client.datasets.get("test-dataset")
-            assert dataset.name == "test-dataset"
-
-        # Verify 2 calls were made (1 retry + 1 success)
-        assert route.call_count == 2

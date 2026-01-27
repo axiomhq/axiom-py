@@ -86,15 +86,25 @@ class TestAsyncClient:
     async def test_query(self):
         """Test async APL query."""
         mock_response = {
-            "status": {"minCursor": "0", "maxCursor": "100"},
+            "status": {
+                "elapsedTime": 100,
+                "blocksExamined": 1,
+                "rowsExamined": 100,
+                "rowsMatched": 1,
+                "numGroups": 0,
+                "isPartial": False,
+                "minCursor": "0",
+                "maxCursor": "100",
+            },
             "matches": [
                 {
                     "_time": "2024-01-01T00:00:00Z",
-                    "field": "value",
-                    "count": 1,
+                    "_sysTime": "2024-01-01T00:00:00Z",
+                    "_rowId": "row-1",
+                    "data": {"field": "value", "count": 1},
                 }
             ],
-            "buckets": {"totals": []},
+            "buckets": {"series": [], "totals": []},
         }
 
         respx.post("/v1/datasets/_apl").mock(
@@ -110,16 +120,25 @@ class TestAsyncClient:
         ) as client:
             result = await client.query("['test-dataset'] | limit 100")
             assert len(result.matches) == 1
-            assert result.matches[0]["field"] == "value"
+            assert result.matches[0].data["field"] == "value"
             assert result.savedQueryID == "query-123"
 
     @respx.mock
     async def test_query_with_options(self):
         """Test APL query with options."""
         mock_response = {
-            "status": {"minCursor": "0", "maxCursor": "100"},
+            "status": {
+                "elapsedTime": 50,
+                "blocksExamined": 1,
+                "rowsExamined": 50,
+                "rowsMatched": 0,
+                "numGroups": 0,
+                "isPartial": False,
+                "minCursor": "0",
+                "maxCursor": "100",
+            },
             "matches": [],
-            "buckets": {"totals": []},
+            "buckets": {"series": [], "totals": []},
         }
 
         respx.post("/v1/datasets/_apl").mock(
