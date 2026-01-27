@@ -47,7 +47,7 @@ async def main():
         start_time = time.time()
 
         # Query multiple datasets concurrently
-        results = await asyncio.gather(
+        await asyncio.gather(
             *[query_dataset(client, dataset) for dataset in datasets]
         )
 

@@ -7,8 +7,6 @@ from datetime import datetime
 
 from axiom_py import (
     AsyncClient,
-    ContentType,
-    ContentEncoding,
     IngestOptions,
     AplOptions,
     AplResultFormat,

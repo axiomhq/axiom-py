@@ -1,7 +1,7 @@
 """Quick test to verify async imports work correctly."""
 
 # Test sync imports (should already work)
-from axiom_py import Client, Dataset, Annotation
+from axiom_py import Client, Dataset, Annotation  # noqa: F401
 
 # Test async imports (new)
 from axiom_py import (
@@ -15,8 +15,8 @@ from axiom_py import (
 )
 
 # Test internal modules
-from axiom_py._http_client import get_common_headers, async_retry
-from axiom_py._error_handling import check_response_error
+from axiom_py._http_client import get_common_headers, async_retry  # noqa: F401
+from axiom_py._error_handling import check_response_error  # noqa: F401
 
 print("✓ All imports successful!")
 print(f"✓ AsyncClient available: {AsyncClient}")

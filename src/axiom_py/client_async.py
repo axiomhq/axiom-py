@@ -22,7 +22,6 @@ from .annotations_async import AsyncAnnotationsClient
 from .tokens_async import AsyncTokensClient
 from .users_async import AsyncUsersClient
 from .query import QueryLegacy, QueryResult, QueryOptions, QueryLegacyResult, QueryKind
-from .version import __version__
 from .util import from_dict, handle_json_serialization, is_personal_token
 from ._http_client import get_common_headers, async_retry, DEFAULT_TIMEOUT
 from ._error_handling import check_response_error
