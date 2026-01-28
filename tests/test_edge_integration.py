@@ -9,6 +9,7 @@ import rfc3339
 
 from .helpers import get_random_name
 from axiom_py import Client, AplOptions, AplResultFormat, AxiomError
+import logging
 
 
 def get_edge_config():
@@ -186,12 +187,23 @@ class TestEdgeIntegration(unittest.TestCase):
             format=AplResultFormat.Legacy,
         )
 
-        # Retry up to 5 times with 1s delay for eventual consistency
-        for attempt in range(5):
-            qr = self.edge_client.query(apl, opts)
-            if len(qr.matches) >= 2:
-                break
-            time.sleep(1)
+        # Retry up to 10 times with 2s delay for eventual consistency
+        # Schema may not be indexed yet, causing "invalid field" errors
+        qr = None
+        last_error = None
+        for attempt in range(10):
+            try:
+                qr = self.edge_client.query(apl, opts)
+                if len(qr.matches) >= 2:
+                    break
+            except AxiomError as e:
+                # Field may not be indexed yet
+                last_error = e
+                logging.debug(f"Query attempt {attempt + 1} failed: {e}")
+            time.sleep(2)
+
+        if qr is None:
+            self.fail(f"Query failed after retries: {last_error}")
 
         self.assertGreaterEqual(
             len(qr.matches),
@@ -226,7 +238,21 @@ class TestEdgeIntegration(unittest.TestCase):
             format=AplResultFormat.Legacy,
         )
 
-        qr = self.edge_client.query(apl, opts)
+        # Retry up to 10 times with 2s delay for eventual consistency
+        qr = None
+        last_error = None
+        for attempt in range(10):
+            try:
+                qr = self.edge_client.query(apl, opts)
+                if len(qr.matches) >= 1:
+                    break
+            except AxiomError as e:
+                last_error = e
+                logging.debug(f"Query attempt {attempt + 1} failed: {e}")
+            time.sleep(2)
+
+        if qr is None:
+            self.fail(f"Query failed after retries: {last_error}")
 
         self.assertEqual(
             len(qr.matches),
