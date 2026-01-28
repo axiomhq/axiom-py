@@ -1,6 +1,7 @@
 """Integration tests for edge-based ingestion and query."""
 
 import os
+import time
 import unittest
 from datetime import datetime, timedelta
 
@@ -13,21 +14,23 @@ from axiom_py import Client, AplOptions, AplResultFormat, AxiomError
 def get_edge_config():
     """Get edge configuration from environment variables.
 
-    Returns tuple of (edge_url, edge, edge_token, dataset_region).
-    Returns (None, None, None, None) if edge testing is not configured.
-    """
-    edge_url = os.getenv("AXIOM_EDGE_URL")
-    edge = os.getenv("AXIOM_EDGE")
-    edge_token = os.getenv("AXIOM_EDGE_TOKEN")
-    dataset_region = os.getenv("AXIOM_EDGE_DATASET_REGION")
+    Returns tuple of (edge_url, edge_token, dataset_region).
+    Returns (None, None, None) if edge testing is not configured.
 
-    return edge_url, edge, edge_token, dataset_region
+    Note: Empty strings are treated as None since GitHub Actions sets
+    undefined variables to empty strings.
+    """
+    edge_url = os.getenv("AXIOM_EDGE_URL") or None
+    edge_token = os.getenv("AXIOM_EDGE_TOKEN") or None
+    dataset_region = os.getenv("AXIOM_EDGE_DATASET_REGION") or None
+
+    return edge_url, edge_token, dataset_region
 
 
 def is_edge_configured():
     """Check if edge testing is configured."""
-    edge_url, edge, _, _ = get_edge_config()
-    return edge_url is not None or edge is not None
+    edge_url, _, _ = get_edge_config()
+    return edge_url is not None
 
 
 class TestEdgeIntegration(unittest.TestCase):
@@ -41,11 +44,19 @@ class TestEdgeIntegration(unittest.TestCase):
     def setUpClass(cls):
         if not is_edge_configured():
             raise unittest.SkipTest(
-                "skipping edge integration tests; "
-                "set AXIOM_EDGE_URL or AXIOM_EDGE to run"
+                "skipping edge integration tests; " "set AXIOM_EDGE_URL to run"
             )
 
-        edge_url, edge, edge_token, dataset_region = get_edge_config()
+        edge_url, edge_token, dataset_region = get_edge_config()
+
+        # Dataset region must be set for edge tests to ensure the dataset
+        # is created in the same region as the edge endpoint
+        if not dataset_region:
+            raise unittest.SkipTest(
+                "skipping edge integration tests; "
+                "AXIOM_EDGE_DATASET_REGION must be set to match edge endpoint"
+            )
+
         org_id = os.getenv("AXIOM_ORG_ID")
 
         # Use dedicated edge token if provided (edge requires API token)
@@ -54,14 +65,13 @@ class TestEdgeIntegration(unittest.TestCase):
 
         # Create edge client for ingest/query
         # Edge client uses edge configuration and edge token
-        # Note: edge_url and edge must be passed explicitly as Client does not
+        # Note: edge_url must be passed explicitly as Client does not
         # auto-read from environment (to avoid affecting non-edge tests)
         cls.edge_client = Client(
             token=token_for_edge,
             org_id=org_id,
             url=os.getenv("AXIOM_URL"),
             edge_url=edge_url,
-            edge=edge,
         )
 
         # Create main API client for dataset management
@@ -77,7 +87,6 @@ class TestEdgeIntegration(unittest.TestCase):
 
         # Log configuration for debugging
         print(f"Edge URL: {edge_url}")
-        print(f"Edge: {edge}")
         print(f"Edge Token set: {bool(edge_token)}")
         print(f"Dataset Region: {dataset_region}")
         print(f"Dataset Name: {cls.dataset_name}")
@@ -89,6 +98,31 @@ class TestEdgeIntegration(unittest.TestCase):
             "edge integration test dataset",
             region=dataset_region,
         )
+
+        # Verify the dataset was created in the expected region
+        # The API may ignore the region parameter on some environments
+        import requests
+
+        resp = requests.get(
+            f"{os.getenv('AXIOM_URL')}/v1/datasets/{cls.dataset_name}",
+            headers={
+                "Authorization": f"Bearer {os.getenv('AXIOM_TOKEN')}",
+                "X-Axiom-Org-Id": org_id,
+            },
+        )
+        if resp.status_code == 200:
+            actual_region = resp.json().get("region", "")
+            if actual_region != dataset_region:
+                # Clean up and skip - the server didn't create in expected region
+                try:
+                    cls.api_client.datasets.delete(cls.dataset_name)
+                except Exception:
+                    pass
+                raise unittest.SkipTest(
+                    f"skipping edge tests; dataset created in {actual_region} "
+                    f"instead of {dataset_region} (server may not support "
+                    "region parameter)"
+                )
 
     @classmethod
     def tearDownClass(cls):
@@ -127,8 +161,8 @@ class TestEdgeIntegration(unittest.TestCase):
     def test_edge_query(self):
         """Test querying via edge endpoint."""
         # First ingest some data
-        time = datetime.utcnow() - timedelta(minutes=1)
-        time_formatted = rfc3339.format(time)
+        t = datetime.utcnow() - timedelta(minutes=1)
+        time_formatted = rfc3339.format(t)
 
         events = [
             {"query_test": "value1", "_time": time_formatted},
@@ -141,7 +175,7 @@ class TestEdgeIntegration(unittest.TestCase):
         )
         self.assertEqual(res.ingested, 2)
 
-        # Now query the data
+        # Query with retry - data may take time to be indexed
         start_time = datetime.utcnow() - timedelta(minutes=5)
         end_time = datetime.utcnow() + timedelta(minutes=1)
 
@@ -152,7 +186,12 @@ class TestEdgeIntegration(unittest.TestCase):
             format=AplResultFormat.Legacy,
         )
 
-        qr = self.edge_client.query(apl, opts)
+        # Retry up to 5 times with 1s delay for eventual consistency
+        for attempt in range(5):
+            qr = self.edge_client.query(apl, opts)
+            if len(qr.matches) >= 2:
+                break
+            time.sleep(1)
 
         self.assertGreaterEqual(
             len(qr.matches),
@@ -207,27 +246,22 @@ class TestEdgeIntegration(unittest.TestCase):
 
 
 class TestEdgeURLConfiguration(unittest.TestCase):
-    """Test AXIOM_EDGE_URL takes precedence over AXIOM_EDGE."""
+    """Test edge_url configuration."""
 
-    def test_edge_url_precedence(self):
-        """When both edge_url and edge are set, edge_url should win."""
-        # This is a unit test that doesn't require edge secrets
+    def test_edge_url_builds_correct_urls(self):
+        """Test edge_url builds correct ingest and query URLs."""
         from unittest.mock import patch
 
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
-            os.environ.pop("AXIOM_EDGE", None)
             os.environ.pop("AXIOM_EDGE_URL", None)
 
             client = Client(
                 token="xaat-test-token",
                 org_id="test-org",
                 edge_url="https://custom-edge.example.com",
-                edge="ignored-edge.axiom.co",
             )
 
-            # edge_url takes precedence, edge should be None
-            self.assertIsNone(client._edge)
             self.assertEqual(
                 client._edge_url, "https://custom-edge.example.com"
             )
@@ -243,7 +277,6 @@ class TestEdgeURLConfiguration(unittest.TestCase):
 
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("AXIOM_URL", None)
-            os.environ.pop("AXIOM_EDGE", None)
             os.environ.pop("AXIOM_EDGE_URL", None)
 
             client = Client(

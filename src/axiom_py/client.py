@@ -171,7 +171,6 @@ class Client:  # pylint: disable=R0903
         org_id: Optional[str] = None,
         url: Optional[str] = None,
         edge_url: Optional[str] = None,
-        edge: Optional[str] = None,
     ):
         """
         Initialize the Axiom client.
@@ -183,15 +182,10 @@ class Client:  # pylint: disable=R0903
             org_id: Organization ID (required for personal tokens).
                 Falls back to AXIOM_ORG_ID env var.
             url: Base URL for Axiom API. Falls back to AXIOM_URL env var.
-            edge_url: Explicit edge URL for ingest/query operations (e.g.,
+            edge_url: Edge URL for ingest/query operations (e.g.,
                 "https://eu-central-1.aws.edge.axiom.co"). When set, ingest
                 requests use `/v1/ingest/{dataset}` and query requests use
-                `/v1/query/_apl`. Takes precedence over `edge`.
-                Must be passed explicitly (not read from environment).
-            edge: Regional edge domain for ingest/query operations (e.g.,
-                "eu-central-1.aws.edge.axiom.co"). When set, requests are
-                sent to `https://{edge}/v1/ingest/{dataset}` and
-                `https://{edge}/v1/query/_apl`.
+                `/v1/query/_apl`.
                 Must be passed explicitly (not read from environment).
         """
         # fallback to env variables if not provided
@@ -201,21 +195,18 @@ class Client:  # pylint: disable=R0903
             org_id = os.getenv("AXIOM_ORG_ID")
         if url is None:
             url = os.getenv("AXIOM_URL")
-        # Note: edge_url and edge are NOT auto-read from environment.
+        # Note: edge_url is NOT auto-read from environment.
         # Edge configuration must be explicit to avoid accidentally routing
-        # all requests through edge when AXIOM_EDGE_URL/AXIOM_EDGE are set
-        # for edge-specific tests. Create a separate Client with edge params
+        # all requests through edge when AXIOM_EDGE_URL is set for
+        # edge-specific tests. Create a separate Client with edge_url
         # for edge operations.
 
-        # Priority: edge_url > edge (for edge operations)
-        # If edge_url is set, it takes precedence over edge
-        if edge_url is not None:
-            edge = None
+        # Normalize empty strings to None for edge config
+        edge_url = edge_url or None
 
         # Store for building ingest/query endpoints
         self._token = token
         self._url = url
-        self._edge = edge
         self._edge_url = edge_url
 
         # Determine API base URL (for non-ingest/query operations)
@@ -259,55 +250,45 @@ class Client:  # pylint: disable=R0903
 
     def is_edge_configured(self) -> bool:
         """Check if edge is configured."""
-        return self._edge_url is not None or self._edge is not None
+        return self._edge_url is not None
 
     def _get_edge_ingest_url(self, dataset: str) -> Optional[str]:
         """
         Get the full edge ingest URL for a dataset.
         Returns None if edge is not configured.
         """
-        if self._edge_url is not None:
-            url = self._edge_url.rstrip("/")
-            parsed = urlparse(url)
-            path = parsed.path
+        if self._edge_url is None:
+            return None
 
-            # If path is empty or just "/", append edge ingest format
-            if path == "" or path == "/":
-                return f"{parsed.scheme}://{parsed.netloc}/v1/ingest/{dataset}"
+        url = self._edge_url.rstrip("/")
+        parsed = urlparse(url)
+        path = parsed.path
 
-            # edge_url has a custom path, use as-is
-            return url
+        # If path is empty or just "/", append edge ingest format
+        if path == "" or path == "/":
+            return f"{parsed.scheme}://{parsed.netloc}/v1/ingest/{dataset}"
 
-        if self._edge is not None:
-            # Edge domain: construct full URL with edge ingest path
-            domain = self._edge.rstrip("/")
-            return f"https://{domain}/v1/ingest/{dataset}"
-
-        return None
+        # edge_url has a custom path, use as-is
+        return url
 
     def _get_edge_query_url(self) -> Optional[str]:
         """
         Get the full edge query URL.
         Returns None if edge is not configured.
         """
-        if self._edge_url is not None:
-            url = self._edge_url.rstrip("/")
-            parsed = urlparse(url)
-            path = parsed.path
+        if self._edge_url is None:
+            return None
 
-            # If path is empty or just "/", append edge query format
-            if path == "" or path == "/":
-                return f"{parsed.scheme}://{parsed.netloc}/v1/query/_apl"
+        url = self._edge_url.rstrip("/")
+        parsed = urlparse(url)
+        path = parsed.path
 
-            # edge_url has a custom path, use as-is
-            return url
+        # If path is empty or just "/", append edge query format
+        if path == "" or path == "/":
+            return f"{parsed.scheme}://{parsed.netloc}/v1/query/_apl"
 
-        if self._edge is not None:
-            # Edge domain: construct full URL with edge query path
-            domain = self._edge.rstrip("/")
-            return f"https://{domain}/v1/query/_apl"
-
-        return None
+        # edge_url has a custom path, use as-is
+        return url
 
     def before_shutdown(self, func: Callable):
         self.before_shutdown_funcs.append(func)
@@ -420,13 +401,17 @@ class Client:  # pylint: disable=R0903
         """
         Executes the given apl query on the dataset identified by its id.
 
-        If edge is configured, uses the edge endpoint.
+        If edge is configured, uses the edge endpoint. Edge endpoints require
+        API tokens (xaat-), not personal tokens (xapt-).
 
         See https://axiom.co/docs/restapi/endpoints/queryApl
         """
         # Check if edge is configured and build appropriate URL
         edge_url = self._get_edge_query_url()
         if edge_url is not None:
+            # Edge endpoints only support API tokens, not personal tokens
+            if is_personal_token(self._token):
+                raise PersonalTokenNotSupportedForEdgeError()
             path = edge_url
         else:
             # Legacy path format for backwards compatibility
