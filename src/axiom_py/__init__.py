@@ -57,7 +57,7 @@ _all_ = [
     Annotation,
     AnnotationCreateRequest,
     AnnotationUpdateRequest,
-   # Sync API
+    # Sync API
     Client,
     DatasetsClient,
     AnnotationsClient,
