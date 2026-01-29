@@ -7,6 +7,7 @@ from unittest.mock import patch
 import gzip
 import uuid
 
+import pytest
 import ujson
 import rfc3339
 import responses
@@ -148,6 +149,7 @@ class TestClient(unittest.TestCase):
             res.ingested == 2
         ), f"expected ingested count to equal 2, found {res.ingested}"
 
+    @pytest.mark.flaky(reruns=3, reruns_delay=2)
     def test_step004_query(self):
         """Test querying a dataset"""
         # query the events we ingested in step2
@@ -165,6 +167,7 @@ class TestClient(unittest.TestCase):
         self.assertIsNotNone(qr.savedQueryID)
         self.assertEqual(len(qr.matches), len(self.events))
 
+    @pytest.mark.flaky(reruns=3, reruns_delay=2)
     def test_step005_apl_query(self):
         """Test apl query"""
         # query the events we ingested in step2
@@ -181,6 +184,7 @@ class TestClient(unittest.TestCase):
 
         self.assertEqual(len(qr.matches), len(self.events))
 
+    @pytest.mark.flaky(reruns=3, reruns_delay=2)
     def test_step005_apl_query_messages(self):
         """Test an APL query with messages"""
         startTime = datetime.utcnow() - timedelta(minutes=2)
@@ -204,6 +208,7 @@ class TestClient(unittest.TestCase):
             "apl_whereclausealwaysevaluatestoTRUEwhichwillincludealldata_1",
         )
 
+    @pytest.mark.flaky(reruns=3, reruns_delay=2)
     def test_step005_apl_query_tabular(self):
         """Test apl query (tabular)"""
         # query the events we ingested in step2

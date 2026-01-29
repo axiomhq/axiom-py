@@ -158,22 +158,22 @@ class Client:  # pylint: disable=R0903
         self,
         token: Optional[str] = None,
         org_id: Optional[str] = None,
-        url_base: Optional[str] = None,
+        url: Optional[str] = None,
     ):
         # fallback to env variables if token, org_id or url are not provided
         if token is None:
             token = os.getenv("AXIOM_TOKEN")
         if org_id is None:
             org_id = os.getenv("AXIOM_ORG_ID")
-        if url_base is None:
-            url_base = AXIOM_URL
+        if url is None:
+            url = AXIOM_URL
 
         # set exponential retries
         retries = Retry(
             total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504]
         )
 
-        self.session = BaseUrlSession(url_base.rstrip("/"))
+        self.session = BaseUrlSession(url.rstrip("/"))
         self.session.mount("http://", HTTPAdapter(max_retries=retries))
         self.session.mount("https://", HTTPAdapter(max_retries=retries))
         # hook on responses, raise error when response is not successfull
