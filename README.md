@@ -3,6 +3,14 @@
 
 # axiom-py [![CI][ci_badge]][ci] [![PyPI version][pypi_badge]][pypi] [![Python version][version_badge]][pypi]
 
+## Install
+
+```sh
+pip install axiom-py
+```
+
+## Synchronous Client
+
 ```py
 import axiom_py
 
@@ -36,11 +44,47 @@ edge_client = axiom_py.Client(
 
 **Note:** Edge endpoints require API tokens (`xaat-`), not personal tokens.
 Edge configuration must be passed explicitly when creating the client.
+## Asynchronous Client
 
-## Install
+The library also provides an async client for use with asyncio:
 
-```sh
-pip install axiom-py
+```py
+import asyncio
+from axiom_py import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:
+        # Ingest events
+        await client.ingest_events(
+            dataset="DATASET_NAME",
+            events=[{"foo": "bar"}, {"bar": "baz"}]
+        )
+
+        # Query data
+        result = await client.query(r"['DATASET_NAME'] | where foo == 'bar' | limit 100")
+        print(f"Found {len(result.matches)} matches")
+
+asyncio.run(main())
+```
+
+### Concurrent Operations
+
+The async client enables efficient concurrent operations:
+
+```py
+import asyncio
+from axiom_py import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:
+        # Ingest to multiple datasets concurrently
+        await asyncio.gather(
+            client.ingest_events("dataset1", [{"event": "data1"}]),
+            client.ingest_events("dataset2", [{"event": "data2"}]),
+            client.ingest_events("dataset3", [{"event": "data3"}]),
+        )
+
+asyncio.run(main())
 ```
 
 ## Documentation

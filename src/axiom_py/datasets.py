@@ -17,8 +17,8 @@ class Dataset:
     id: str = field(init=False)
     name: str
     description: str
-    who: str
-    created: str
+    who: Optional[str]
+    created: Optional[str]
 
 
 @dataclass
