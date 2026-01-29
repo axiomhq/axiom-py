@@ -556,18 +556,22 @@ class TestAsyncEdgeIntegration(unittest.TestCase):
 
     def test_async_edge_is_configured(self):
         """Test is_edge_configured() method on AsyncClient."""
-        async with AsyncClient(
-            token=self.edge_token,
-            org_id=self.org_id,
-            edge_url=self.edge_url,
-        ) as client:
-            self.assertTrue(client.is_edge_configured())
 
-        async with AsyncClient(
-            token=self.edge_token,
-            org_id=self.org_id,
-        ) as client:
-            self.assertFalse(client.is_edge_configured())
+        async def run_test():
+            async with AsyncClient(
+                token=self.edge_token,
+                org_id=self.org_id,
+                edge_url=self.edge_url,
+            ) as client:
+                self.assertTrue(client.is_edge_configured())
+
+            async with AsyncClient(
+                token=self.edge_token,
+                org_id=self.org_id,
+            ) as client:
+                self.assertFalse(client.is_edge_configured())
+
+        asyncio.run(run_test())
 
 
 class TestAsyncEdgeURLConfiguration(unittest.TestCase):
