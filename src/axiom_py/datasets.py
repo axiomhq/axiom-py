@@ -4,7 +4,7 @@ This package provides dataset models and methods as well as a DatasetClient
 
 import ujson
 from requests import Session
-from typing import List
+from typing import List, Optional
 from dataclasses import dataclass, asdict, field
 from datetime import timedelta
 from .util import from_dict
@@ -17,8 +17,8 @@ class Dataset:
     id: str = field(init=False)
     name: str
     description: str
-    who: str
-    created: str
+    who: Optional[str]
+    created: Optional[str]
 
 
 @dataclass

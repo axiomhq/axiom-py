@@ -2,6 +2,7 @@
 
 import asyncio
 import sys
+import os
 
 sys.path.insert(0, "/Users/islam/axiom/axiom-py/src")
 
@@ -12,7 +13,7 @@ async def test_basic():
     """Test basic async client functionality."""
     print("Testing AsyncClient context manager...")
     async with AsyncClient(
-        token="test", url_base="http://localhost"
+        token=os.getenv("AXIOM_TOKEN"), url=os.getenv("AXIOM_URL")
     ) as client:
         print(f"✓ Client created: {client}")
         print(f"✓ HTTP client exists: {client.client}")

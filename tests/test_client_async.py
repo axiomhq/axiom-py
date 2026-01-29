@@ -3,6 +3,7 @@
 import pytest
 import respx
 import httpx
+import os
 from datetime import datetime
 
 from axiom_py import (
@@ -21,7 +22,7 @@ class TestAsyncClient:
     async def test_context_manager(self):
         """Test that context manager properly manages client lifecycle."""
         async with AsyncClient(
-            token="test-token", url_base="http://localhost"
+            token=os.getenv("AXIOM_TOKEN"), url=os.getenv("AXIOM_URL")
         ) as client:
             assert client.client is not None
             assert not client.client.is_closed
@@ -46,7 +47,7 @@ class TestAsyncClient:
         )
 
         async with AsyncClient(
-            token="test-token", url_base="http://localhost"
+            token="test-token", url="http://localhost"
         ) as client:
             result = await client.ingest_events(
                 "test-dataset", [{"field": "value1"}, {"field": "value2"}]
@@ -72,7 +73,7 @@ class TestAsyncClient:
         )
 
         async with AsyncClient(
-            token="test-token", url_base="http://localhost"
+            token="test-token", url="http://localhost"
         ) as client:
             opts = IngestOptions(
                 timestamp_field="_time", timestamp_format=None
@@ -116,7 +117,7 @@ class TestAsyncClient:
         )
 
         async with AsyncClient(
-            token="test-token", url_base="http://localhost"
+            token="test-token", url="http://localhost"
         ) as client:
             result = await client.query("['test-dataset'] | limit 100")
             assert len(result.matches) == 1
@@ -150,7 +151,7 @@ class TestAsyncClient:
         )
 
         async with AsyncClient(
-            token="test-token", url_base="http://localhost"
+            token="test-token", url="http://localhost"
         ) as client:
             opts = AplOptions(
                 start_time=datetime(2024, 1, 1),
@@ -184,7 +185,7 @@ class TestAsyncClient:
         ]
 
         async with AsyncClient(
-            token="test-token", url_base="http://localhost"
+            token="test-token", url="http://localhost"
         ) as client:
             result = await client.ingest_events(
                 "test-dataset", [{"field": "value"}]
@@ -205,7 +206,7 @@ class TestAsyncClient:
         )
 
         async with AsyncClient(
-            token="test-token", url_base="http://localhost"
+            token="test-token", url="http://localhost"
         ) as client:
             with pytest.raises(Exception) as exc_info:
                 await client.ingest_events(
@@ -221,7 +222,7 @@ class TestAsyncClient:
         monkeypatch.setenv("AXIOM_TOKEN", "env-token")
         monkeypatch.setenv("AXIOM_ORG_ID", "env-org")
 
-        async with AsyncClient(url_base="http://localhost") as client:
+        async with AsyncClient(url="http://localhost") as client:
             # Check that headers were set correctly
             assert (
                 client.client.headers.get("Authorization")

@@ -3,6 +3,7 @@
 import pytest
 import respx
 import httpx
+import os
 from datetime import timedelta
 
 from axiom_py import AsyncClient
@@ -27,7 +28,7 @@ class TestAsyncDatasetsClient:
         )
 
         async with AsyncClient(
-            token="test-token", url_base="http://localhost"
+            token=os.getenv("AXIOM_TOKEN"), url=os.getenv("AXIOM_URL")
         ) as client:
             dataset = await client.datasets.get("test-dataset")
             assert dataset.name == "test-dataset"
@@ -48,7 +49,7 @@ class TestAsyncDatasetsClient:
         )
 
         async with AsyncClient(
-            token="test-token", url_base="http://localhost"
+            token="test-token", url="http://localhost"
         ) as client:
             dataset = await client.datasets.create(
                 "new-dataset", "New dataset"
@@ -79,7 +80,7 @@ class TestAsyncDatasetsClient:
         )
 
         async with AsyncClient(
-            token="test-token", url_base="http://localhost"
+            token="test-token", url="http://localhost"
         ) as client:
             datasets = await client.datasets.get_list()
             assert len(datasets) == 2
@@ -101,7 +102,7 @@ class TestAsyncDatasetsClient:
         )
 
         async with AsyncClient(
-            token="test-token", url_base="http://localhost"
+            token="test-token", url="http://localhost"
         ) as client:
             dataset = await client.datasets.update(
                 "test-dataset", "Updated description"
@@ -117,7 +118,7 @@ class TestAsyncDatasetsClient:
         )
 
         async with AsyncClient(
-            token="test-token", url_base="http://localhost"
+            token="test-token", url="http://localhost"
         ) as client:
             # Should not raise an exception
             await client.datasets.delete("test-dataset")
@@ -130,7 +131,7 @@ class TestAsyncDatasetsClient:
         )
 
         async with AsyncClient(
-            token="test-token", url_base="http://localhost"
+            token="test-token", url="http://localhost"
         ) as client:
             # Should not raise an exception
             await client.datasets.trim("test-dataset", timedelta(days=7))

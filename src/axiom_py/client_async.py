@@ -46,7 +46,7 @@ class AsyncClient:
         self,
         token: Optional[str] = None,
         org_id: Optional[str] = None,
-        url_base: Optional[str] = None,
+        url: Optional[str] = None,
     ):
         """
         Initialize the async Axiom client.
@@ -54,7 +54,7 @@ class AsyncClient:
         Args:
             token: API token for authentication (or set AXIOM_TOKEN env var)
             org_id: Optional organization ID (or set AXIOM_ORG_ID env var)
-            url_base: Optional base URL (defaults to https://api.axiom.co)
+            url: Optional base URL (defaults to https://api.axiom.co)
 
         Example:
             ```python
@@ -67,15 +67,15 @@ class AsyncClient:
             token = os.getenv("AXIOM_TOKEN")
         if org_id is None:
             org_id = os.getenv("AXIOM_ORG_ID")
-        if url_base is None:
-            url_base = AXIOM_URL
+        if url is None:
+            url = AXIOM_URL
 
         # Get common headers
         headers = get_common_headers(token, org_id)
 
         # Create httpx async client
         self.client = httpx.AsyncClient(
-            base_url=url_base.rstrip("/"),
+            base_url=url.rstrip("/"),
             timeout=DEFAULT_TIMEOUT,
             headers=headers,
             follow_redirects=True,
