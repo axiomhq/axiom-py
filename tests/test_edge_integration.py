@@ -342,6 +342,14 @@ class TestAsyncEdgeIntegration(unittest.TestCase):
 
         edge_url, edge_token, dataset_region = get_edge_config()
 
+        # Dataset region must be set for edge tests to ensure the dataset
+        # is created in the same region as the edge endpoint
+        if not dataset_region:
+            raise unittest.SkipTest(
+                "skipping async edge integration tests; "
+                "AXIOM_EDGE_DATASET_REGION must be set to match edge endpoint"
+            )
+
         cls.edge_url = edge_url
         cls.edge_token = edge_token or os.getenv("AXIOM_TOKEN")
         cls.org_id = os.getenv("AXIOM_ORG_ID")
@@ -362,12 +370,37 @@ class TestAsyncEdgeIntegration(unittest.TestCase):
         print(f"Async Dataset Name: {cls.dataset_name}")
 
         # Create the test dataset via main API
-        # Pass region if configured (optional for edge tests)
+        # Set dataset region if configured (required for edge routing)
         cls.api_client.datasets.create(
             cls.dataset_name,
             "async edge integration test dataset",
             region=dataset_region,
         )
+
+        # Verify the dataset was created in the expected region
+        # The API may ignore the region parameter on some environments
+        import requests
+
+        resp = requests.get(
+            f"{os.getenv('AXIOM_URL')}/v1/datasets/{cls.dataset_name}",
+            headers={
+                "Authorization": f"Bearer {os.getenv('AXIOM_TOKEN')}",
+                "X-Axiom-Org-Id": cls.org_id,
+            },
+        )
+        if resp.status_code == 200:
+            actual_region = resp.json().get("region", "")
+            if actual_region != dataset_region:
+                # Clean up and skip - the server didn't create in expected region
+                try:
+                    cls.api_client.datasets.delete(cls.dataset_name)
+                except Exception:
+                    pass
+                raise unittest.SkipTest(
+                    f"skipping async edge tests; dataset created in "
+                    f"{actual_region} instead of {dataset_region} "
+                    "(server may not support region parameter)"
+                )
 
     @classmethod
     def tearDownClass(cls):
