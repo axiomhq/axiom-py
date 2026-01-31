@@ -139,8 +139,8 @@ class TestEdgeIntegration(unittest.TestCase):
 
     def test_edge_ingest_events(self):
         """Test ingesting events via edge endpoint."""
-        time = datetime.utcnow() - timedelta(minutes=1)
-        time_formatted = rfc3339.format(time)
+        t = datetime.utcnow() - timedelta(minutes=1)
+        time_formatted = rfc3339.format(t)
 
         events = [
             {"foo": "bar", "_time": time_formatted, "source": "edge_test"},
@@ -216,8 +216,8 @@ class TestEdgeIntegration(unittest.TestCase):
     def test_edge_ingest_and_query_roundtrip(self):
         """Test full ingest -> query roundtrip via edge."""
         unique_marker = f"roundtrip-{datetime.utcnow().timestamp()}"
-        time = datetime.utcnow() - timedelta(seconds=30)
-        time_formatted = rfc3339.format(time)
+        t = datetime.utcnow() - timedelta(seconds=30)
+        time_formatted = rfc3339.format(t)
 
         # Ingest with unique marker
         events = [
