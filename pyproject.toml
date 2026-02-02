@@ -1,6 +1,6 @@
 [project]
 name = "axiom-py"
-version = "0.9.1"
+version = "0.10.0"
 description = "Official bindings for the Axiom API"
 readme = "README.md"
 requires-python = ">=3.8"
