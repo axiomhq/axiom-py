@@ -27,6 +27,7 @@ class DatasetCreateRequest:
 
     name: str
     description: str
+    region: Optional[str] = field(default=None)
 
 
 @dataclass
@@ -65,23 +66,34 @@ class DatasetsClient:  # pylint: disable=R0903
         decoded_response = res.json()
         return from_dict(Dataset, decoded_response)
 
-    def create(self, name: str, description: str = "") -> Dataset:
+    def create(
+        self,
+        name: str,
+        description: str = "",
+        region: Optional[str] = None,
+    ) -> Dataset:
         """
         Create a dataset with the given properties.
+
+        Args:
+            name: Name of the dataset.
+            description: Description of the dataset.
+            region: Optional region for the dataset (e.g., "eu-west-1").
+                When set, the dataset is created in the specified region.
 
         See https://axiom.co/docs/restapi/endpoints/createDataset
         """
         path = "/v1/datasets"
+        req = DatasetCreateRequest(
+            name=name,
+            description=description,
+            region=region,
+        )
+        # Filter out None values from the request
+        req_dict = {k: v for k, v in asdict(req).items() if v is not None}
         res = self.session.post(
             path,
-            data=ujson.dumps(
-                asdict(
-                    DatasetCreateRequest(
-                        name=name,
-                        description=description,
-                    )
-                )
-            ),
+            data=ujson.dumps(req_dict),
         )
         ds = from_dict(Dataset, res.json())
         return ds

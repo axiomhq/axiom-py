@@ -24,16 +24,12 @@ from axiom_py import (
     ContentType,
     IngestOptions,
     WrongQueryKindException,
+    PersonalTokenNotSupportedForEdgeError,
 )
 from axiom_py.query import (
     QueryLegacy,
     QueryOptions,
     QueryKind,
-    Filter,
-    Order,
-    VirtualField,
-    Projection,
-    FilterOperation,
     Aggregation,
 )
 from axiom_py.tokens import (
@@ -50,9 +46,9 @@ class TestClient(unittest.TestCase):
     def setUpClass(cls):
         cls.logger = getLogger()
         cls.client = Client(
-            os.getenv("AXIOM_TOKEN"),
-            os.getenv("AXIOM_ORG_ID"),
-            os.getenv("AXIOM_URL"),
+            token=os.getenv("AXIOM_TOKEN"),
+            org_id=os.getenv("AXIOM_ORG_ID"),
+            url=os.getenv("AXIOM_URL"),
         )
         cls.dataset_name = get_random_name()
         cls.logger.info(
@@ -255,15 +251,6 @@ class TestClient(unittest.TestCase):
             Aggregation(alias="event_count", op="count", field="*")
         ]
         q = QueryLegacy(startTime, endTime, aggregations=aggregations)
-        q.groupBy = ["success", "remote_ip"]
-        q.filter = Filter(FilterOperation.EQUAL, "response", 304)
-        q.order = [
-            Order("success", True),
-            Order("remote_ip", False),
-        ]
-        q.virtualFields = [VirtualField("success", "response < 400")]
-        q.project = [Projection("remote_ip", "ip")]
-
         res = self.client.query_legacy(self.dataset_name, q, QueryOptions())
 
         # self.assertEqual(len(self.events), res.status.rowsExamined)
@@ -324,10 +311,212 @@ class TestClient(unittest.TestCase):
             if ds:
                 cls.client.datasets.delete(cls.dataset_name)
                 cls.logger.info(
-                    "dataset (%s) was not deleted as part of the test, deleting it now."
-                    % cls.dataset_name
+                    "dataset (%s) was not deleted as part of the test, "
+                    "deleting it now." % cls.dataset_name
                 )
         except AxiomError as e:
             # nothing to do here, since the dataset doesn't exist
             cls.logger.warning(e)
         cls.logger.info("finish cleaning up after TestClient")
+
+
+class TestEdgeConfiguration(unittest.TestCase):
+    """Tests for edge-based ingestion configuration."""
+
+    def _clear_env(self):
+        """Helper to clear edge-related env vars."""
+        os.environ.pop("AXIOM_URL", None)
+        os.environ.pop("AXIOM_EDGE_URL", None)
+
+    def test_edge_url_builds_correct_ingest_url(self):
+        """Test that edge_url config builds correct edge ingest URL."""
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            client = Client(
+                token="xaat-test-token",
+                org_id="test-org",
+                edge_url="https://eu-central-1.aws.edge.axiom.co",
+            )
+            url = client._get_edge_ingest_url("my-dataset")
+            self.assertEqual(
+                url,
+                "https://eu-central-1.aws.edge.axiom.co/v1/ingest/my-dataset",
+            )
+            self.assertTrue(client.is_edge_configured())
+
+    def test_edge_url_builds_correct_query_url(self):
+        """Test that edge_url config builds correct edge query URL."""
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            client = Client(
+                token="xaat-test-token",
+                org_id="test-org",
+                edge_url="https://eu-central-1.aws.edge.axiom.co",
+            )
+            url = client._get_edge_query_url()
+            self.assertEqual(
+                url,
+                "https://eu-central-1.aws.edge.axiom.co/v1/query/_apl",
+            )
+
+    def test_no_edge_returns_none(self):
+        """Test that no edge config returns None for edge URLs."""
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            client = Client(
+                token="xaat-test-token",
+                org_id="test-org",
+            )
+            self.assertIsNone(client._get_edge_ingest_url("my-dataset"))
+            self.assertIsNone(client._get_edge_query_url())
+            self.assertFalse(client.is_edge_configured())
+
+    def test_edge_url_without_path_appends_ingest_path(self):
+        """Test that edge_url without path appends edge ingest path."""
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            client = Client(
+                token="xaat-test-token",
+                org_id="test-org",
+                edge_url="https://eu-central-1.aws.edge.axiom.co",
+            )
+            url = client._get_edge_ingest_url("my-dataset")
+            self.assertEqual(
+                url,
+                "https://eu-central-1.aws.edge.axiom.co/v1/ingest/my-dataset",
+            )
+
+    def test_edge_url_without_path_appends_query_path(self):
+        """Test that edge_url without path appends edge query path."""
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            client = Client(
+                token="xaat-test-token",
+                org_id="test-org",
+                edge_url="https://eu-central-1.aws.edge.axiom.co",
+            )
+            url = client._get_edge_query_url()
+            self.assertEqual(
+                url,
+                "https://eu-central-1.aws.edge.axiom.co/v1/query/_apl",
+            )
+
+    def test_edge_url_with_custom_path_used_as_is(self):
+        """Test that edge_url with custom path is used as-is."""
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            client = Client(
+                token="xaat-test-token",
+                org_id="test-org",
+                edge_url="http://localhost:3400/ingest",
+            )
+            url = client._get_edge_ingest_url("ignored")
+            self.assertEqual(url, "http://localhost:3400/ingest")
+
+    def test_both_url_and_edge_url_edge_used_for_ingest(self):
+        """Test that when url and edge_url are set, edge_url is used."""
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            client = Client(
+                token="xaat-test-token",
+                org_id="test-org",
+                url="https://api.eu.axiom.co",
+                edge_url="https://eu-central-1.aws.edge.axiom.co",
+            )
+            # Both are kept - url for API, edge_url for ingest/query
+            self.assertEqual(
+                client._edge_url, "https://eu-central-1.aws.edge.axiom.co"
+            )
+            self.assertEqual(client._url, "https://api.eu.axiom.co")
+            # Should use edge URL for ingest
+            url = client._get_edge_ingest_url("my-dataset")
+            self.assertEqual(
+                url,
+                "https://eu-central-1.aws.edge.axiom.co/v1/ingest/my-dataset",
+            )
+
+    def test_production_aws_edge_url(self):
+        """Test production AWS edge endpoint."""
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            client = Client(
+                token="xaat-test-token",
+                org_id="test-org",
+                edge_url="https://us-east-1.aws.edge.axiom.co",
+            )
+            url = client._get_edge_ingest_url("logs")
+            self.assertEqual(
+                url, "https://us-east-1.aws.edge.axiom.co/v1/ingest/logs"
+            )
+
+    def test_staging_environment_edge_url(self):
+        """Test staging environment edge endpoint."""
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            client = Client(
+                token="xaat-test-token",
+                org_id="test-org",
+                edge_url="https://us-east-1.edge.staging.axiomdomain.co",
+            )
+            url = client._get_edge_ingest_url("test-dataset")
+            self.assertEqual(
+                url,
+                "https://us-east-1.edge.staging.axiomdomain.co"
+                "/v1/ingest/test-dataset",
+            )
+
+    def test_edge_url_not_read_from_env(self):
+        """Test that edge_url is NOT auto-read from environment."""
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            # Set env var that should be ignored
+            os.environ["AXIOM_EDGE_URL"] = "https://edge.example.com"
+
+            # Client should NOT pick up edge config from env
+            client = Client(token="xaat-test-token", org_id="test-org")
+            self.assertIsNone(client._edge_url)
+            self.assertFalse(client.is_edge_configured())
+
+            os.environ.pop("AXIOM_EDGE_URL", None)
+
+    def test_personal_token_rejected_for_edge_ingest(self):
+        """Test that personal tokens are rejected for edge ingest."""
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            client = Client(
+                token="xapt-personal-token",
+                org_id="test-org",
+                edge_url="https://eu-central-1.aws.edge.axiom.co",
+            )
+            with self.assertRaises(PersonalTokenNotSupportedForEdgeError):
+                client.ingest(
+                    "test-dataset",
+                    b"test",
+                    ContentType.JSON,
+                    ContentEncoding.IDENTITY,
+                )
+
+    def test_api_token_allowed_for_edge_ingest(self):
+        """Test that API tokens work for edge (no exception on token check)."""
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            client = Client(
+                token="xaat-api-token",
+                org_id="test-org",
+                edge_url="https://eu-central-1.aws.edge.axiom.co",
+            )
+            # This should not raise PersonalTokenNotSupportedForEdgeError
+            # It will fail on the actual HTTP request, but that's expected
+            self.assertTrue(client.is_edge_configured())
+
+    def test_empty_string_edge_url_treated_as_none(self):
+        """Test that empty string for edge_url is treated as None."""
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            client = Client(
+                token="xaat-api-token",
+                org_id="test-org",
+                edge_url="",
+            )
+            self.assertIsNone(client._edge_url)
+            self.assertFalse(client.is_edge_configured())

@@ -18,9 +18,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python }}
+          python-version: "3.12"
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v5
       - run: uv run ruff check
       - run: uv run ruff format --check
 
@@ -34,6 +34,14 @@ jobs:
       fail-fast: true
       matrix:
         python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        environment:
+          - development
+          - staging
+        include:
+          - environment: development
+            slug: DEV
+          - environment: staging
+            slug: STAGING
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -41,18 +49,16 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: Test against development
+      - name: Run tests
         run: uv run pytest
         env:
-          AXIOM_URL: ${{ secrets.TESTING_DEV_API_URL }}
-          AXIOM_TOKEN: ${{ secrets.TESTING_DEV_TOKEN }}
-          AXIOM_ORG_ID: ${{ secrets.TESTING_DEV_ORG_ID }}
-      - name: Test against staging
-        run: uv run pytest
-        env:
-          AXIOM_URL: ${{ secrets.TESTING_STAGING_API_URL }}
-          AXIOM_TOKEN: ${{ secrets.TESTING_STAGING_TOKEN }}
-          AXIOM_ORG_ID: ${{ secrets.TESTING_STAGING_ORG_ID }}
+          AXIOM_URL: ${{ secrets[format('TESTING_{0}_API_URL', matrix.slug)] }}
+          AXIOM_TOKEN: ${{ secrets[format('TESTING_{0}_TOKEN', matrix.slug)] }}
+          AXIOM_ORG_ID: ${{ secrets[format('TESTING_{0}_ORG_ID', matrix.slug)] }}
+          AXIOM_EDGE_URL: ${{ vars[format('TESTING_{0}_EDGE_URL', matrix.slug)] }}
+          AXIOM_EDGE_TOKEN: ${{ secrets[format('TESTING_{0}_EDGE_TOKEN', matrix.slug)] }}
+          AXIOM_EDGE_DATASET_REGION: ${{ vars[format('TESTING_{0}_EDGE_DATASET_REGION', matrix.slug)] }}
+          AXIOM_DATASET_SUFFIX: ${{ github.run_id }}-${{ matrix.python }}
 
   publish:
     name: Publish on PyPi
