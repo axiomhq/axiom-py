@@ -234,12 +234,25 @@ class Client:  # pylint: disable=R0903
         # prepare query params
         params = self._prepare_ingest_options(opts)
 
-        # override the default header and set the value from the passed parameter
-        res = self.session.post(
-            path, data=payload, headers=headers, params=params
-        )
-        status_snake = decamelize(res.json())
-        return from_dict(IngestStatus, status_snake)
+        try:
+            # override the default header and set the value from the passed parameter
+            res = self.session.post(
+                path, data=payload, headers=headers, params=params
+            )
+            status_snake = decamelize(res.json())
+            return from_dict(IngestStatus, status_snake)
+        except AxiomError as err:
+            # Do not crash the app if we cannot save to the logs to Axiom's servers
+            # Log the error to stdout, since we cannot send it to Axiom
+            print(err)
+            return IngestStatus(
+                ingested=0,
+                failed=1,
+                failures=[],
+                processed_bytes=0,
+                blocks_created=0,
+                wal_length=0,
+            )
 
     def ingest_events(
         self,
