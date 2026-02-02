@@ -69,5 +69,8 @@ def handle_json_serialization(obj):
         return str(obj)
 
 
-def is_personal_token(token: str):
+def is_personal_token(token: str) -> bool:
+    """Check if the token is a personal token (xapt-) vs API token (xaat-)."""
+    if token is None:
+        return False
     return token.startswith("xapt-")

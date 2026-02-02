@@ -6,6 +6,7 @@ import ujson
 import httpx
 from typing import Optional, List, Dict
 from dataclasses import asdict
+from urllib.parse import urlparse
 from humps import decamelize
 
 from .client import (
@@ -16,6 +17,7 @@ from .client import (
     WrongQueryKindException,
     AplOptions,
     AXIOM_URL,
+    PersonalTokenNotSupportedForEdgeError,
 )
 from .datasets_async import AsyncDatasetsClient
 from .annotations_async import AsyncAnnotationsClient
@@ -47,14 +49,22 @@ class AsyncClient:
         token: Optional[str] = None,
         org_id: Optional[str] = None,
         url: Optional[str] = None,
+        edge_url: Optional[str] = None,
     ):
         """
         Initialize the async Axiom client.
 
         Args:
-            token: API token for authentication (or set AXIOM_TOKEN env var)
+            token: API token for authentication (or set AXIOM_TOKEN env var).
+                Edge endpoints require API tokens (xaat-), not personal
+                tokens (xapt-).
             org_id: Optional organization ID (or set AXIOM_ORG_ID env var)
             url: Optional base URL (defaults to https://api.axiom.co)
+            edge_url: Edge URL for ingest/query operations (e.g.,
+                "https://eu-central-1.aws.edge.axiom.co"). When set, ingest
+                requests use `/v1/ingest/{dataset}` and query requests use
+                `/v1/query/_apl`.
+                Must be passed explicitly (not read from environment).
 
         Example:
             ```python
@@ -69,6 +79,19 @@ class AsyncClient:
             org_id = os.getenv("AXIOM_ORG_ID")
         if url is None:
             url = AXIOM_URL
+
+        # Note: edge_url is NOT auto-read from environment.
+        # Edge configuration must be explicit to avoid accidentally routing
+        # all requests through edge when AXIOM_EDGE_URL is set for
+        # edge-specific tests. Create a separate AsyncClient with edge_url
+        # for edge operations.
+
+        # Normalize empty strings to None for edge config
+        edge_url = edge_url or None
+
+        # Store for building ingest/query endpoints
+        self._token = token
+        self._edge_url = edge_url
 
         # Get common headers
         headers = get_common_headers(token, org_id)
@@ -104,6 +127,48 @@ class AsyncClient:
         """
         await self.client.aclose()
 
+    def is_edge_configured(self) -> bool:
+        """Check if edge is configured."""
+        return self._edge_url is not None
+
+    def _get_edge_ingest_url(self, dataset: str) -> Optional[str]:
+        """
+        Get the full edge ingest URL for a dataset.
+        Returns None if edge is not configured.
+        """
+        if self._edge_url is None:
+            return None
+
+        url = self._edge_url.rstrip("/")
+        parsed = urlparse(url)
+        path = parsed.path
+
+        # If path is empty or just "/", append edge ingest format
+        if path == "" or path == "/":
+            return f"{parsed.scheme}://{parsed.netloc}/v1/ingest/{dataset}"
+
+        # edge_url has a custom path, use as-is
+        return url
+
+    def _get_edge_query_url(self) -> Optional[str]:
+        """
+        Get the full edge query URL.
+        Returns None if edge is not configured.
+        """
+        if self._edge_url is None:
+            return None
+
+        url = self._edge_url.rstrip("/")
+        parsed = urlparse(url)
+        path = parsed.path
+
+        # If path is empty or just "/", append edge query format
+        if path == "" or path == "/":
+            return f"{parsed.scheme}://{parsed.netloc}/v1/query/_apl"
+
+        # edge_url has a custom path, use as-is
+        return url
+
     async def ingest(
         self,
         dataset: str,
@@ -114,6 +179,9 @@ class AsyncClient:
     ) -> IngestStatus:
         """
         Asynchronously ingest the payload into the named dataset and return the status.
+
+        If edge is configured, uses the edge endpoint. Edge endpoints require
+        API tokens (xaat-), not personal tokens (xapt-).
 
         Args:
             dataset: Dataset name
@@ -127,7 +195,16 @@ class AsyncClient:
 
         See https://axiom.co/docs/restapi/endpoints/ingestIntoDataset
         """
-        path = f"/v1/datasets/{dataset}/ingest"
+        # Check if edge is configured and build appropriate URL
+        edge_url = self._get_edge_ingest_url(dataset)
+        if edge_url is not None:
+            # Edge endpoints only support API tokens, not personal tokens
+            if is_personal_token(self._token):
+                raise PersonalTokenNotSupportedForEdgeError()
+            path = edge_url
+        else:
+            # Legacy path format for backwards compatibility
+            path = f"/v1/datasets/{dataset}/ingest"
 
         # set headers
         headers = {
@@ -255,6 +332,9 @@ class AsyncClient:
         """
         Asynchronously execute the given APL query.
 
+        If edge is configured, uses the edge endpoint. Edge endpoints require
+        API tokens (xaat-), not personal tokens (xapt-).
+
         Args:
             apl: APL query string
             opts: Optional APL query options
@@ -272,7 +352,17 @@ class AsyncClient:
 
         See https://axiom.co/docs/restapi/endpoints/queryApl
         """
-        path = "/v1/datasets/_apl"
+        # Check if edge is configured and build appropriate URL
+        edge_url = self._get_edge_query_url()
+        if edge_url is not None:
+            # Edge endpoints only support API tokens, not personal tokens
+            if is_personal_token(self._token):
+                raise PersonalTokenNotSupportedForEdgeError()
+            path = edge_url
+        else:
+            # Legacy path format for backwards compatibility
+            path = "/v1/datasets/_apl"
+
         payload = ujson.dumps(
             self._prepare_apl_payload(apl, opts),
             default=handle_json_serialization,
