@@ -21,6 +21,7 @@ from .client import (
 )
 from .datasets_async import AsyncDatasetsClient
 from .annotations_async import AsyncAnnotationsClient
+from .dashboards_async import AsyncDashboardsClient
 from .tokens_async import AsyncTokensClient
 from .users_async import AsyncUsersClient
 from .query import (
@@ -41,6 +42,7 @@ class AsyncClient:
     datasets: AsyncDatasetsClient
     users: AsyncUsersClient
     annotations: AsyncAnnotationsClient
+    dashboards: AsyncDashboardsClient
     tokens: AsyncTokensClient
     client: httpx.AsyncClient
 
@@ -108,6 +110,7 @@ class AsyncClient:
         self.datasets = AsyncDatasetsClient(self.client)
         self.users = AsyncUsersClient(self.client, is_personal_token(token))
         self.annotations = AsyncAnnotationsClient(self.client)
+        self.dashboards = AsyncDashboardsClient(self.client)
         self.tokens = AsyncTokensClient(self.client)
 
     async def __aenter__(self):
