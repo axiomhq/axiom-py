@@ -28,6 +28,12 @@ from .annotations import (
     AnnotationUpdateRequest,
     AnnotationsClient,
 )
+from .dashboards import (
+    Dashboard,
+    DashboardCreateRequest,
+    DashboardUpdateRequest,
+    DashboardsClient,
+)
 from .logging import AxiomHandler
 from .structlog import AxiomProcessor
 
@@ -35,6 +41,7 @@ from .structlog import AxiomProcessor
 from .client_async import AsyncClient
 from .datasets_async import AsyncDatasetsClient
 from .annotations_async import AsyncAnnotationsClient
+from .dashboards_async import AsyncDashboardsClient
 from .tokens_async import AsyncTokensClient
 from .users_async import AsyncUsersClient
 from .logging_async import AsyncAxiomHandler
@@ -57,16 +64,21 @@ _all_ = [
     Annotation,
     AnnotationCreateRequest,
     AnnotationUpdateRequest,
+    Dashboard,
+    DashboardCreateRequest,
+    DashboardUpdateRequest,
     # Sync API
     Client,
     DatasetsClient,
     AnnotationsClient,
+    DashboardsClient,
     AxiomHandler,
     AxiomProcessor,
     # Async API
     AsyncClient,
     AsyncDatasetsClient,
     AsyncAnnotationsClient,
+    AsyncDashboardsClient,
     AsyncTokensClient,
     AsyncUsersClient,
     AsyncAxiomHandler,
