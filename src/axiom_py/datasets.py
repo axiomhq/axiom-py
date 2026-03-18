@@ -27,7 +27,7 @@ class DatasetCreateRequest:
 
     name: str
     description: str
-    region: Optional[str] = field(default=None)
+    edgeDeployment: Optional[str] = field(default=None)
 
 
 @dataclass
@@ -70,7 +70,7 @@ class DatasetsClient:  # pylint: disable=R0903
         self,
         name: str,
         description: str = "",
-        region: Optional[str] = None,
+        edgeDeployment: Optional[str] = None,
     ) -> Dataset:
         """
         Create a dataset with the given properties.
@@ -78,8 +78,8 @@ class DatasetsClient:  # pylint: disable=R0903
         Args:
             name: Name of the dataset.
             description: Description of the dataset.
-            region: Optional region for the dataset (e.g., "eu-west-1").
-                When set, the dataset is created in the specified region.
+            edgeDeployment: Optional edge deployment for the dataset (e.g., "eu-west-1").
+                When set, the dataset is created in the specified edge deployment.
 
         See https://axiom.co/docs/restapi/endpoints/createDataset
         """
@@ -87,7 +87,7 @@ class DatasetsClient:  # pylint: disable=R0903
         req = DatasetCreateRequest(
             name=name,
             description=description,
-            region=region,
+            edgeDeployment=edgeDeployment,
         )
         # Filter out None values from the request
         req_dict = {k: v for k, v in asdict(req).items() if v is not None}
