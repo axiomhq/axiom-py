@@ -218,8 +218,16 @@ class Client:  # pylint: disable=R0903
             api_base = f"{parsed.scheme}://{parsed.netloc}"
 
         # set exponential retries
+        # allowed_methods includes POST so that connection errors
+        # (e.g. RemoteDisconnected from stale keep-alive connections)
+        # are retried on ingest calls, not just GET requests.
         retries = Retry(
-            total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504]
+            total=3,
+            backoff_factor=2,
+            status_forcelist=[500, 502, 503, 504],
+            allowed_methods=frozenset(
+                ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE"]
+            ),
         )
 
         # Create session for all API operations
