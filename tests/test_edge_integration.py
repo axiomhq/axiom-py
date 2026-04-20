@@ -607,16 +607,44 @@ class TestAsyncEdgeIntegration(unittest.TestCase):
         asyncio.run(run_test())
 
 
-class TestAsyncEdgeURLConfiguration(unittest.TestCase):
-    """Test async edge_url configuration."""
+class TestAsyncEdgeConfiguration(unittest.TestCase):
+    """Test async edge configuration."""
+
+    def _clear_env(self):
+        os.environ.pop("AXIOM_EDGE", None)
+        os.environ.pop("AXIOM_URL", None)
+        os.environ.pop("AXIOM_EDGE_URL", None)
+
+    def test_async_edge_builds_correct_urls(self):
+        """Test async edge builds correct ingest and query URLs."""
+        from unittest.mock import patch
+
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+
+            client = AsyncClient(
+                token="xaat-test-token",
+                org_id="test-org",
+                edge="eu-central-1.aws.edge.axiom.co",
+            )
+
+            self.assertEqual(client._edge, "eu-central-1.aws.edge.axiom.co")
+            self.assertEqual(
+                client._get_edge_ingest_url("my-dataset"),
+                "https://eu-central-1.aws.edge.axiom.co/v1/ingest/my-dataset",
+            )
+            self.assertEqual(
+                client._get_edge_query_url(),
+                "https://eu-central-1.aws.edge.axiom.co/v1/query/_apl",
+            )
+            self.assertTrue(client.is_edge_configured())
 
     def test_async_edge_url_builds_correct_urls(self):
         """Test async edge_url builds correct ingest and query URLs."""
         from unittest.mock import patch
 
         with patch.dict(os.environ, {}, clear=False):
-            os.environ.pop("AXIOM_URL", None)
-            os.environ.pop("AXIOM_EDGE_URL", None)
+            self._clear_env()
 
             client = AsyncClient(
                 token="xaat-test-token",
@@ -638,8 +666,7 @@ class TestAsyncEdgeURLConfiguration(unittest.TestCase):
         from unittest.mock import patch
 
         with patch.dict(os.environ, {}, clear=False):
-            os.environ.pop("AXIOM_URL", None)
-            os.environ.pop("AXIOM_EDGE_URL", None)
+            self._clear_env()
 
             client = AsyncClient(
                 token="xaat-test-token",
@@ -657,3 +684,57 @@ class TestAsyncEdgeURLConfiguration(unittest.TestCase):
                 query_url,
                 "https://eu-central-1.aws.edge.axiom.co/v1/query/_apl",
             )
+
+    def test_async_edge_url_takes_precedence_over_edge(self):
+        """Test that async edge_url takes precedence over edge."""
+        from unittest.mock import patch
+
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+
+            client = AsyncClient(
+                token="xaat-test-token",
+                org_id="test-org",
+                edge="ignored.aws.edge.axiom.co",
+                edge_url="https://custom-edge.example.com",
+            )
+
+            self.assertEqual(
+                client._get_edge_ingest_url("my-dataset"),
+                "https://custom-edge.example.com/v1/ingest/my-dataset",
+            )
+            self.assertEqual(
+                client._get_edge_query_url(),
+                "https://custom-edge.example.com/v1/query/_apl",
+            )
+
+    def test_async_edge_not_read_from_env(self):
+        """Test that async edge config is NOT auto-read from environment."""
+        from unittest.mock import patch
+
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+            os.environ["AXIOM_EDGE"] = "eu-central-1.aws.edge.axiom.co"
+            os.environ["AXIOM_EDGE_URL"] = "https://custom-edge.example.com"
+
+            client = AsyncClient(token="xaat-test-token", org_id="test-org")
+
+            self.assertIsNone(client._edge)
+            self.assertIsNone(client._edge_url)
+            self.assertFalse(client.is_edge_configured())
+
+    def test_async_empty_string_edge_treated_as_none(self):
+        """Test that async edge empty string is treated as None."""
+        from unittest.mock import patch
+
+        with patch.dict(os.environ, {}, clear=False):
+            self._clear_env()
+
+            client = AsyncClient(
+                token="xaat-test-token",
+                org_id="test-org",
+                edge="",
+            )
+
+            self.assertIsNone(client._edge)
+            self.assertFalse(client.is_edge_configured())

@@ -171,6 +171,7 @@ class Client:  # pylint: disable=R0903
         org_id: Optional[str] = None,
         url: Optional[str] = None,
         edge_url: Optional[str] = None,
+        edge: Optional[str] = None,
     ):
         """
         Initialize the Axiom client.
@@ -187,6 +188,12 @@ class Client:  # pylint: disable=R0903
                 requests use `/v1/ingest/{dataset}` and query requests use
                 `/v1/query/_apl`.
                 Must be passed explicitly (not read from environment).
+                Takes precedence over `edge`.
+            edge: Edge domain for ingest/query operations (e.g.,
+                "eu-central-1.aws.edge.axiom.co"). When set, ingest
+                requests use `https://{edge}/v1/ingest/{dataset}` and query
+                requests use `https://{edge}/v1/query/_apl`.
+                Must be passed explicitly (not read from environment).
         """
         # fallback to env variables if not provided
         if token is None:
@@ -195,19 +202,21 @@ class Client:  # pylint: disable=R0903
             org_id = os.getenv("AXIOM_ORG_ID")
         if url is None:
             url = os.getenv("AXIOM_URL")
-        # Note: edge_url is NOT auto-read from environment.
+        # Note: edge_url and edge are NOT auto-read from environment.
         # Edge configuration must be explicit to avoid accidentally routing
-        # all requests through edge when AXIOM_EDGE_URL is set for
+        # all requests through edge when AXIOM_EDGE_URL or AXIOM_EDGE is set for
         # edge-specific tests. Create a separate Client with edge_url
         # for edge operations.
 
         # Normalize empty strings to None for edge config
         edge_url = edge_url or None
+        edge = edge or None
 
         # Store for building ingest/query endpoints
         self._token = token
         self._url = url
         self._edge_url = edge_url
+        self._edge = edge
 
         # Determine API base URL (for non-ingest/query operations)
         # This always uses AXIOM_URL (api.axiom.co) unless a custom url is set
@@ -258,45 +267,51 @@ class Client:  # pylint: disable=R0903
 
     def is_edge_configured(self) -> bool:
         """Check if edge is configured."""
-        return self._edge_url is not None
+        return self._edge_url is not None or self._edge is not None
 
     def _get_edge_ingest_url(self, dataset: str) -> Optional[str]:
         """
         Get the full edge ingest URL for a dataset.
         Returns None if edge is not configured.
         """
-        if self._edge_url is None:
-            return None
+        if self._edge_url is not None:
+            url = self._edge_url.rstrip("/")
+            parsed = urlparse(url)
+            path = parsed.path
 
-        url = self._edge_url.rstrip("/")
-        parsed = urlparse(url)
-        path = parsed.path
+            # If path is empty or just "/", append edge ingest format
+            if path == "" or path == "/":
+                return f"{parsed.scheme}://{parsed.netloc}/v1/ingest/{dataset}"
 
-        # If path is empty or just "/", append edge ingest format
-        if path == "" or path == "/":
-            return f"{parsed.scheme}://{parsed.netloc}/v1/ingest/{dataset}"
+            # edge_url has a custom path, use as-is
+            return url
 
-        # edge_url has a custom path, use as-is
-        return url
+        if self._edge is not None:
+            return f"https://{self._edge.rstrip('/')}/v1/ingest/{dataset}"
+
+        return None
 
     def _get_edge_query_url(self) -> Optional[str]:
         """
         Get the full edge query URL.
         Returns None if edge is not configured.
         """
-        if self._edge_url is None:
-            return None
+        if self._edge_url is not None:
+            url = self._edge_url.rstrip("/")
+            parsed = urlparse(url)
+            path = parsed.path
 
-        url = self._edge_url.rstrip("/")
-        parsed = urlparse(url)
-        path = parsed.path
+            # If path is empty or just "/", append edge query format
+            if path == "" or path == "/":
+                return f"{parsed.scheme}://{parsed.netloc}/v1/query/_apl"
 
-        # If path is empty or just "/", append edge query format
-        if path == "" or path == "/":
-            return f"{parsed.scheme}://{parsed.netloc}/v1/query/_apl"
+            # edge_url has a custom path, use as-is
+            return url
 
-        # edge_url has a custom path, use as-is
-        return url
+        if self._edge is not None:
+            return f"https://{self._edge.rstrip('/')}/v1/query/_apl"
+
+        return None
 
     def before_shutdown(self, func: Callable):
         self.before_shutdown_funcs.append(func)
