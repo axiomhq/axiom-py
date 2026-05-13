@@ -263,3 +263,34 @@ class QueryResult:
     # was saved on the server. This is only set when the apl query was send with
     # the `saveAsKind` option specified.
     savedQueryID: Optional[str] = field(default=None)
+
+
+@dataclass
+class MplSeriesItem:
+    """A single time series returned by an MPL query."""
+
+    metric: str
+    tags: Dict[str, object]
+    # Unix timestamp (seconds) of the first data point.
+    start: int
+    # Interval in seconds between data points.
+    resolution: int
+    # Data points; None indicates a gap in the series.
+    data: List[Optional[float]]
+    summary: Optional[float] = field(default=None)
+
+
+@dataclass
+class MplMetadata:
+    """Metadata accompanying an MPL query result."""
+
+    group_keys: List[str] = field(default_factory=list)
+
+
+@dataclass
+class MplResult:
+    """Result of an MPL (metrics) query."""
+
+    metadata: MplMetadata
+    series: List[MplSeriesItem]
+    savedQueryID: Optional[str] = field(default=None)

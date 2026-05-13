@@ -13,6 +13,9 @@ from .result import (
     Timeseries,
     QueryLegacyResult,
     QueryResult,
+    MplSeriesItem,
+    MplMetadata,
+    MplResult,
 )
 
 __all__ = (
@@ -36,4 +39,7 @@ __all__ = (
     Timeseries,
     QueryLegacyResult,
     QueryResult,
+    MplSeriesItem,
+    MplMetadata,
+    MplResult,
 )

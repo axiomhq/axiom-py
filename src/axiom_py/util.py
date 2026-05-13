@@ -3,7 +3,7 @@ import iso8601
 from enum import Enum
 from uuid import UUID
 from typing import Type, TypeVar
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from .query import QueryKind
 from .query.result import MessagePriority
@@ -56,6 +56,18 @@ def from_dict(data_class: Type[T], data) -> T:
     )
 
     return dacite.from_dict(data_class=data_class, data=data, config=cfg)
+
+
+def format_datetime_rfc3339_utc(dt: datetime) -> str:
+    """
+    Serialize datetime as RFC3339 in UTC with trailing Z.
+
+    Naive datetimes are interpreted as UTC.
+    """
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    dt = dt.astimezone(timezone.utc)
+    return dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 def handle_json_serialization(obj):

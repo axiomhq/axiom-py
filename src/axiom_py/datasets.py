@@ -19,6 +19,7 @@ class Dataset:
     description: str
     who: Optional[str]
     created: Optional[str]
+    edgeDeployment: Optional[str] = field(default=None)
 
 
 @dataclass

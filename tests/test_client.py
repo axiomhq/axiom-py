@@ -505,19 +505,19 @@ class TestEdgeConfiguration(unittest.TestCase):
                 "/v1/ingest/test-dataset",
             )
 
-    def test_edge_url_not_read_from_env(self):
-        """Test that edge_url is NOT auto-read from environment."""
+    def test_edge_url_read_from_env(self):
+        """Test that edge_url and edge are auto-read from environment."""
         with patch.dict(os.environ, {}, clear=False):
             self._clear_env()
-            # Set env var that should be ignored
+            # Set env vars that should be picked up
             os.environ["AXIOM_EDGE_URL"] = "https://edge.example.com"
             os.environ["AXIOM_EDGE"] = "eu-central-1.aws.edge.axiom.co"
 
-            # Client should NOT pick up edge config from env
+            # Client should pick up edge_url from env and keep edge unset
             client = Client(token="xaat-test-token", org_id="test-org")
-            self.assertIsNone(client._edge_url)
+            self.assertEqual(client._edge_url, "https://edge.example.com")
             self.assertIsNone(client._edge)
-            self.assertFalse(client.is_edge_configured())
+            self.assertTrue(client.is_edge_configured())
 
             os.environ.pop("AXIOM_EDGE_URL", None)
             os.environ.pop("AXIOM_EDGE", None)
@@ -553,9 +553,10 @@ class TestEdgeConfiguration(unittest.TestCase):
             self.assertTrue(client.is_edge_configured())
 
     def test_empty_string_edge_url_treated_as_none(self):
-        """Test that empty string for edge_url is treated as None."""
+        """Test that empty string for edge_url disables env fallback."""
         with patch.dict(os.environ, {}, clear=False):
             self._clear_env()
+            os.environ["AXIOM_EDGE_URL"] = "https://edge.example.com"
             client = Client(
                 token="xaat-api-token",
                 org_id="test-org",
@@ -565,9 +566,10 @@ class TestEdgeConfiguration(unittest.TestCase):
             self.assertFalse(client.is_edge_configured())
 
     def test_empty_string_edge_treated_as_none(self):
-        """Test that empty string for edge is treated as None."""
+        """Test that empty string for edge disables env fallback."""
         with patch.dict(os.environ, {}, clear=False):
             self._clear_env()
+            os.environ["AXIOM_EDGE"] = "eu-central-1.aws.edge.axiom.co"
             client = Client(
                 token="xaat-api-token",
                 org_id="test-org",

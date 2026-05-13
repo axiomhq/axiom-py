@@ -4,7 +4,7 @@ import os
 import gzip
 import ujson
 import httpx
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 from dataclasses import asdict
 from urllib.parse import urlparse
 from humps import decamelize
@@ -16,8 +16,10 @@ from .client import (
     ContentEncoding,
     WrongQueryKindException,
     AplOptions,
+    MplOptions,
     AXIOM_URL,
     PersonalTokenNotSupportedForEdgeError,
+    EdgeResolutionError,
 )
 from .datasets_async import AsyncDatasetsClient
 from .annotations_async import AsyncAnnotationsClient
@@ -29,8 +31,14 @@ from .query import (
     QueryOptions,
     QueryLegacyResult,
     QueryKind,
+    MplResult,
 )
-from .util import from_dict, handle_json_serialization, is_personal_token
+from .util import (
+    from_dict,
+    format_datetime_rfc3339_utc,
+    handle_json_serialization,
+    is_personal_token,
+)
 from ._http_client import get_common_headers, async_retry, DEFAULT_TIMEOUT
 from ._error_handling import check_response_error
 
@@ -65,13 +73,13 @@ class AsyncClient:
                 "https://eu-central-1.aws.edge.axiom.co"). When set, ingest
                 requests use `/v1/ingest/{dataset}` and query requests use
                 `/v1/query/_apl`.
-                Must be passed explicitly (not read from environment).
+                Falls back to AXIOM_EDGE_URL env var.
                 Takes precedence over `edge`.
             edge: Edge domain for ingest/query operations (e.g.,
                 "eu-central-1.aws.edge.axiom.co"). When set, ingest
                 requests use `https://{edge}/v1/ingest/{dataset}` and query
                 requests use `https://{edge}/v1/query/_apl`.
-                Must be passed explicitly (not read from environment).
+                Falls back to AXIOM_EDGE env var.
 
         Example:
             ```python
@@ -87,11 +95,10 @@ class AsyncClient:
         if url is None:
             url = AXIOM_URL
 
-        # Note: edge_url and edge are NOT auto-read from environment.
-        # Edge configuration must be explicit to avoid accidentally routing
-        # all requests through edge when AXIOM_EDGE_URL or AXIOM_EDGE is set for
-        # edge-specific tests. Create a separate AsyncClient with edge_url
-        # for edge operations.
+        if edge_url is None:
+            edge_url = os.getenv("AXIOM_EDGE_URL")
+        if edge is None:
+            edge = os.getenv("AXIOM_EDGE")
 
         # Normalize empty strings to None for edge config
         edge_url = edge_url or None
@@ -140,49 +147,111 @@ class AsyncClient:
         """Check if edge is configured."""
         return self._edge_url is not None or self._edge is not None
 
-    def _get_edge_ingest_url(self, dataset: str) -> Optional[str]:
+    def _resolve_edge_url(self, path_suffix: str) -> Optional[str]:
         """
-        Get the full edge ingest URL for a dataset.
-        Returns None if edge is not configured.
+        Resolve an edge URL for the given path suffix.
+
+        If edge_url includes a custom path, it is used as-is.
+        If edge_url is just a host/base URL, the suffix is appended.
+        If only edge domain is configured, https://{edge}/{suffix} is used.
         """
         if self._edge_url is not None:
             url = self._edge_url.rstrip("/")
             parsed = urlparse(url)
             path = parsed.path
 
-            # If path is empty or just "/", append edge ingest format
             if path == "" or path == "/":
-                return f"{parsed.scheme}://{parsed.netloc}/v1/ingest/{dataset}"
+                return f"{parsed.scheme}://{parsed.netloc}/{path_suffix}"
 
-            # edge_url has a custom path, use as-is
             return url
 
         if self._edge is not None:
-            return f"https://{self._edge.rstrip('/')}/v1/ingest/{dataset}"
+            return f"https://{self._edge.rstrip('/')}/{path_suffix}"
 
         return None
+
+    def _get_edge_ingest_url(self, dataset: str) -> Optional[str]:
+        """
+        Get the full edge ingest URL for a dataset.
+        Returns None if edge is not configured.
+        """
+        return self._resolve_edge_url(f"v1/ingest/{dataset}")
 
     def _get_edge_query_url(self) -> Optional[str]:
         """
         Get the full edge query URL.
         Returns None if edge is not configured.
         """
-        if self._edge_url is not None:
-            url = self._edge_url.rstrip("/")
-            parsed = urlparse(url)
-            path = parsed.path
+        return self._resolve_edge_url("v1/query/_apl")
 
-            # If path is empty or just "/", append edge query format
-            if path == "" or path == "/":
-                return f"{parsed.scheme}://{parsed.netloc}/v1/query/_apl"
+    def _get_edge_mpl_url(self) -> Optional[str]:
+        """
+        Get the full edge MPL query URL.
+        Returns None if edge is not configured.
+        """
+        return self._resolve_edge_url("v1/query/_mpl")
 
-            # edge_url has a custom path, use as-is
-            return url
+    async def mpl_query(self, mpl: str, opts: MplOptions) -> MplResult:
+        """
+        Asynchronously execute an MPL (Metrics Processing Language) query.
 
-        if self._edge is not None:
-            return f"https://{self._edge.rstrip('/')}/v1/query/_apl"
+        MPL queries are edge-only. Configure the client with edge_url or
+        edge to specify the endpoint. Edge endpoints require API tokens
+        (xaat-), not personal tokens.
 
-        return None
+        Args:
+            mpl: MPL query string (e.g.
+                "`my-dataset`:`http.requests` | align to 5m using avg")
+            opts: Query options including required start_time and end_time.
+
+        Returns:
+            MplResult containing the time-series data.
+        """
+        url = self._get_edge_mpl_url()
+        if url is None:
+            raise EdgeResolutionError(
+                "MPL queries require an edge endpoint; "
+                "set edge_url or edge when creating the AsyncClient"
+            )
+        if is_personal_token(self._token):
+            raise PersonalTokenNotSupportedForEdgeError()
+
+        payload = ujson.dumps(
+            self._prepare_mpl_payload(mpl, opts),
+            default=handle_json_serialization,
+        )
+        params = self._prepare_mpl_params(opts)
+
+        @async_retry()
+        async def _make_request():
+            return await self.client.post(url, content=payload, params=params)
+
+        response = await _make_request()
+        check_response_error(response.status_code, response.json())
+
+        result = from_dict(MplResult, response.json())
+        result.savedQueryID = response.headers.get("X-Axiom-History-Query-Id")
+        return result
+
+    def _prepare_mpl_payload(
+        self, mpl: str, opts: MplOptions
+    ) -> Dict[str, object]:
+        payload: Dict[str, object] = {
+            "mpl": mpl,
+            "startTime": format_datetime_rfc3339_utc(opts.start_time),
+            "endTime": format_datetime_rfc3339_utc(opts.end_time),
+        }
+        if opts.params:
+            payload["params"] = opts.params
+        if opts.query_options:
+            payload["queryOptions"] = opts.query_options
+        return payload
+
+    def _prepare_mpl_params(self, opts: MplOptions) -> Dict[str, object]:
+        params: Dict[str, object] = {"format": "metrics-v2"}
+        if opts.nocache:
+            params["nocache"] = "true"
+        return params
 
     async def ingest(
         self,
