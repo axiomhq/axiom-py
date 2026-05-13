@@ -43,9 +43,7 @@ edge_client = axiom_py.Client(
 ```
 
 **Note:** Edge endpoints require API tokens (`xaat-`), not personal tokens.
-Edge configuration can be passed explicitly (`edge_url` / `edge`) or through
-environment variables (`AXIOM_EDGE_URL` / `AXIOM_EDGE`). Explicit constructor
-arguments take precedence.
+Edge configuration must be passed explicitly when creating the client.
 
 ## Metrics Queries (MPL)
 

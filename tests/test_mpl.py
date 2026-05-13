@@ -88,8 +88,7 @@ class TestMplQuery(unittest.TestCase):
     def setUp(self):
         self.client = _make_client(url=AXIOM_URL, edge_url=EDGE_URL)
         self.mpl = (
-            "`my-metrics`:`http.server.duration` "
-            "| align to 5m using avg"
+            "`my-metrics`:`http.server.duration` " "| align to 5m using avg"
         )
         self.opts = MplOptions(
             start_time=datetime(2024, 1, 1),
@@ -138,10 +137,20 @@ class TestMplQuery(unittest.TestCase):
         )
         opts = MplOptions(
             start_time=datetime(
-                2024, 1, 1, 5, 30, tzinfo=timezone(timedelta(hours=5, minutes=30))
+                2024,
+                1,
+                1,
+                5,
+                30,
+                tzinfo=timezone(timedelta(hours=5, minutes=30)),
             ),
             end_time=datetime(
-                2024, 1, 2, 5, 30, tzinfo=timezone(timedelta(hours=5, minutes=30))
+                2024,
+                1,
+                2,
+                5,
+                30,
+                tzinfo=timezone(timedelta(hours=5, minutes=30)),
             ),
         )
         self.client.mpl_query(self.mpl, opts)
@@ -193,9 +202,7 @@ class TestMplQuery(unittest.TestCase):
         self.client.mpl_query(self.mpl, opts)
 
         body = ujson.loads(responses.calls[0].request.body)
-        self.assertEqual(
-            body["queryOptions"], {"quickRange": "last-1h"}
-        )
+        self.assertEqual(body["queryOptions"], {"quickRange": "last-1h"})
 
     @responses.activate
     def test_optional_mpl_fields_omitted_when_unset(self):
@@ -252,8 +259,7 @@ class TestAsyncMplQuery(unittest.TestCase):
 
     def setUp(self):
         self.mpl = (
-            "`my-metrics`:`http.server.duration` "
-            "| align to 5m using avg"
+            "`my-metrics`:`http.server.duration` " "| align to 5m using avg"
         )
         self.opts = MplOptions(
             start_time=datetime(2024, 1, 1),

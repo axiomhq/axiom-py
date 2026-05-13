@@ -73,13 +73,13 @@ class AsyncClient:
                 "https://eu-central-1.aws.edge.axiom.co"). When set, ingest
                 requests use `/v1/ingest/{dataset}` and query requests use
                 `/v1/query/_apl`.
-                Falls back to AXIOM_EDGE_URL env var.
                 Takes precedence over `edge`.
+                Must be passed explicitly (not read from environment).
             edge: Edge domain for ingest/query operations (e.g.,
                 "eu-central-1.aws.edge.axiom.co"). When set, ingest
                 requests use `https://{edge}/v1/ingest/{dataset}` and query
                 requests use `https://{edge}/v1/query/_apl`.
-                Falls back to AXIOM_EDGE env var.
+                Must be passed explicitly (not read from environment).
 
         Example:
             ```python
@@ -95,10 +95,11 @@ class AsyncClient:
         if url is None:
             url = AXIOM_URL
 
-        if edge_url is None:
-            edge_url = os.getenv("AXIOM_EDGE_URL")
-        if edge is None:
-            edge = os.getenv("AXIOM_EDGE")
+        # Note: edge_url and edge are NOT auto-read from environment.
+        # Edge configuration must be explicit to avoid accidentally routing
+        # all requests through edge when AXIOM_EDGE_URL/AXIOM_EDGE are set
+        # for edge-specific tests. Create a separate AsyncClient with edge_url
+        # for edge operations.
 
         # Normalize empty strings to None for edge config
         edge_url = edge_url or None
