@@ -532,7 +532,7 @@ class AsyncClient:
         """
         from .client import AplResultFormat
 
-        params: Dict[str, object] = {"format": AplResultFormat.Legacy.value}
+        params: Dict[str, object] = {"format": AplResultFormat.Tabular.value}
 
         if opts is not None:
             if opts.format:

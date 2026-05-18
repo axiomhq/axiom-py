@@ -85,8 +85,9 @@ class TestAsyncClient:
 
     @respx.mock
     async def test_query(self):
-        """Test async APL query."""
+        """Test async APL query defaults to tabular format."""
         mock_response = {
+            "request": None,
             "status": {
                 "elapsedTime": 100,
                 "blocksExamined": 1,
@@ -97,18 +98,29 @@ class TestAsyncClient:
                 "minCursor": "0",
                 "maxCursor": "100",
             },
-            "matches": [
+            "matches": None,
+            "buckets": None,
+            "tables": [
                 {
-                    "_time": "2024-01-01T00:00:00Z",
-                    "_sysTime": "2024-01-01T00:00:00Z",
-                    "_rowId": "row-1",
-                    "data": {"field": "value", "count": 1},
+                    "buckets": None,
+                    "columns": [["value"]],
+                    "fields": [
+                        {
+                            "name": "field",
+                            "type": "string",
+                            "agg": None,
+                        }
+                    ],
+                    "groups": [],
+                    "name": "0",
+                    "order": [{"desc": False, "field": "_time"}],
+                    "range": None,
+                    "sources": [{"name": "test-dataset"}],
                 }
             ],
-            "buckets": {"series": [], "totals": []},
         }
 
-        respx.post("/v1/datasets/_apl").mock(
+        route = respx.post("/v1/datasets/_apl").mock(
             return_value=httpx.Response(
                 200,
                 json=mock_response,
@@ -120,9 +132,10 @@ class TestAsyncClient:
             token="test-token", url="http://localhost"
         ) as client:
             result = await client.query("['test-dataset'] | limit 100")
-            assert len(result.matches) == 1
-            assert result.matches[0].data["field"] == "value"
+            assert list(result.tables[0].events()) == [{"field": "value"}]
             assert result.savedQueryID == "query-123"
+
+        assert route.calls[0].request.url.params["format"] == "tabular"
 
     @respx.mock
     async def test_query_with_options(self):
