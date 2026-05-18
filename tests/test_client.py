@@ -506,14 +506,14 @@ class TestEdgeConfiguration(unittest.TestCase):
             )
 
     def test_edge_url_not_read_from_env(self):
-        """Test that edge_url is NOT auto-read from environment."""
+        """Test that edge_url and edge are not auto-read from environment."""
         with patch.dict(os.environ, {}, clear=False):
             self._clear_env()
-            # Set env var that should be ignored
+            # Set env vars that should be ignored
             os.environ["AXIOM_EDGE_URL"] = "https://edge.example.com"
             os.environ["AXIOM_EDGE"] = "eu-central-1.aws.edge.axiom.co"
 
-            # Client should NOT pick up edge config from env
+            # Client should ignore edge env vars unless passed explicitly
             client = Client(token="xaat-test-token", org_id="test-org")
             self.assertIsNone(client._edge_url)
             self.assertIsNone(client._edge)
@@ -553,9 +553,10 @@ class TestEdgeConfiguration(unittest.TestCase):
             self.assertTrue(client.is_edge_configured())
 
     def test_empty_string_edge_url_treated_as_none(self):
-        """Test that empty string for edge_url is treated as None."""
+        """Test that empty string for edge_url stays unset."""
         with patch.dict(os.environ, {}, clear=False):
             self._clear_env()
+            os.environ["AXIOM_EDGE_URL"] = "https://edge.example.com"
             client = Client(
                 token="xaat-api-token",
                 org_id="test-org",
@@ -565,9 +566,10 @@ class TestEdgeConfiguration(unittest.TestCase):
             self.assertFalse(client.is_edge_configured())
 
     def test_empty_string_edge_treated_as_none(self):
-        """Test that empty string for edge is treated as None."""
+        """Test that empty string for edge stays unset."""
         with patch.dict(os.environ, {}, clear=False):
             self._clear_env()
+            os.environ["AXIOM_EDGE"] = "eu-central-1.aws.edge.axiom.co"
             client = Client(
                 token="xaat-api-token",
                 org_id="test-org",

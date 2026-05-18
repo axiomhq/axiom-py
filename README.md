@@ -44,6 +44,34 @@ edge_client = axiom_py.Client(
 
 **Note:** Edge endpoints require API tokens (`xaat-`), not personal tokens.
 Edge configuration must be passed explicitly when creating the client.
+
+## Metrics Queries (MPL)
+
+To query OTel metrics using MPL (Metrics Processing Language), configure the
+client with your edge endpoint and use `mpl_query`:
+
+```python
+import axiom_py
+from axiom_py import MplOptions
+from datetime import datetime, timedelta, timezone
+
+client = axiom_py.Client(
+    token="xaat-your-api-token",
+    edge="us-east-1.aws.edge.axiom.co"
+)
+
+end = datetime.now(timezone.utc)
+start = end - timedelta(hours=1)
+
+result = client.mpl_query(
+    "`my-metrics`:`http.server.duration` | align to 5m using avg",
+    opts=MplOptions(start_time=start, end_time=end),
+)
+
+for series in result.series:
+    print(series.metric, series.tags, series.data)
+```
+
 ## Asynchronous Client
 
 The library also provides an async client for use with asyncio:

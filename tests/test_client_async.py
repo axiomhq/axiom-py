@@ -229,3 +229,33 @@ class TestAsyncClient:
                 == "Bearer env-token"
             )
             assert client.client.headers.get("X-Axiom-Org-Id") == "env-org"
+
+    @respx.mock
+    async def test_edge_environment_variables(self, monkeypatch):
+        """Test that async client ignores edge env variables."""
+        monkeypatch.setenv("AXIOM_EDGE_URL", "https://edge.example.com")
+        monkeypatch.setenv("AXIOM_EDGE", "eu-central-1.aws.edge.axiom.co")
+
+        async with AsyncClient(
+            token="test-token", org_id="test-org", url="http://localhost"
+        ) as client:
+            assert client._edge_url is None
+            assert client._edge is None
+            assert not client.is_edge_configured()
+
+    @respx.mock
+    async def test_edge_explicit_empty_string_disables_env(self, monkeypatch):
+        """Test that explicit empty edge values remain unset."""
+        monkeypatch.setenv("AXIOM_EDGE_URL", "https://edge.example.com")
+        monkeypatch.setenv("AXIOM_EDGE", "eu-central-1.aws.edge.axiom.co")
+
+        async with AsyncClient(
+            token="test-token",
+            org_id="test-org",
+            url="http://localhost",
+            edge_url="",
+            edge="",
+        ) as client:
+            assert client._edge_url is None
+            assert client._edge is None
+            assert not client.is_edge_configured()
