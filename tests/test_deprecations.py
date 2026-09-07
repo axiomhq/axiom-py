@@ -1,8 +1,8 @@
 """
 The 0.13.0 runway.
 
-Every legacy path warns once before 0.14.0 changes the default and 0.15.0
-removes the format. The category is FutureWarning on purpose: Python's
+The default is tabular as of 0.14.0. What remains deprecated warns once
+before 0.15.0 removes it. The category is FutureWarning on purpose: Python's
 default filter only surfaces a DeprecationWarning attributed to __main__,
 and an SDK call comes from the caller's own module, so DeprecationWarning
 would reach nobody.
@@ -37,11 +37,14 @@ def client():
 
 
 @responses.activate
-def test_implicit_legacy_default_warns(client):
+def test_implicit_default_is_tabular_and_silent(client):
     responses.add(responses.POST, APL_URL, json=RESULT, status=200)
 
-    with pytest.warns(FutureWarning, match="default to the legacy result"):
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", FutureWarning)
         client.query("['d'] | limit 1")
+
+    assert responses.calls[0].request.params["format"] == "tabular"
 
 
 @responses.activate
@@ -64,17 +67,6 @@ def test_tabular_is_silent(client):
         client.query(
             "['d'] | limit 1",
             AplOptions(format=AplResultFormat.Tabular),
-        )
-
-
-@responses.activate
-def test_limit_warns(client):
-    responses.add(responses.POST, APL_URL, json=RESULT, status=200)
-
-    with pytest.warns(FutureWarning, match="never reached the server"):
-        client.query(
-            "['d'] | limit 1",
-            AplOptions(format=AplResultFormat.Tabular, limit=5),
         )
 
 
@@ -107,7 +99,10 @@ def test_warning_category_is_futurewarning(client):
     responses.add(responses.POST, APL_URL, json=RESULT, status=200)
 
     with pytest.warns(FutureWarning) as caught:
-        client.query("['d'] | limit 1")
+        client.query(
+            "['d'] | limit 1",
+            AplOptions(format=AplResultFormat.Legacy),
+        )
 
     assert [w.category for w in caught] == [FutureWarning]
     assert not any(issubclass(w.category, DeprecationWarning) for w in caught)

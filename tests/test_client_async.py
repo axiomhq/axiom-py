@@ -97,18 +97,24 @@ class TestAsyncClient:
                 "minCursor": "0",
                 "maxCursor": "100",
             },
-            "matches": [
+            "tables": [
                 {
-                    "_time": "2024-01-01T00:00:00Z",
-                    "_sysTime": "2024-01-01T00:00:00Z",
-                    "_rowId": "row-1",
-                    "data": {"field": "value", "count": 1},
+                    "buckets": None,
+                    "columns": [["value"], [1]],
+                    "fields": [
+                        {"name": "field", "type": "string", "agg": None},
+                        {"name": "count", "type": "integer", "agg": None},
+                    ],
+                    "groups": [],
+                    "name": "0",
+                    "order": [],
+                    "range": None,
+                    "sources": [{"name": "test-dataset"}],
                 }
             ],
-            "buckets": {"series": [], "totals": []},
         }
 
-        respx.post("/v1/datasets/_apl").mock(
+        route = respx.post("/v1/datasets/_apl").mock(
             return_value=httpx.Response(
                 200,
                 json=mock_response,
@@ -120,9 +126,12 @@ class TestAsyncClient:
             token="test-token", url="http://localhost"
         ) as client:
             result = await client.query("['test-dataset'] | limit 100")
-            assert len(result.matches) == 1
-            assert result.matches[0].data["field"] == "value"
+            assert list(result.tables[0].events()) == [
+                {"field": "value", "count": 1}
+            ]
             assert result.savedQueryID == "query-123"
+
+        assert route.calls[0].request.url.params["format"] == "tabular"
 
     @respx.mock
     async def test_query_with_options(self):
@@ -157,7 +166,6 @@ class TestAsyncClient:
                 start_time=datetime(2024, 1, 1),
                 end_time=datetime(2024, 1, 2),
                 format=AplResultFormat.Legacy,
-                limit=50,
             )
             result = await client.query("['test-dataset']", opts)
             assert result.savedQueryID == "query-456"

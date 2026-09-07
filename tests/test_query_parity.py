@@ -23,7 +23,6 @@ APL_CASES = [
     pytest.param(AplOptions(format=AplResultFormat.Legacy), id="legacy"),
     pytest.param(AplOptions(start_time=START, end_time=END), id="time-range"),
     pytest.param(AplOptions(cursor="abc", includeCursor=True), id="cursor"),
-    pytest.param(AplOptions(limit=25), id="limit"),
 ]
 
 QUERY_OPTION_CASES = [
@@ -75,13 +74,11 @@ def test_ingest_params_match(clients):
         )
 
 
-def test_limit_never_reaches_the_wire(clients):
-    """It was serialized as `?request=limit` and dropped by the server."""
+def test_both_clients_default_to_tabular(clients):
     sync, asyn = clients
     for client in (sync, asyn):
-        params = client._prepare_apl_options(AplOptions(limit=25))
-        assert "request" not in params
-        assert "limit" not in params
+        assert client._prepare_apl_options(None)["format"] == "tabular"
+        assert client._prepare_apl_options(AplOptions())["format"] == "tabular"
 
 
 ENV_CASES = [
