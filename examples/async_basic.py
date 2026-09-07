@@ -35,11 +35,12 @@ async def main():
         query_result = await client.query(
             f"['{dataset_name}'] | where action == 'login' | limit 10"
         )
-        print(f"Found {len(query_result.matches)} matches")
+        rows = list(query_result.tables[0].events())
+        print(f"Found {len(rows)} rows")
 
-        # Print the matches
-        for match in query_result.matches:
-            print(f"  - {match}")
+        # Print the rows
+        for row in rows:
+            print(f"  - {row}")
 
 
 if __name__ == "__main__":

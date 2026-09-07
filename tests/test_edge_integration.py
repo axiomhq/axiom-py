@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import rfc3339
 
 from .helpers import get_random_name
-from axiom_py import Client, AplOptions, AplResultFormat, AxiomError
+from axiom_py import Client, AplOptions, AxiomError
 from axiom_py.client_async import AsyncClient
 import logging
 
@@ -186,7 +186,6 @@ class TestEdgeIntegration(unittest.TestCase):
         opts = AplOptions(
             start_time=start_time,
             end_time=end_time,
-            format=AplResultFormat.Legacy,
         )
 
         # Retry up to 10 times with 2s delay for eventual consistency
@@ -196,7 +195,7 @@ class TestEdgeIntegration(unittest.TestCase):
         for attempt in range(10):
             try:
                 qr = self.edge_client.query(apl, opts)
-                if len(qr.matches) >= 2:
+                if len(list(qr.tables[0].events())) >= 2:
                     break
             except AxiomError as e:
                 # Field may not be indexed yet
@@ -208,9 +207,9 @@ class TestEdgeIntegration(unittest.TestCase):
             self.fail(f"Query failed after retries: {last_error}")
 
         self.assertGreaterEqual(
-            len(qr.matches),
+            len(list(qr.tables[0].events())),
             2,
-            f"expected at least 2 matches, got {len(qr.matches)}",
+            f"expected at least 2 matches, got {len(list(qr.tables[0].events()))}",
         )
 
     def test_edge_ingest_and_query_roundtrip(self):
@@ -237,7 +236,6 @@ class TestEdgeIntegration(unittest.TestCase):
         opts = AplOptions(
             start_time=start_time,
             end_time=end_time,
-            format=AplResultFormat.Legacy,
         )
 
         # Retry up to 10 times with 2s delay for eventual consistency
@@ -246,7 +244,7 @@ class TestEdgeIntegration(unittest.TestCase):
         for attempt in range(10):
             try:
                 qr = self.edge_client.query(apl, opts)
-                if len(qr.matches) >= 1:
+                if len(list(qr.tables[0].events())) >= 1:
                     break
             except AxiomError as e:
                 last_error = e
@@ -257,10 +255,10 @@ class TestEdgeIntegration(unittest.TestCase):
             self.fail(f"Query failed after retries: {last_error}")
 
         self.assertEqual(
-            len(qr.matches),
+            len(list(qr.tables[0].events())),
             1,
             f"expected 1 match for marker {unique_marker}, "
-            f"got {len(qr.matches)}",
+            f"got {len(list(qr.tables[0].events()))}",
         )
 
     def test_main_client_still_works(self):
@@ -487,7 +485,6 @@ class TestAsyncEdgeIntegration(unittest.TestCase):
                 opts = AplOptions(
                     start_time=start_time,
                     end_time=end_time,
-                    format=AplResultFormat.Legacy,
                 )
 
                 # Retry up to 10 times with 2s delay
@@ -496,7 +493,7 @@ class TestAsyncEdgeIntegration(unittest.TestCase):
                 for attempt in range(10):
                     try:
                         qr = await client.query(apl, opts)
-                        if len(qr.matches) >= 2:
+                        if len(list(qr.tables[0].events())) >= 2:
                             break
                     except AxiomError as e:
                         last_error = e
@@ -511,9 +508,9 @@ class TestAsyncEdgeIntegration(unittest.TestCase):
                     )
 
                 self.assertGreaterEqual(
-                    len(qr.matches),
+                    len(list(qr.tables[0].events())),
                     2,
-                    f"expected at least 2 matches, got {len(qr.matches)}",
+                    f"expected at least 2 matches, got {len(list(qr.tables[0].events()))}",
                 )
 
         asyncio.run(run_test())
@@ -555,7 +552,6 @@ class TestAsyncEdgeIntegration(unittest.TestCase):
                 opts = AplOptions(
                     start_time=start_time,
                     end_time=end_time,
-                    format=AplResultFormat.Legacy,
                 )
 
                 # Retry up to 10 times with 2s delay
@@ -564,7 +560,7 @@ class TestAsyncEdgeIntegration(unittest.TestCase):
                 for attempt in range(10):
                     try:
                         qr = await client.query(apl, opts)
-                        if len(qr.matches) >= 1:
+                        if len(list(qr.tables[0].events())) >= 1:
                             break
                     except AxiomError as e:
                         last_error = e
@@ -579,10 +575,10 @@ class TestAsyncEdgeIntegration(unittest.TestCase):
                     )
 
                 self.assertEqual(
-                    len(qr.matches),
+                    len(list(qr.tables[0].events())),
                     1,
                     f"expected 1 match for marker {unique_marker}, "
-                    f"got {len(qr.matches)}",
+                    f"got {len(list(qr.tables[0].events()))}",
                 )
 
         asyncio.run(run_test())

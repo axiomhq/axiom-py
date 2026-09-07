@@ -9,17 +9,13 @@ from urllib.parse import urlparse
 from enum import Enum
 from humps import decamelize
 from typing import Dict, List, Optional, Callable
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from datetime import datetime
 from requests_toolbelt.sessions import BaseUrlSession
 from requests.adapters import HTTPAdapter, Retry
 from .datasets import DatasetsClient
 from .query import (
-    QueryLegacy,
     QueryResult,
-    QueryOptions,
-    QueryLegacyResult,
-    QueryKind,
     MplResult,
 )
 from .annotations import AnnotationsClient
@@ -32,7 +28,6 @@ from .util import (
     is_personal_token,
 )
 from .tokens import TokensClient
-from . import _deprecation
 
 AXIOM_URL = "https://api.axiom.co"
 
@@ -90,13 +85,6 @@ class IngestOptions:
     CSV_delimiter: Optional[str] = field(default=None)
 
 
-class AplResultFormat(Enum):
-    """The result format of an APL query."""
-
-    Legacy = "legacy"
-    Tabular = "tabular"
-
-
 class ContentType(Enum):
     """ContentType describes the content type of the data to ingest."""
 
@@ -112,10 +100,6 @@ class ContentEncoding(Enum):
     GZIP = "gzip"
 
 
-class WrongQueryKindException(Exception):
-    pass
-
-
 @dataclass
 class AplOptions:
     """AplOptions specifies the optional parameters for the apl query method."""
@@ -124,8 +108,6 @@ class AplOptions:
     start_time: Optional[datetime] = field(default=None)
     # End time for the interval to query.
     end_time: Optional[datetime] = field(default=None)
-    # The result format.
-    format: AplResultFormat = field(default=AplResultFormat.Tabular)
     # Cursor is the query cursor. It should be set to the Cursor returned with
     # a previous query result if it was partial.
     cursor: Optional[str] = field(default=None)
@@ -412,31 +394,6 @@ class Client:  # pylint: disable=R0903
             dataset, gzipped, ContentType.NDJSON, ContentEncoding.GZIP, opts
         )
 
-    def query_legacy(
-        self, id: str, query: QueryLegacy, opts: QueryOptions
-    ) -> QueryLegacyResult:
-        """
-        Executes the given structured query on the dataset identified by its id.
-
-        See https://axiom.co/docs/restapi/endpoints/queryDataset
-        """
-        _deprecation.warn_query_legacy(stacklevel=2)
-
-        if not opts.saveAsKind or (opts.saveAsKind == QueryKind.APL):
-            raise WrongQueryKindException(
-                "invalid query kind %s: must be %s or %s"
-                % (opts.saveAsKind, QueryKind.ANALYTICS, QueryKind.STREAM)
-            )
-
-        path = "/v1/datasets/%s/query" % id
-        payload = ujson.dumps(asdict(query), default=handle_json_serialization)
-        params = self._prepare_query_options(opts)
-        res = self.session.post(path, data=payload, params=params)
-        result = from_dict(QueryLegacyResult, res.json())
-        query_id = res.headers.get("X-Axiom-History-Query-Id")
-        result.savedQueryID = query_id
-        return result
-
     def apl_query(
         self, apl: str, opts: Optional[AplOptions] = None
     ) -> QueryResult:
@@ -458,8 +415,6 @@ class Client:  # pylint: disable=R0903
 
         See https://axiom.co/docs/restapi/endpoints/queryApl
         """
-        _deprecation.warn_legacy_query_options(opts, stacklevel=3)
-
         # Check if edge is configured and build appropriate URL
         edge_url = self._get_edge_query_url()
         if edge_url is not None:
@@ -538,23 +493,6 @@ class Client:  # pylint: disable=R0903
             params["nocache"] = "true"
         return params
 
-    def _prepare_query_options(self, opts: QueryOptions) -> Dict[str, object]:
-        """returns the query options as a Dict, handles any renaming for key
-        fields."""
-        if opts is None:
-            return {}
-        params = {}
-        if opts.streamingDuration:
-            params["streaming-duration"] = (
-                opts.streamingDuration.seconds.__str__() + "s"
-            )
-        if opts.saveAsKind:
-            params["saveAsKind"] = opts.saveAsKind.value
-
-        params["nocache"] = opts.nocache.__str__()
-
-        return params
-
     def _prepare_ingest_options(
         self, opts: Optional[IngestOptions]
     ) -> Dict[str, object]:
@@ -579,13 +517,7 @@ class Client:  # pylint: disable=R0903
         self, opts: Optional[AplOptions]
     ) -> Dict[str, object]:
         """Prepare the apl query options for the request."""
-        params: Dict[str, object] = {"format": AplResultFormat.Tabular.value}
-
-        if opts is not None:
-            if opts.format:
-                params["format"] = opts.format.value
-
-        return params
+        return {"format": "tabular"}
 
     def _prepare_apl_payload(
         self, apl: str, opts: Optional[AplOptions]

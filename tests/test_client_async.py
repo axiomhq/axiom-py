@@ -10,7 +10,6 @@ from axiom_py import (
     AsyncClient,
     IngestOptions,
     AplOptions,
-    AplResultFormat,
 )
 
 
@@ -165,7 +164,6 @@ class TestAsyncClient:
             opts = AplOptions(
                 start_time=datetime(2024, 1, 1),
                 end_time=datetime(2024, 1, 2),
-                format=AplResultFormat.Legacy,
             )
             result = await client.query("['test-dataset']", opts)
             assert result.savedQueryID == "query-456"

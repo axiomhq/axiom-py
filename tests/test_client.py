@@ -12,25 +12,17 @@ import ujson
 import rfc3339
 import responses
 from logging import getLogger
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from .helpers import get_random_name
 from axiom_py import (
     AxiomError,
     Client,
     AplOptions,
-    AplResultFormat,
     ContentEncoding,
     ContentType,
     IngestOptions,
-    WrongQueryKindException,
     PersonalTokenNotSupportedForEdgeError,
-)
-from axiom_py.query import (
-    QueryLegacy,
-    QueryOptions,
-    QueryKind,
-    Aggregation,
 )
 from axiom_py.tokens import (
     CreateTokenRequest,
@@ -56,7 +48,7 @@ class TestClient(unittest.TestCase):
         )
         events_time_format = "%d/%b/%Y:%H:%M:%S +0000"
         # create events to ingest and query
-        time = datetime.utcnow() - timedelta(minutes=1)
+        time = datetime.now(timezone.utc) - timedelta(minutes=1)
         time_formatted = time.strftime(events_time_format)
         cls.logger.info(f"time_formatted: {time_formatted}")
         cls.events = [
@@ -129,7 +121,7 @@ class TestClient(unittest.TestCase):
 
     def test_step002_ingest_events(self):
         """Tests the ingest_events method"""
-        time = datetime.utcnow() - timedelta(hours=1)
+        time = datetime.now(timezone.utc) - timedelta(hours=1)
         time_formatted = rfc3339.format(time)
 
         res = self.client.ingest_events(
@@ -146,51 +138,15 @@ class TestClient(unittest.TestCase):
         ), f"expected ingested count to equal 2, found {res.ingested}"
 
     @pytest.mark.flaky(reruns=3, reruns_delay=2)
-    def test_step004_query(self):
-        """Test querying a dataset"""
-        # query the events we ingested in step2
-        startTime = datetime.utcnow() - timedelta(minutes=2)
-        endTime = datetime.utcnow()
-
-        q = QueryLegacy(startTime=startTime, endTime=endTime)
-        opts = QueryOptions(
-            streamingDuration=timedelta(seconds=60),
-            nocache=True,
-            saveAsKind=QueryKind.ANALYTICS,
-        )
-        qr = self.client.query_legacy(self.dataset_name, q, opts)
-
-        self.assertIsNotNone(qr.savedQueryID)
-        self.assertEqual(len(qr.matches), len(self.events))
-
-    @pytest.mark.flaky(reruns=3, reruns_delay=2)
-    def test_step005_apl_query(self):
-        """Test apl query"""
-        # query the events we ingested in step2
-        startTime = datetime.utcnow() - timedelta(minutes=2)
-        endTime = datetime.utcnow()
-
-        apl = "['%s']" % self.dataset_name
-        opts = AplOptions(
-            start_time=startTime,
-            end_time=endTime,
-            format=AplResultFormat.Legacy,
-        )
-        qr = self.client.query(apl, opts)
-
-        self.assertEqual(len(qr.matches), len(self.events))
-
-    @pytest.mark.flaky(reruns=3, reruns_delay=2)
     def test_step005_apl_query_messages(self):
         """Test an APL query with messages"""
-        startTime = datetime.utcnow() - timedelta(minutes=2)
-        endTime = datetime.utcnow()
+        startTime = datetime.now(timezone.utc) - timedelta(minutes=2)
+        endTime = datetime.now(timezone.utc)
 
         apl = "['%s'] | where true" % self.dataset_name
         opts = AplOptions(
             start_time=startTime,
             end_time=endTime,
-            format=AplResultFormat.Legacy,
         )
         qr = self.client.query(apl, opts)
         # "where clause always evaluates to TRUE, which will include all data"
@@ -205,60 +161,21 @@ class TestClient(unittest.TestCase):
         )
 
     @pytest.mark.flaky(reruns=3, reruns_delay=2)
-    def test_step005_apl_query_tabular(self):
-        """Test apl query (tabular)"""
+    def test_step005_apl_query(self):
+        """Test apl query"""
         # query the events we ingested in step2
-        startTime = datetime.utcnow() - timedelta(minutes=2)
-        endTime = datetime.utcnow()
+        startTime = datetime.now(timezone.utc) - timedelta(minutes=2)
+        endTime = datetime.now(timezone.utc)
 
         apl = "['%s']" % self.dataset_name
         opts = AplOptions(
             start_time=startTime,
             end_time=endTime,
-            format=AplResultFormat.Tabular,
         )
         qr = self.client.query(apl, opts)
 
         events = list(qr.tables[0].events())
         self.assertEqual(len(events), len(self.events))
-
-    def test_step005_wrong_query_kind(self):
-        """Test wrong query kind"""
-        startTime = datetime.utcnow() - timedelta(minutes=2)
-        endTime = datetime.utcnow()
-        opts = QueryOptions(
-            streamingDuration=timedelta(seconds=60),
-            nocache=True,
-            saveAsKind=QueryKind.APL,
-        )
-        q = QueryLegacy(startTime, endTime)
-
-        try:
-            self.client.query_legacy(self.dataset_name, q, opts)
-        except WrongQueryKindException:
-            self.logger.info(
-                "passing kind apl to query raised exception as expected"
-            )
-            return
-
-        self.fail("was excepting WrongQueryKindException")
-
-    def test_step005_complex_query(self):
-        """Test complex query"""
-        startTime = datetime.utcnow() - timedelta(minutes=2)
-        endTime = datetime.utcnow()
-        aggregations = [
-            Aggregation(alias="event_count", op="count", field="*")
-        ]
-        q = QueryLegacy(startTime, endTime, aggregations=aggregations)
-        res = self.client.query_legacy(self.dataset_name, q, QueryOptions())
-
-        # self.assertEqual(len(self.events), res.status.rowsExamined)
-        self.assertEqual(len(self.events), res.status.rowsMatched)
-
-        if res.buckets.totals and len(res.buckets.totals):
-            agg = res.buckets.totals[0].aggregations[0]
-            self.assertEqual("event_count", agg.op)
 
     def test_api_tokens(self):
         """Test creating and deleting an API token"""

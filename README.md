@@ -1,8 +1,5 @@
 > [!IMPORTANT]
-> APL queries still default to the legacy result format. The default becomes tabular in v0.14.0, and v0.15.0 removes the legacy format, `query_legacy()` and the `QueryLegacy` types. v0.13.0 warns on every affected call. Read [MIGRATING.md](./MIGRATING.md).
-
-> [!WARNING]
-> Version [v0.9.0](https://github.com/axiomhq/axiom-py/releases/tag/v0.9.0) removes the aggregation operation enum, see [#158](https://github.com/axiomhq/axiom-py/pull/158).
+> Version v0.15.0 removes the legacy result format, `query_legacy()` and the `QueryLegacy` types. APL queries return tabular results and you read them with `result.tables[0].events()`. Read [MIGRATING.md](./MIGRATING.md).
 
 # axiom-py [![CI][ci_badge]][ci] [![PyPI version][pypi_badge]][pypi] [![Python version][version_badge]][pypi]
 
@@ -20,7 +17,9 @@ import axiom_py
 client = axiom_py.Client()
 
 client.ingest_events(dataset="DATASET_NAME", events=[{"foo": "bar"}, {"bar": "baz"}])
-client.query(r"['DATASET_NAME'] | where foo == 'bar' | limit 100")
+result = client.query(r"['DATASET_NAME'] | where foo == 'bar' | limit 100")
+for row in result.tables[0].events():
+    print(row)
 ```
 
 ## Edge Ingestion
@@ -93,7 +92,8 @@ async def main():
 
         # Query data
         result = await client.query(r"['DATASET_NAME'] | where foo == 'bar' | limit 100")
-        print(f"Found {len(result.matches)} matches")
+        for row in result.tables[0].events():
+            print(row)
 
 asyncio.run(main())
 ```

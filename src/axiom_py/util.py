@@ -5,9 +5,7 @@ from uuid import UUID
 from typing import Type, TypeVar
 from datetime import datetime, timedelta, timezone
 
-from .query import QueryKind
 from .query.result import MessagePriority
-from .query.filter import FilterOperation
 
 
 T = TypeVar("T")
@@ -47,9 +45,7 @@ def _convert_string_to_timedelta(val: str) -> timedelta:
 def from_dict(data_class: Type[T], data) -> T:
     cfg = dacite.Config(
         type_hooks={
-            QueryKind: QueryKind,
             datetime: _convert_string_to_datetime,
-            FilterOperation: FilterOperation,
             MessagePriority: MessagePriority,
             timedelta: _convert_string_to_timedelta,
         }
