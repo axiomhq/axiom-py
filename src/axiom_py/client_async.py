@@ -41,6 +41,7 @@ from .util import (
 )
 from ._http_client import get_common_headers, async_retry, DEFAULT_TIMEOUT
 from ._error_handling import check_response_error
+from . import _deprecation
 
 
 class AsyncClient:
@@ -93,6 +94,8 @@ class AsyncClient:
         if org_id is None:
             org_id = os.getenv("AXIOM_ORG_ID")
         if url is None:
+            url = os.getenv("AXIOM_URL")
+        if not url:
             url = AXIOM_URL
 
         # Note: edge_url and edge are NOT auto-read from environment.
@@ -370,6 +373,8 @@ class AsyncClient:
 
         See https://axiom.co/docs/restapi/endpoints/queryDataset
         """
+        _deprecation.warn_query_legacy(stacklevel=2)
+
         if not opts.saveAsKind or (opts.saveAsKind == QueryKind.APL):
             raise WrongQueryKindException(
                 "invalid query kind %s: must be %s or %s"
@@ -437,6 +442,8 @@ class AsyncClient:
 
         See https://axiom.co/docs/restapi/endpoints/queryApl
         """
+        _deprecation.warn_legacy_query_options(opts, stacklevel=3)
+
         # Check if edge is configured and build appropriate URL
         edge_url = self._get_edge_query_url()
         if edge_url is not None:
@@ -537,8 +544,6 @@ class AsyncClient:
         if opts is not None:
             if opts.format:
                 params["format"] = opts.format.value
-            if opts.limit is not None:
-                params["request"] = {"limit": opts.limit}
 
         return params
 

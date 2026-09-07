@@ -72,7 +72,9 @@ def format_datetime_rfc3339_utc(dt: datetime) -> str:
 
 def handle_json_serialization(obj):
     if isinstance(obj, datetime):
-        return obj.isoformat("T") + "Z"
+        # Not isoformat() + "Z": that yields "...+00:00Z" for an aware
+        # datetime, which the API rejects.
+        return format_datetime_rfc3339_utc(obj)
     elif isinstance(obj, timedelta):
         return str(obj.seconds) + "s"
     elif isinstance(obj, Enum):

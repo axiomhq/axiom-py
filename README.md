@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> APL queries still default to the legacy result format. The default becomes tabular in v0.14.0, and v0.15.0 removes the legacy format, `query_legacy()` and the `QueryLegacy` types. v0.13.0 warns on every affected call. Read [MIGRATING.md](./MIGRATING.md).
+
 > [!WARNING]
 > Version [v0.9.0](https://github.com/axiomhq/axiom-py/releases/tag/v0.9.0) removes the aggregation operation enum, see [#158](https://github.com/axiomhq/axiom-py/pull/158).
 
