@@ -258,7 +258,7 @@ class TestClient(unittest.TestCase):
 
         if res.buckets.totals and len(res.buckets.totals):
             agg = res.buckets.totals[0].aggregations[0]
-            self.assertEqual("event_count", agg.op)
+            self.assertEqual(len(self.events), agg.value)
 
     def test_api_tokens(self):
         """Test creating and deleting an API token"""
