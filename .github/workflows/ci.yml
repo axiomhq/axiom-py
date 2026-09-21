@@ -30,6 +30,9 @@ jobs:
     # run integration tests on PRs originating in the upstream repo (non-forks only)
     if: github.repository == 'axiomhq/axiom-py' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     needs: lint
+    # The development deployment moves ahead of the released server, so a
+    # change there must not block a release.
+    continue-on-error: ${{ matrix.environment == 'development' }}
     strategy:
       fail-fast: true
       matrix:
