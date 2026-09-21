@@ -21,8 +21,8 @@ def main():
 
     # Query events
     res = client.query(f"['{dataset_name}'] | where status == 500")
-    for match in res.matches:
-        print(match.data)
+    for row in res.tables[0].events():
+        print(row)
 
     # Delete the dataset
     client.datasets.delete(dataset_name)

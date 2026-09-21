@@ -5,7 +5,6 @@ import gzip
 import ujson
 import httpx
 from typing import Dict, List, Optional
-from dataclasses import asdict
 from urllib.parse import urlparse
 from humps import decamelize
 
@@ -14,7 +13,6 @@ from .client import (
     IngestOptions,
     ContentType,
     ContentEncoding,
-    WrongQueryKindException,
     AplOptions,
     MplOptions,
     AXIOM_URL,
@@ -26,11 +24,7 @@ from .annotations_async import AsyncAnnotationsClient
 from .tokens_async import AsyncTokensClient
 from .users_async import AsyncUsersClient
 from .query import (
-    QueryLegacy,
     QueryResult,
-    QueryOptions,
-    QueryLegacyResult,
-    QueryKind,
     MplResult,
 )
 from .util import (
@@ -93,6 +87,8 @@ class AsyncClient:
         if org_id is None:
             org_id = os.getenv("AXIOM_ORG_ID")
         if url is None:
+            url = os.getenv("AXIOM_URL")
+        if not url:
             url = AXIOM_URL
 
         # Note: edge_url and edge are NOT auto-read from environment.
@@ -353,45 +349,6 @@ class AsyncClient:
             dataset, gzipped, ContentType.NDJSON, ContentEncoding.GZIP, opts
         )
 
-    async def query_legacy(
-        self, id: str, query: QueryLegacy, opts: QueryOptions
-    ) -> QueryLegacyResult:
-        """
-        Asynchronously execute the given structured query on the dataset
-        identified by its id.
-
-        Args:
-            id: Dataset identifier
-            query: Legacy query object
-            opts: Query options
-
-        Returns:
-            QueryLegacyResult with query results
-
-        See https://axiom.co/docs/restapi/endpoints/queryDataset
-        """
-        if not opts.saveAsKind or (opts.saveAsKind == QueryKind.APL):
-            raise WrongQueryKindException(
-                "invalid query kind %s: must be %s or %s"
-                % (opts.saveAsKind, QueryKind.ANALYTICS, QueryKind.STREAM)
-            )
-
-        path = f"/v1/datasets/{id}/query"
-        payload = ujson.dumps(asdict(query), default=handle_json_serialization)
-        params = self._prepare_query_options(opts)
-
-        @async_retry()
-        async def _make_request():
-            return await self.client.post(path, content=payload, params=params)
-
-        response = await _make_request()
-        check_response_error(response.status_code, response.json())
-
-        result = from_dict(QueryLegacyResult, response.json())
-        query_id = response.headers.get("X-Axiom-History-Query-Id")
-        result.savedQueryID = query_id
-        return result
-
     async def apl_query(
         self, apl: str, opts: Optional[AplOptions] = None
     ) -> QueryResult:
@@ -467,30 +424,6 @@ class AsyncClient:
 
         return result
 
-    def _prepare_query_options(self, opts: QueryOptions) -> Dict[str, object]:
-        """
-        Return the query options as a Dict, handles any renaming for key fields.
-
-        Args:
-            opts: Query options
-
-        Returns:
-            Dictionary of query parameters
-        """
-        if opts is None:
-            return {}
-        params = {}
-        if opts.streamingDuration:
-            params["streaming-duration"] = (
-                opts.streamingDuration.seconds.__str__() + "s"
-            )
-        if opts.saveAsKind:
-            params["saveAsKind"] = opts.saveAsKind.value
-
-        params["nocache"] = opts.nocache.__str__()
-
-        return params
-
     def _prepare_ingest_options(
         self, opts: Optional[IngestOptions]
     ) -> Dict[str, object]:
@@ -530,17 +463,7 @@ class AsyncClient:
         Returns:
             Dictionary of APL parameters
         """
-        from .client import AplResultFormat
-
-        params: Dict[str, object] = {"format": AplResultFormat.Legacy.value}
-
-        if opts is not None:
-            if opts.format:
-                params["format"] = opts.format.value
-            if opts.limit is not None:
-                params["request"] = {"limit": opts.limit}
-
-        return params
+        return {"format": "tabular"}
 
     def _prepare_apl_payload(
         self, apl: str, opts: Optional[AplOptions]

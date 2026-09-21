@@ -21,7 +21,8 @@ async def ingest_to_dataset(client: AsyncClient, dataset: str, count: int):
 async def query_dataset(client: AsyncClient, dataset: str):
     """Query a specific dataset."""
     result = await client.query(f"['{dataset}'] | limit 10")
-    print(f"Queried {dataset}: found {len(result.matches)} matches")
+    rows = list(result.tables[0].events())
+    print(f"Queried {dataset}: found {len(rows)} rows")
     return result
 
 

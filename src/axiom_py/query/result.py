@@ -3,8 +3,6 @@ from datetime import datetime
 from typing import List, Dict, Optional, Union
 from enum import Enum
 
-from .query import QueryLegacy
-
 
 class MessagePriority(Enum):
     """Message priorities represents the priority of a message associated with a query."""
@@ -62,83 +60,6 @@ class QueryStatus:
     maxCursor: Optional[str] = field(default=None)
     # row id of the oldest row, as seen server side.
     minCursor: Optional[str] = field(default=None)
-
-
-@dataclass
-class Entry:
-    """Entry is an event that matched a query and is thus part of the result set."""
-
-    # the time the event occurred. Matches SysTime if not specified
-    # during ingestion.
-    _time: str
-    # the time the event was recorded on the server.
-    _sysTime: str
-    # the unique ID of the event row.
-    _rowId: str
-    # contains the raw data of the event (with filters and aggregations
-    # applied).
-    data: Dict[str, object]
-
-
-@dataclass
-class EntryGroupAgg:
-    """an aggregation which is part of a group of queried events."""
-
-    # alias is the aggregations alias. If it wasn't specified at query time, it
-    # is the uppercased string representation of the aggregation operation.
-    value: object
-    op: str = field(default="")
-    # value is the result value of the aggregation.
-
-
-@dataclass
-class EntryGroup:
-    """a group of queried event."""
-
-    # the unique id of the group.
-    id: int
-    # group maps the fieldnames to the unique values for the entry.
-    group: Dict[str, object]
-    # aggregations of the group.
-    aggregations: List[EntryGroupAgg]
-
-
-@dataclass
-class Interval:
-    """the interval of queried time series."""
-
-    # startTime of the interval.
-    startTime: datetime
-    # endTime of the interval.
-    endTime: datetime
-    # groups of the interval.
-    groups: Optional[List[EntryGroup]]
-
-
-@dataclass
-class Timeseries:
-    """Timeseries are queried time series."""
-
-    # the intervals that build a time series.
-    series: List[Interval]
-    # totals of the time series.
-    totals: Optional[List[EntryGroup]]
-
-
-@dataclass
-class QueryLegacyResult:
-    """Result is the result of a query."""
-
-    # Status of the query result.
-    status: QueryStatus
-    # Matches are the events that matched the query.
-    matches: List[Entry]
-    # Buckets are the time series buckets.
-    buckets: Timeseries
-    # savedQueryID is the ID of the query that generated this result when it
-    # was saved on the server. This is only set when the query was send with
-    # the `saveAsKind` option specified.
-    savedQueryID: Optional[str] = field(default=None)
 
 
 @dataclass
@@ -248,14 +169,9 @@ class ColumnIterator:
 class QueryResult:
     """Result is the result of apl query."""
 
-    request: Optional[QueryLegacy]
     # Status of the apl query result.
     status: QueryStatus
-    # Matches are the events that matched the apl query.
-    matches: Optional[List[Entry]]
-    # Buckets are the time series buckets.
-    buckets: Optional[Timeseries]
-    # Tables is populated in tabular queries.
+    # Tables holds one table per result set.
     tables: Optional[List[Table]]
     # Dataset names are the datasets that were used in the apl query.
     dataset_names: List[str] = field(default_factory=lambda: [])

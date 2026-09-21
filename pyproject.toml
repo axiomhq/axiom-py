@@ -1,9 +1,9 @@
 [project]
 name = "axiom-py"
-version = "0.12.0"
+dynamic = ["version"]
 description = "Official bindings for the Axiom API"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
     "iso8601>=1.0.2",
     "requests>=2.32.3",
@@ -20,11 +20,11 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Topic :: System :: Logging",
 
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
 [project.urls]
@@ -35,6 +35,9 @@ Issues = "https://github.com/axiomhq/axiom-py/issues"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/axiom_py/version.py"
 
 [tool.ruff]
 line-length = 79 # PEP 8
