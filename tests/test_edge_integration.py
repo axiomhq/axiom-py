@@ -47,7 +47,7 @@ class TestEdgeIntegration(unittest.TestCase):
     def setUpClass(cls):
         if not is_edge_configured():
             raise unittest.SkipTest(
-                "skipping edge integration tests; " "set AXIOM_EDGE_URL to run"
+                "skipping edge integration tests; set AXIOM_EDGE_URL to run"
             )
 
         edge_url, edge_token, dataset_edge_deployment = get_edge_config()

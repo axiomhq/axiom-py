@@ -114,9 +114,8 @@ class TestClient(unittest.TestCase):
         )
         self.logger.debug(res)
 
-        assert (
-            res.ingested == 2
-        ), f"expected ingested count to equal 2, found {res.ingested}"
+        msg = f"expected ingested count to equal 2, found {res.ingested}"
+        assert res.ingested == 2, msg
         self.logger.info("ingested 2 events successfully.")
 
     def test_step002_ingest_events(self):
@@ -133,9 +132,8 @@ class TestClient(unittest.TestCase):
         )
         self.logger.debug(res)
 
-        assert (
-            res.ingested == 2
-        ), f"expected ingested count to equal 2, found {res.ingested}"
+        msg = f"expected ingested count to equal 2, found {res.ingested}"
+        assert res.ingested == 2, msg
 
     @pytest.mark.flaky(reruns=3, reruns_delay=2)
     def test_step005_apl_query_messages(self):
