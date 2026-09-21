@@ -88,7 +88,7 @@ class TestMplQuery(unittest.TestCase):
     def setUp(self):
         self.client = _make_client(url=AXIOM_URL, edge_url=EDGE_URL)
         self.mpl = (
-            "`my-metrics`:`http.server.duration` " "| align to 5m using avg"
+            "`my-metrics`:`http.server.duration` | align to 5m using avg"
         )
         self.opts = MplOptions(
             start_time=datetime(2024, 1, 1),
@@ -259,7 +259,7 @@ class TestAsyncMplQuery(unittest.TestCase):
 
     def setUp(self):
         self.mpl = (
-            "`my-metrics`:`http.server.duration` " "| align to 5m using avg"
+            "`my-metrics`:`http.server.duration` | align to 5m using avg"
         )
         self.opts = MplOptions(
             start_time=datetime(2024, 1, 1),

@@ -41,6 +41,14 @@ path = "src/axiom_py/version.py"
 
 [tool.ruff]
 line-length = 79 # PEP 8
+# Python only. Newer ruff also formats code blocks in markdown, which
+# reflows the README examples.
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+# Pin the rule set. Left implicit, it tracks whatever ruff makes default,
+# so a ruff upgrade becomes a lint overhaul.
+select = ["E4", "E7", "E9", "F"]
 
 [dependency-groups]
 dev = [
