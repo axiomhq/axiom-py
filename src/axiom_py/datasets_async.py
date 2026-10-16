@@ -14,7 +14,7 @@ from .datasets import (
     DatasetUpdateRequest,
     TrimRequest,
 )
-from .util import from_dict
+from .util import format_timedelta_seconds, from_dict
 from ._error_handling import check_response_error
 
 
@@ -147,7 +147,7 @@ class AsyncDatasetsClient:
         """
         path = f"/v1/datasets/{id}/trim"
         # prepare request payload and format maxDuration to append time unit
-        req = TrimRequest(f"{maxDuration.seconds}s")
+        req = TrimRequest(format_timedelta_seconds(maxDuration))
         payload = ujson.dumps(asdict(req))
         response = await self.client.post(path, content=payload)
         check_response_error(response.status_code, response.json())

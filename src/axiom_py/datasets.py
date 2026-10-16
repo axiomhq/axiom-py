@@ -7,7 +7,7 @@ from requests import Session
 from typing import List, Optional
 from dataclasses import dataclass, asdict, field
 from datetime import timedelta
-from .util import from_dict
+from .util import format_timedelta_seconds, from_dict
 
 
 @dataclass
@@ -155,5 +155,5 @@ class DatasetsClient:  # pylint: disable=R0903
         path = "/v1/datasets/%s/trim" % id
         # prepare request payload and format masDuration to append time unit at
         # the end, e.g `1s`
-        req = TrimRequest(f"{maxDuration.seconds}s")
+        req = TrimRequest(format_timedelta_seconds(maxDuration))
         self.session.post(path, data=ujson.dumps(asdict(req)))
