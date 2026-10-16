@@ -66,13 +66,24 @@ def format_datetime_rfc3339_utc(dt: datetime) -> str:
     return dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
+def format_timedelta_seconds(value: timedelta) -> str:
+    """Serialize a complete duration without losing days or microseconds."""
+    total_micros = (
+        value.days * 86400 + value.seconds
+    ) * 1000000 + value.microseconds
+    seconds, micros = divmod(abs(total_micros), 1000000)
+    fraction = f".{micros:06d}".rstrip("0") if micros else ""
+    sign = "-" if total_micros < 0 else ""
+    return f"{sign}{seconds}{fraction}s"
+
+
 def handle_json_serialization(obj):
     if isinstance(obj, datetime):
         # Not isoformat() + "Z": that yields "...+00:00Z" for an aware
         # datetime, which the API rejects.
         return format_datetime_rfc3339_utc(obj)
     elif isinstance(obj, timedelta):
-        return str(obj.seconds) + "s"
+        return format_timedelta_seconds(obj)
     elif isinstance(obj, Enum):
         return obj.value
     elif isinstance(obj, UUID):
