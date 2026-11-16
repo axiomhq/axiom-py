@@ -99,6 +99,18 @@ class AsyncAxiomHandler(Handler):
         """
         self.buffer.append(record.__dict__)
 
+        # Ensure event loop is available
+        if self._loop is None:
+            try:
+                self._loop = asyncio.get_running_loop()
+            except RuntimeError:
+                # No event loop running, can't flush
+                return
+
+        # Start periodic flushing even when this record needs no immediate flush
+        if self.flush_task is None or self.flush_task.done():
+            self._start_periodic_flush()
+
         # Check if we need to flush
         should_flush = (
             len(self.buffer) >= 1000
@@ -106,18 +118,6 @@ class AsyncAxiomHandler(Handler):
         )
 
         if should_flush:
-            # Ensure event loop is available
-            if self._loop is None:
-                try:
-                    self._loop = asyncio.get_running_loop()
-                except RuntimeError:
-                    # No event loop running, can't flush
-                    return
-
-            # Ensure periodic flush task is running
-            if self.flush_task is None or self.flush_task.done():
-                self._start_periodic_flush()
-
             # Schedule immediate flush
             self._loop.create_task(self.flush())
 
